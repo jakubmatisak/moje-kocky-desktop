@@ -1,4 +1,4 @@
-; Inno Setup: inštalátor Moje kocky Desktop.
+﻿; Inno Setup: inštalátor Moje kocky Desktop.
 ; Zostavenie: scripts\build.ps1 (PyInstaller do build\dist\MojeKocky, potom ISCC).
 ; Inštaluje sa pre aktuálneho používateľa, bez práv správcu. Údaje appky sú
 ; v %APPDATA%\MojeKocky a odinštalovanie ich zmaže, len keď to používateľ chce.

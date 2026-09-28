@@ -66,8 +66,9 @@ v `%APPDATA%\MojeKocky`.
 
 **Ostatné**
 
-- Viac účtov na jednej inštancii, každý so svojou zbierkou a kľúčmi.
-  Registráciu otvára a zatvára správca v appke.
+- Viac účtov na jednom počítači (napríklad pre členov rodiny), každý so
+  svojou zbierkou, heslom a kľúčmi. Ďalší účet povolí prvý (správca)
+  v Nastaveniach → Aplikácia.
 - Rozhranie po slovensky aj po anglicky, svetlý a tmavý režim, telefón aj
   počítač. Nastavenia zobrazenia sa pamätajú pri účte.
 - Prehľad spotreby volaní cudzích služieb a prepínače, čo sa z ktorej
@@ -99,19 +100,20 @@ zo súborov a každé volanie appky pošle priamo Pythonu v tom istom procese
 Appka funguje aj bez kľúčov; vtedy je to evidencia, kde si názov setu a cenu
 vyplníš sám. Každá služba pridá niečo navyše.
 
-Kľúče nie sú v `.env`. **Každý používateľ si svoje vloží v appke**,
-v Nastaveniach na karte Dáta. Ukladajú sa zašifrované pri jeho účte a von
-sa už nedostanú, rozhranie ukáže len ich koncovku. Šifra je odvodená
-z `JWT_SECRET`; po jeho zmene treba kľúče zadať znova. Každý kľúč má vlastnú
-dennú kvótu, nikto ju nemíňa niekomu inému.
+Kľúče vložíš v appke v **Nastaveniach → Dáta**. Kde nejaký kľúč chýba,
+appka to povie priamo pri údaji (a na Prehľade v karte „Čo ešte appka vie“)
+aj s odkazom na pripojenie. Kľúče sú uložené zašifrované v databáze na tomto
+počítači a rozhranie ukáže len ich koncovku. Šifruje ich súbor
+`%APPDATA%\MojeKocky\secret.key`: keby sa stratil, zbierka ostane, len
+kľúče treba zadať znova.
 
 | Služba | Na čo je | Cena a limit | Kľúč |
 |---|---|---|---|
 | [Rebrickable](https://rebrickable.com/api/) | názvy, roky, dieliky, fotky, série, figúrky | zdarma, ~1 volanie/s | nastavenia účtu na rebrickable.com |
 | [Brickset](https://brickset.com/article/52664/api-version-3-documentation) | pôvodná cena, čiarové kódy, popis, štítky, vlny sérií, ďalšie fotky setu | zdarma, 100 volaní/deň | [žiadosť o kľúč](https://brickset.com/tools/webservices/requestkey) |
 | [BrickEconomy](https://www.brickeconomy.com/api-reference) | trhová cena nového a použitého kusu, história, odhady | súčasť Premium, 100 volaní/deň | profil na brickeconomy.com |
-| [UPCitemdb](https://www.upcitemdb.com/) | záložné hľadanie podľa čiarového kódu | zdarma, bez kľúča, ~100 dotazov/deň na server | netreba |
-| [Eurostat](https://ec.europa.eu/eurostat/) | inflácia pre prepočet do dnešných peňazí | zdarma, bez kľúča | netreba |
+| [UPCitemdb](https://www.upcitemdb.com/) | záložné hľadanie podľa čiarového kódu | zdarma, bez kľúča, ~100 dotazov/deň na IP adresu | netreba, zapína sa v Nastaveniach |
+| [Eurostat](https://ec.europa.eu/eurostat/) | inflácia pre prepočet do dnešných peňazí | zdarma, bez kľúča | netreba, zapína sa v Nastaveniach |
 
 ### Ako sa šetria volania
 
@@ -119,9 +121,9 @@ Nič sa nedeje samo od seba, nie je tu plánovač. Obnovu cien spúšťa tlačid
 v hornej lište a beží na pozadí. Denná kvóta BrickEconomy je 100 volaní,
 preto:
 
-1. Hromadná obnova neťahá ceny mladšie než týždeň (`PRICE_MAX_AGE_HOURS`).
-2. Na jedno spustenie najviac 40 položiek (`PRICE_REFRESH_BUDGET`), od
-   najstaršej; zvyšok pri ďalšom.
+1. Hromadná obnova neťahá ceny mladšie než týždeň.
+2. Na jedno spustenie najviac 40 položiek, od najstaršej; zvyšok pri
+   ďalšom (dávka sa dá zmeniť na karte BrickEconomy).
 3. Platí zvyšok dennej kvóty, po odpovedi 429 sa dávka zastaví.
 4. Jedno volanie na set: odpoveď nesie cenu nového aj použitého kusu
    a históriu, takže nový aj postavený kus sa obnovia spolu.
@@ -225,40 +227,29 @@ Zdrojový kód je pod licenciou [MIT](LICENSE). Licencia sa nevzťahuje na dáta
 ceny a obrázky zo služieb tretích strán ani na ochrannú známku LEGO® a obrázky
 výrobkov LEGO; tie patria svojim vlastníkom.
 
-## Právne poznámky pre prevádzku
+## Súkromie a licencie
 
-Nie je to právna rada, len to, ako appka rieši podmienky služieb (k septembru
-2026). Podrobne v [specu](docs/superpowers/specs/2026-09-28-licencne-cista-architektura-design.md).
+Nie je to právna rada, len to, ako desktopová appka rieši súkromie
+a podmienky služieb (k septembru 2026).
 
-**Kým účet nezadá vlastný kľúč, zo služby nevidí nič.**
-
-- **Rebrickable** (katalóg a fotky): API dovoľuje akékoľvek použitie.
-  Spoločný katalóg vidí každý účet s vlastným kľúčom Rebrickable, bez neho
-  len čísla setov.
-- **Brickset a BrickEconomy** (osobné licencie): údaj sa ukladá raz, ale
-  účet ho vidí, len keď si ho jeho vlastný kľúč sám stiahol. Ceny
-  BrickEconomy len do času jeho posledného volania. Verejné odkazy z týchto
-  služieb neukazujú nič.
-- **UPCitemdb a Eurostat** nemajú kľúč: sú predvolene vypnuté, účet ich
-  zapne sám v Nastaveniach → Dáta. Zdroj Eurostatu je uvedený vyššie.
-- **Obrázky setov** sa v desktope načítavajú priamo zo služieb (vidí ich
-  len vlastník počítača).
-- **GDPR:** stránka Zásady ochrany súkromia (prevádzkovateľa vyplní
-  správca v Nastaveniach → Aplikácia), potvrdenie pri registrácii, export
-  všetkých údajov a zmazanie účtu v Nastaveniach → Účet. Fotky sa ukladajú
-  zmenšené a bez polohy GPS. Appka používa len nevyhnutné cookie na
-  prihlásenie, bez analytiky a reklamy, takže lišta so súhlasom netreba.
-
-Čo zostáva na prevádzkovateľovi:
-
-- **Nekomerčne.** Bez reklám, predplatného a affiliate odkazov. Pravidlá
-  LEGO Fair Play aj licencia BrickEconomy platia len pre osobné, nekomerčné
-  použitie.
-- **Brickset** dáva kľúč „na testovanie a vzdelávanie“. Pri otvorenej
-  verejnej inštancii mu napíš o súhlas.
-- **BrickEconomy:** údaje sa na serveri ukladajú raz pre všetky kľúče ako
-  vyrovnávacia pamäť (nikomu bez vlastného kľúča sa neukážu). Kto chce mať
-  úplnú istotu, nech si vyžiada ich súhlas.
-- **Slovo LEGO nepatrí do domény** ani do názvu verejnej stránky, logo LEGO
-  sa nepoužíva.
-- **HTTPS** a vyplnený prevádzkovateľ, keď sa registrujú cudzí ľudia.
+- **Údaje sú len na tvojom počítači** v `%APPDATA%\MojeKocky`. Appka nemá
+  server ani prevádzkovateľa, autor k nim nemá prístup. Ide o osobné použitie
+  v domácnosti, na ktoré sa GDPR nevzťahuje (čl. 2 ods. 2 písm. c).
+- **Čo odchádza z počítača:** len otázky na služby, ktoré si pripojíš
+  (čísla setov a čiarové kódy pod tvojím kľúčom), stiahnutie indexu inflácie
+  z Eurostatu (keď ho zapneš) a obrázky setov, ktoré sa načítavajú priamo
+  z Rebrickable a Brickset (tie vidia IP adresu počítača).
+- **Kým účet nezadá vlastný kľúč, zo služby nevidí nič.** Pri viacerých
+  účtoch na jednom počítači vidí každý len to, čo stiahol jeho vlastný kľúč.
+- **Tvoje práva a kontrola:** v Nastaveniach → Účet si stiahneš všetky svoje
+  údaje (ZIP) alebo zmažeš účet. Odinštalovanie sa opýta, či zmazať aj
+  priečinok s údajmi.
+- **Fotky** sa ukladajú zmenšené a bez polohy GPS.
+- **Cookies ani sledovanie** appka nepoužíva. Okno si pamätá len nastavenia
+  zobrazenia (tmavý režim, skryté ceny a pod.).
+- **Služby:** Rebrickable dovoľuje akékoľvek použitie; BrickEconomy a
+  Brickset dávajú osobné licencie ku kľúču, preto ich údaje vidí len účet
+  s vlastným kľúčom. Ak svoj kľúč BrickEconomy vložíš do viacerých účtov,
+  zdieľaš licenciu.
+- **Nekomerčne:** pravidlá LEGO Fair Play aj licencia BrickEconomy platia
+  len pre osobné, nekomerčné použitie. Logo LEGO appka nepoužíva.

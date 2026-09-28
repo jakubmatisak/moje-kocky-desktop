@@ -120,7 +120,80 @@
     },
   ]
 
-  const sections = computed(() => (locale.value === 'sk' ? SK : EN))
+  /** Desktop: bez servera a prevádzkovateľa, všetko na tomto počítači. */
+  const SK_DESKTOP: Section[] = [
+    {
+      title: 'Kde sú tvoje údaje',
+      body: [
+        String.raw`Všetko je len na tomto počítači v priečinku %APPDATA%\MojeKocky: databáza, fotky, zašifrované kľúče a denník. Appka nemá server ani prevádzkovateľa a autor k údajom nemá prístup.`,
+        'Ide o osobné použitie v domácnosti; na také spracúvanie sa GDPR nevzťahuje (čl. 2 ods. 2 písm. c). Ak na počítači používa appku viac ľudí, každý má svoj účet s heslom.',
+      ],
+    },
+    {
+      title: 'Čo appka ukladá',
+      body: [
+        'Účet: meno, e-mail (ak ho zadáš), heslo len ako odtlačok (argon2), jazyk a nastavenia zobrazenia.',
+        'Zbierku: kusy, ceny, dátumy, umiestnenie, poznámky, Chcem, kategórie, uložené pohľady, overené a ručne zadané ceny.',
+        'Fotky kusov, zmenšené a bez údajov fotoaparátu vrátane polohy GPS.',
+        'Kľúče k službám zašifrované súborom secret.key a záznam volaní služieb za posledných 30 dní.',
+      ],
+    },
+    {
+      title: 'Čo odchádza z počítača',
+      body: [
+        'Len otázky na služby, ktoré si sám pripojíš (Rebrickable, Brickset, BrickEconomy, UPCitemdb): čísla setov a čiarové kódy pod tvojím vlastným kľúčom. Osobné údaje nie.',
+        'Index inflácie z Eurostatu, keď prepočet do dnešných peňazí zapneš. Eurostat nedostane nič o tebe.',
+        'Obrázky setov sa načítavajú priamo z Rebrickable a Brickset, tie vidia IP adresu tohto počítača.',
+      ],
+    },
+    {
+      title: 'Tvoja kontrola',
+      body: [
+        'V Nastaveniach → Účet si stiahneš všetky svoje údaje (ZIP) alebo zmažeš účet so všetkým, čo k nemu patrí.',
+        String.raw`Pri odinštalovaní sa appka opýta, či zmazať aj priečinok s údajmi. Záloha je kópia priečinka %APPDATA%\MojeKocky.`,
+      ],
+    },
+  ]
+
+  const EN_DESKTOP: Section[] = [
+    {
+      title: 'Where your data is',
+      body: [
+        String.raw`Everything stays on this computer in %APPDATA%\MojeKocky: the database, photos, encrypted keys and the log. The app has no server or operator and its author has no access to the data.`,
+        'This is personal, household use, which GDPR does not cover (Art. 2(2)(c)). If several people use the app on this computer, each has their own account with a password.',
+      ],
+    },
+    {
+      title: 'What the app stores',
+      body: [
+        'Account: name, e-mail (if you enter it), password only as a hash (argon2), language and display settings.',
+        'Collection: pieces, prices, dates, location, notes, wishlist, categories, saved views, price checks and manual prices.',
+        'Photos of pieces, shrunk and without camera data including the GPS location.',
+        'Keys to services encrypted with secret.key and a log of service calls for the last 30 days.',
+      ],
+    },
+    {
+      title: 'What leaves the computer',
+      body: [
+        'Only questions to services you connect yourself (Rebrickable, Brickset, BrickEconomy, UPCitemdb): set numbers and barcodes under your own key. No personal data.',
+        'The Eurostat inflation index when you switch on today’s-money figures. Eurostat receives nothing about you.',
+        'Set pictures are loaded directly from Rebrickable and Brickset, which see this computer’s IP address.',
+      ],
+    },
+    {
+      title: 'Your control',
+      body: [
+        'In Settings → Account you download all your data (ZIP) or delete the account with everything that belongs to it.',
+        String.raw`Uninstalling asks whether to delete the data folder too. A backup is a copy of %APPDATA%\MojeKocky.`,
+      ],
+    },
+  ]
+
+  const sections = computed(() => {
+    const sk = locale.value === 'sk'
+    if (isDesktop) return sk ? SK_DESKTOP : EN_DESKTOP
+    return sk ? SK : EN
+  })
 
   const storage = computed(() => [
     // Desktop: prihlásenie drží appka v pamäti, v okne nie je žiadne cookie.
@@ -166,8 +239,8 @@
         </section>
 
         <section class="mb-5">
-          <h2 class="text-h6 mb-2">{{ t('privacy.cookiesTitle') }}</h2>
-          <p class="text-body-1 mb-3">{{ t('privacy.cookiesIntro') }}</p>
+          <h2 class="text-h6 mb-2">{{ isDesktop ? t('privacy.cookiesTitleDesktop') : t('privacy.cookiesTitle') }}</h2>
+          <p class="text-body-1 mb-3">{{ isDesktop ? t('privacy.cookiesIntroDesktop') : t('privacy.cookiesIntro') }}</p>
 
           <v-table density="compact">
             <thead>

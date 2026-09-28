@@ -1,0 +1,113 @@
+"""Desktop: okno volá appku cez most v tom istom procese, bez portu."""
+
+import base64
+import json
+import os
+import subprocess
+import sys
+
+import pytest
+
+from lego_desktop.bridge import Bridge
+from lego_desktop.paths import DataDir
+
+
+def _body(payload: dict) -> str:
+    return base64.b64encode(json.dumps(payload).encode()).decode()
+
+
+def _json(response: dict) -> dict:
+    return json.loads(base64.b64decode(response["body"]))
+
+
+@pytest.fixture
+def bridge(engine, sessionmaker_, settings):
+    from lego_api import db as db_module
+    from lego_api.main import create_app
+
+    db_module._engine = engine
+    db_module._sessionmaker = sessionmaker_
+    app = create_app()
+
+    async def _session_override():
+        async with sessionmaker_() as s:
+            yield s
+
+    app.dependency_overrides[db_module.get_session] = _session_override
+    started = Bridge(app, run_lifespan=False)
+    yield started
+    started.close()
+    db_module.reset_engine()
+
+
+JSON = {"content-type": "application/json"}
+
+
+def test_request_goes_to_the_app_and_keeps_the_session_cookie(bridge: Bridge) -> None:
+    health = bridge.request("GET", "/api/v1/health", {}, None)
+    assert health["status"] == 200
+    assert _json(health) == {"status": "ok"}
+
+    reg = bridge.request(
+        "POST",
+        "/api/v1/auth/register",
+        JSON,
+        _body({"email": "ja@doma.sk", "password": "tajneheslo123", "accept_privacy": True}),
+    )
+    assert reg["status"] == 201, _json(reg)
+    # Obnovovacie cookie drží most, prehliadač ho nemá.
+    refreshed = bridge.request("POST", "/api/v1/auth/refresh", {}, None)
+    assert refreshed["status"] == 200
+    token = _json(refreshed)["access_token"]
+    me = bridge.request("GET", "/api/v1/auth/me", {"authorization": f"Bearer {token}"}, None)
+    assert _json(me)["email"] == "ja@doma.sk"
+
+
+def test_errors_and_query_strings_pass_through(bridge: Bridge) -> None:
+    missing = bridge.request("GET", "/api/v1/auth/me", {}, None)
+    assert missing["status"] == 401
+    bad = bridge.request("GET", "/api/v1/img?u=https%3A%2F%2Fevil.example%2Fa.jpg", {}, None)
+    assert bad["status"] == 400
+
+
+def test_save_file_writes_what_the_dialog_chose(bridge: Bridge, tmp_path) -> None:
+    target = tmp_path / "zbierka.csv"
+    bridge.choose_save_path = lambda name: str(target)
+    assert bridge.save_file("zbierka.csv", base64.b64encode(b"a;b\n").decode()) is True
+    assert target.read_bytes() == b"a;b\n"
+    bridge.choose_save_path = lambda name: None
+    assert bridge.save_file("zbierka.csv", base64.b64encode(b"x").decode()) is False
+
+
+def test_data_dir_creates_folders_and_keeps_one_secret(tmp_path) -> None:
+    data = DataDir(tmp_path / "MojeKocky")
+    first = data.secret()
+    assert len(first) >= 48
+    assert DataDir(tmp_path / "MojeKocky").secret() == first
+    env = data.environment()
+    assert env["DATABASE_URL"].endswith("/lego.db")
+    assert (tmp_path / "MojeKocky" / "photos").is_dir()
+    assert env["ALLOW_REGISTRATION"] == "false"
+
+
+def test_second_instance_is_refused(tmp_path) -> None:
+    data = DataDir(tmp_path / "MojeKocky")
+    first = data.lock()
+    assert first is not None
+    assert DataDir(tmp_path / "MojeKocky").lock() is None
+    first.release()
+    again = data.lock()
+    assert again is not None
+    again.release()
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="netstat -ano je z Windows")
+def test_bridge_opens_no_listening_port(bridge: Bridge) -> None:
+    bridge.request("GET", "/api/v1/health", {}, None)
+    out = subprocess.run(["netstat", "-ano", "-p", "TCP"], capture_output=True, text=True).stdout
+    mine = [
+        line
+        for line in out.splitlines()
+        if "LISTENING" in line and line.split()[-1] == str(os.getpid())
+    ]
+    assert mine == []

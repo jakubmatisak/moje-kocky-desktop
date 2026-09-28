@@ -40,6 +40,18 @@ def _already_running() -> None:
     )
 
 
+def _fatal(data: DataDir) -> None:
+    import ctypes
+
+    ctypes.windll.user32.MessageBoxW(
+        None,
+        "Moje kocky sa nepodarilo spustiť. Podrobnosti sú v denníku:\n"
+        f"{data.logs / 'moje-kocky.log'}",
+        TITLE,
+        0x10,
+    )
+
+
 def _allow_camera(window) -> None:
     """Skenovanie kamerou: povolenie kamery pre vlastnú stránku appky (file://).
 
@@ -94,7 +106,13 @@ def main() -> None:
     from lego_api.main import create_app
     from lego_desktop.bridge import Bridge
 
-    bridge = Bridge(create_app())
+    try:
+        bridge = Bridge(create_app())
+    except Exception:
+        logging.exception("Appka sa nepodarilo spustiť")
+        _fatal(data)
+        lock.release()
+        return
 
     index = _web_index()
     if not index.is_file():

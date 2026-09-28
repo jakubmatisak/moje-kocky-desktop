@@ -1,12 +1,33 @@
-# Moje kocky — poznámky pre prácu v tomto repozitári
+# Moje kocky Desktop — poznámky pre prácu v tomto repozitári
 
-Evidencia LEGO zbierky. Backend FastAPI + SQLite, frontend Vue 3 s Vuetify 4.
-Jazyk rozhrania aj komentárov je slovenčina.
+Desktopová verzia (Windows, inštalátor) webovej appky Moje kocky
+(`github.com/jakubmatisak/lego-app`). **Samostatná kópia kódu**: zmeny sa
+medzi repami prenášajú ručne. Spec desktopu:
+`docs/superpowers/specs/2026-09-28-desktop-design.md`.
 
-Úplný popis appky (funkcie, dáta, API, rozhodnutia a čo sme zamietli) je
-v `docs/superpowers/specs/2026-09-10-lego-collection-design.md`. Väčšia
-funkcia dostane vlastný spec vedľa pred implementáciou; po dokončení sa
-podstata prenesie do úplného specu. Tento súbor je len ťahák.
+**Žiadny server na porte.** Okno pywebview (WebView2) načíta
+`frontend/dist-desktop` cez `file://` (`ALLOW_FILE_URLS`, inak si pywebview
+potichu spustí vlastný server) a volania API idú mostom
+(`lego_desktop/bridge.py`, `window.pywebview.api.request`) priamo do FastAPI
+cez `httpx.ASGITransport`. Frontend v režime `desktop`
+(`import.meta.env.VITE_DESKTOP`): `src/desktop/bridge.ts` nahrádza fetch pre
+adresy `https://moje-kocky.desktop/…`, router je `hash`, súbory sa ukladajú
+cez `utils/saveBlob.ts` (dialóg „Uložiť ako“), obrázky priamo bez `/img`,
+zdieľanie odkazom je skryté. Klient API hľadá `fetch` až pri volaní, inak
+by si zapamätal pôvodný a prvé volanie by sa zaseklo.
+
+**Údaje v `%APPDATA%\MojeKocky`** (`lego_desktop/paths.py`): databáza,
+fotky, `secret.key` (vznikne pri prvom spustení), denníky; zámok proti
+druhému spusteniu. Kamera sa pre `file://` povolí bez pýtania
+(`_allow_camera` v `lego_desktop/main.py`).
+
+**Balenie:** `scripts/build.ps1` → `npm run build-desktop` → PyInstaller
+(`packaging/moje-kocky.spec`; migrácie a ich importy musia byť v spec, lebo
+sa načítavajú zo súborov) → Inno Setup (`packaging/moje-kocky.iss`).
+GitHub Actions `release` pri tagu `v*`.
+
+Nižšie sú pravidlá appky prevzaté z webového repa; platia aj tu, okrem
+Dockeru, portu 8000 a zdieľania odkazom.
 
 ## Príkazy
 

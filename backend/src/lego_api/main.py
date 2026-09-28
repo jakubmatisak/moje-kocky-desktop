@@ -76,6 +76,8 @@ async def _migrate() -> None:
 
     def _upgrade() -> None:
         config = Config(str(ini))
+        # Appka má vlastné zapisovanie denníka (desktop do súboru); Alembic ho nemení.
+        config.attributes["keep_logging"] = True
         config.set_main_option("script_location", str(BACKEND_ROOT / "alembic"))
         command.upgrade(config, "head")
 

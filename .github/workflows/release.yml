@@ -1,0 +1,54 @@
+# Inštalátor pre Windows pri každej verzii (tag v1.2.3): testy, zostavenie, Release.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Závislosti
+        run: |
+          cd frontend && npm ci
+          cd ../backend && uv sync
+
+      - name: Testy
+        run: |
+          cd backend && uv run pytest -q
+          cd ../frontend && npm test
+
+      - name: Inno Setup
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
+
+      - name: Zostavenie
+        run: |
+          $version = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME.TrimStart('v') } else { '0.0.0' }
+          powershell -ExecutionPolicy Bypass -File scripts\build.ps1 -Version $version
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MojeKocky-Setup
+          path: build/installer/*.exe
+
+      - name: Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/installer/*.exe

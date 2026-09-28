@@ -1,19 +1,15 @@
-# Moje kocky
+# Moje kocky Desktop
 
-Evidencia zbierky LEGO® setov pre jednu rodinu alebo pár známych, na vlastnom
-serveri. Zadáš alebo naskenuješ set, appka dotiahne názov, fotku, dieliky
-a sériu z katalógu, ty doplníš kúpnu cenu, stav a kde ho máš uložený. Potom
-vidíš trhovú hodnotu, zisk, ročný výnos a graf vývoja portfólia. Predané kusy
-ostávajú v evidencii, takže vidíš aj to, koľko si na predaji naozaj zarobil.
-
-Appka vznikla pre zberateľa, ktorý mal zbierku v tabuľke a chcel vedieť, čo
-má, kde to má a koľko to dnes stojí. Nie je to obchod ani burza, len evidencia.
+Evidencia zbierky LEGO® setov ako **bežná inštalácia pre Windows**. Je to tá
+istá appka ako webová [Moje kocky](https://github.com/jakubmatisak/lego-app),
+len beží v okne na tvojom počítači: bez servera, bez Dockeru a **bez
+otvoreného portu**. Všetky údaje (zbierka, fotky, kľúče) ostávajú u teba
+v `%APPDATA%\MojeKocky`.
 
 ![Prehľad: hodnota portfólia, zisk a rozdelenie podľa sérií](docs/screenshots/prehlad.png)
 
-![Zbierka: karty setov s filtrami](docs/screenshots/zbierka.png)
+*Snímka je z webovej verzie, desktop vyzerá rovnako.*
 
-*Snímky sú z ukážkového účtu, sumy sú len na ilustráciu.*
 
 ## Čo to vie
 
@@ -67,9 +63,6 @@ má, kde to má a koľko to dnes stojí. Nie je to obchod ani burza, len evidenc
   bez diakritiky, desať spôsobov zoradenia, uložené pohľady, karty alebo
   tabuľka, hromadná úprava vybraných kusov.
 - Prehľad sa dá zúžiť na sériu, kategóriu alebo uložený pohľad.
-- **Odkaz na pozretie** zbierky alebo zoznamu Chcem, celého alebo len
-  vybraných setov, bez hesla. Pri vypnutých sumách server ceny vôbec
-  neposiela, nedajú sa nájsť ani v zdrojovom kóde stránky.
 
 **Ostatné**
 
@@ -80,30 +73,26 @@ má, kde to má a koľko to dnes stojí. Nie je to obchod ani burza, len evidenc
 - Prehľad spotreby volaní cudzích služieb a prepínače, čo sa z ktorej
   služby smie sťahovať.
 
-## Rýchly štart cez Docker
+## Inštalácia
 
-```bash
-cp .env.example .env
-```
+1. Stiahni `MojeKocky-Setup-x.y.z.exe` z [Releases](../../releases).
+2. Spusti ho. Inštaluje sa len pre teba, práva správcu netreba.
+   Inštalátor nie je podpísaný, Windows preto raz ukáže „Windows chránil
+   tento počítač“: klikni **Ďalšie informácie → Spustiť aj tak**.
+3. Pri prvom spustení si vytvoríš účet s heslom. Pri ďalších sa pýta heslo.
 
-Do `.env` doplň aspoň `JWT_SECRET` (náhodný reťazec, aspoň 32 znakov). Potom:
+Potrebuje Windows 10 alebo 11 (64-bit) a Microsoft Edge WebView2, ktorý
+v nich býva. Ak chýba, inštalátor ponúkne stránku na jeho stiahnutie.
 
-```bash
-docker compose up --build -d
-```
+**Údaje** sú v `%APPDATA%\MojeKocky`: `lego.db` (databáza), `photos\`,
+`secret.key` (šifruje uložené kľúče k službám) a `logs\`. **Záloha** je kópia
+celého priečinka. Nová verzia sa nainštaluje cez starú a údaje ostanú.
+Odinštalovanie sa opýta, či ich zmazať.
 
-Otvor `http://localhost:8000`. Prvý založený účet sa stane správcom. Schéma
-databázy sa pri štarte sama posunie na najnovšiu verziu.
-
-Databáza je jeden súbor `data/lego.db`, fotky sú v `data/photos/`. Záloha je
-kópia priečinka `data/`:
-
-```bash
-cp -r data "zaloha-$(date +%F)"
-```
-
-Za HTTPS nastav v `.env` `COOKIE_SECURE=true`. Kamera na skenovanie ide len
-cez HTTPS alebo na `localhost`.
+Ako to funguje bez servera: okno (pywebview nad WebView2) načíta stránku
+zo súborov a každé volanie appky pošle priamo Pythonu v tom istom procese
+(most `window.pywebview.api` → FastAPI cez `httpx.ASGITransport`). Na
+žiadnom porte nič nepočúva.
 
 ## Kľúče k službám
 
@@ -147,44 +136,37 @@ potrebný na pridávanie.
 
 Potrebuješ Python 3.13 (cez [uv](https://docs.astral.sh/uv/)) a Node 22.
 
-```bash
-cd backend && uv run uvicorn lego_api.main:app --reload --port 8000
+```powershell
+cd frontend; npm ci; npm run build-desktop
+cd ..\backend; uv sync; uv run moje-kocky
 ```
 
-```bash
-cd frontend && npm install && npm run dev
+`build-desktop` zostaví frontend do `frontend/dist-desktop` (relatívne cesty,
+navigácia za `#`, fetch cez most). Testy:
+
+```powershell
+cd backend; uv run pytest; uv run ruff check src tests
+cd ..\frontend; npm run type-check; npm run lint; npm test
 ```
 
-Frontend beží na `http://localhost:5173` a volania na `/api` posiela na
-backend. Po zmene API sa typy pre frontend generujú z OpenAPI schémy:
+### Zostavenie inštalátora
 
-```bash
-cd backend && uv run python -m lego_api.openapi_export
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\build.ps1 -Version 0.1.0
 ```
 
-```bash
-cd frontend && npm run gen:api
-```
-
-Testy a kontroly:
-
-```bash
-cd backend && uv run pytest && uv run ruff check src tests
-```
-
-```bash
-cd frontend && npm run type-check && npm run lint && npm test
-```
-
-Testy poskytovateľov bežia proti uloženým odpovediam, bez siete a bez kľúčov.
-Podrobný popis návrhu, dát, API a rozhodnutí je v
-[docs/superpowers/specs/2026-09-10-lego-collection-design.md](docs/superpowers/specs/2026-09-10-lego-collection-design.md).
+Frontend → PyInstaller (`packaging/moje-kocky.spec`, výsledok
+`build/dist/MojeKocky/MojeKocky.exe`) → Inno Setup (`packaging/moje-kocky.iss`,
+výsledok `build/installer/MojeKocky-Setup-0.1.0.exe`). Bez nainštalovaného
+Inno Setup skript skončí pri programe. Na GitHube zostaví inštalátor
+workflow `release` pri každom tagu `v*` a priloží ho k Release.
 
 ```
-backend/     FastAPI, SQLAlchemy 2, SQLite, migrácie Alembic
-frontend/    Vue 3, Vuetify 4, TypeScript, Pinia, vue-i18n, Chart.js
-data/        databáza a fotky, pripojené ako zväzok do kontajnera
-docs/        návrh a snímky obrazovky
+backend/src/lego_api/      appka (FastAPI, SQLAlchemy 2, SQLite, Alembic)
+backend/src/lego_desktop/  okno, most, %APPDATA%, zámok jednej inštancie
+frontend/                  Vue 3, Vuetify 4; src/desktop/ = fetch cez most
+packaging/                 PyInstaller, Inno Setup, ikona
+scripts/build.ps1          celé zostavenie
 ```
 
 ## Zdroje dát a poďakovanie
@@ -259,8 +241,8 @@ Nie je to právna rada, len to, ako appka rieši podmienky služieb (k septembru
   služieb neukazujú nič.
 - **UPCitemdb a Eurostat** nemajú kľúč: sú predvolene vypnuté, účet ich
   zapne sám v Nastaveniach → Dáta. Zdroj Eurostatu je uvedený vyššie.
-- **Obrázky setov** idú cez server appky, takže tieto služby nevidia IP
-  adresy návštevníkov.
+- **Obrázky setov** sa v desktope načítavajú priamo zo služieb (vidí ich
+  len vlastník počítača).
 - **GDPR:** stránka Zásady ochrany súkromia (prevádzkovateľa vyplní
   správca v Nastaveniach → Aplikácia), potvrdenie pri registrácii, export
   všetkých údajov a zmazanie účtu v Nastaveniach → Účet. Fotky sa ukladajú

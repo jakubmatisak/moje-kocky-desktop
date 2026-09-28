@@ -8,6 +8,7 @@
    */
   import { computed, onMounted } from 'vue'
   import { useI18n } from 'vue-i18n'
+  import { isDesktop } from '@/desktop/bridge'
   import { useAuthStore } from '@/stores/auth'
 
   interface Section { title: string, body: string[] }
@@ -51,9 +52,13 @@
     {
       title: 'Kto ich dostane',
       body: [
-        'Poskytovateľ hostingu, na ktorom appka beží.',
+        isDesktop
+          ? String.raw`Nikto: desktopová appka má všetky údaje len na tomto počítači, v priečinku %APPDATA%\MojeKocky.`
+          : 'Poskytovateľ hostingu, na ktorom appka beží.',
         'Služby, ktoré si pripojíš vlastným kľúčom, dostanú len čísla setov a čiarové kódy, na ktoré sa pýtaš, nie tvoje osobné údaje. Eurostat nedostane nič, čo by sa ťa týkalo.',
-        'Fotky setov sa načítavajú cez server appky, takže Rebrickable ani Brickset nevidia tvoju IP adresu.',
+        isDesktop
+          ? 'Fotky setov sa načítavajú priamo z Rebrickable a Brickset, tie vidia IP adresu tohto počítača.'
+          : 'Fotky setov sa načítavajú cez server appky, takže Rebrickable ani Brickset nevidia tvoju IP adresu.',
       ],
     },
     {
@@ -94,9 +99,13 @@
     {
       title: 'Who receives it',
       body: [
-        'The hosting provider the app runs on.',
+        isDesktop
+          ? String.raw`Nobody: the desktop app keeps all data on this computer only, in %APPDATA%\MojeKocky.`
+          : 'The hosting provider the app runs on.',
         'Services you connect with your own key receive only the set numbers and barcodes you ask about, not your personal data. Eurostat receives nothing about you.',
-        'Set pictures are loaded through the app’s server, so Rebrickable and Brickset do not see your IP address.',
+        isDesktop
+          ? 'Set pictures are loaded directly from Rebrickable and Brickset, which see this computer’s IP address.'
+          : 'Set pictures are loaded through the app’s server, so Rebrickable and Brickset do not see your IP address.',
       ],
     },
     {
@@ -114,7 +123,8 @@
   const sections = computed(() => (locale.value === 'sk' ? SK : EN))
 
   const storage = computed(() => [
-    { name: 'lego_refresh', kind: 'cookie', purpose: t('privacy.storage.refresh'), lasts: t('privacy.storage.days30') },
+    // Desktop: prihlásenie drží appka v pamäti, v okne nie je žiadne cookie.
+    ...(isDesktop ? [] : [{ name: 'lego_refresh', kind: 'cookie', purpose: t('privacy.storage.refresh'), lasts: t('privacy.storage.days30') }]),
     { name: 'lego-theme', kind: 'localStorage', purpose: t('privacy.storage.theme'), lasts: t('privacy.storage.untilCleared') },
     { name: 'lego-hide-prices', kind: 'localStorage', purpose: t('privacy.storage.hidePrices'), lasts: t('privacy.storage.untilCleared') },
     { name: 'moje-kocky.camera', kind: 'localStorage', purpose: t('privacy.storage.camera'), lasts: t('privacy.storage.untilCleared') },
@@ -134,7 +144,9 @@
         <h1 class="text-h4 mb-1">{{ t('privacy.title') }}</h1>
         <div class="text-caption text-medium-emphasis mb-4">{{ t('privacy.version', { version }) }}</div>
 
-        <v-card border class="pa-4 mb-4" flat>
+        <v-alert v-if="isDesktop" class="mb-4" type="info" variant="tonal">{{ t('privacy.desktop') }}</v-alert>
+
+        <v-card v-else border class="pa-4 mb-4" flat>
           <div class="text-subtitle-1 font-weight-medium mb-1">{{ t('privacy.operator') }}</div>
 
           <div v-if="operatorName || operatorEmail" class="text-body-1">

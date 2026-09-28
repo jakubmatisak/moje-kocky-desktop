@@ -40,6 +40,42 @@ def _already_running() -> None:
     )
 
 
+def _allow_camera(window) -> None:
+    """Skenovanie kamerou: povolenie kamery pre vlastnú stránku appky (file://).
+
+    WebView2 sa inak pri každom spustení pýta a bez kliknutia by čítačka
+    nikdy nezačala. Iným adresám (odkazy von sa otvárajú v prehliadači)
+    sa nič nepovoľuje.
+    """
+    try:
+        from Microsoft.Web.WebView2.Core import (  # type: ignore[import-not-found]
+            CoreWebView2PermissionKind,
+            CoreWebView2PermissionState,
+        )
+        from System import Action  # type: ignore[import-not-found]
+    except ImportError:
+        logging.warning("WebView2 nie je dostupné, kamera sa nepovolí automaticky")
+        return
+
+    def on_permission(sender, args) -> None:
+        if args.PermissionKind == CoreWebView2PermissionKind.Camera and str(args.Uri).startswith(
+            "file:"
+        ):
+            args.State = CoreWebView2PermissionState.Allow
+
+    def attach() -> None:
+        # Udalosť loaded príde pri každom načítaní stránky; obsluha stačí raz.
+        if getattr(window, "_camera_allowed", False):
+            return
+        window.native.webview.CoreWebView2.PermissionRequested += on_permission
+        window._camera_allowed = True
+
+    try:
+        window.native.Invoke(Action(attach))
+    except Exception:  # noqa: BLE001 - bez automatického povolenia sa appka len opýta
+        logging.exception("Povolenie kamery sa nepodarilo nastaviť")
+
+
 def main() -> None:
     data = DataDir()
     lock = data.lock()
@@ -80,6 +116,7 @@ def main() -> None:
         return chosen if isinstance(chosen, str) else chosen[0]
 
     bridge.choose_save_path = choose_save_path
+    window.events.loaded += lambda: _allow_camera(window)
     icon = resource_root() / "icon.ico"
     try:
         webview.start(

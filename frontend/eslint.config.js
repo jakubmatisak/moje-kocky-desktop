@@ -5,6 +5,7 @@ export default vuetify(
   {
     // Generované z OpenAPI príkazom `npm run gen:api`. Ručne sa needituje,
     // takže nemá zmysel ho ani kontrolovať.
-    ignores: ['src/api/schema.d.ts'],
+    // Zostavený desktopový frontend (npm run build-desktop) tiež nie.
+    ignores: ['src/api/schema.d.ts', 'dist-desktop/**'],
   },
 )

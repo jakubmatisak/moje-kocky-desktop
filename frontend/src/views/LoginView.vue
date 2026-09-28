@@ -4,6 +4,7 @@
   import { useI18n } from 'vue-i18n'
   import { useRoute, useRouter } from 'vue-router'
 
+  import { isDesktop } from '@/desktop/bridge'
   import { useAuthStore } from '@/stores/auth'
   import { safeRedirect } from '@/utils/navigation'
 
@@ -167,7 +168,7 @@
         </div>
 
         <v-alert
-          v-if="cookieNote"
+          v-if="cookieNote && !isDesktop"
           class="mt-3"
           closable
           density="compact"

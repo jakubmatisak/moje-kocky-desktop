@@ -428,15 +428,17 @@
 
           <div class="text-caption text-medium-emphasis">{{ t('settings.registrationFirstHint') }}</div>
 
-          <v-divider class="my-2" />
-          <div class="text-subtitle-2">{{ t('settings.operatorTitle') }}</div>
-          <div class="text-body-2 text-medium-emphasis">{{ t('settings.operatorHint') }}</div>
-          <v-text-field v-model="operatorName" hide-details :label="t('settings.operatorName')" />
-          <v-text-field v-model="operatorEmail" hide-details :label="t('settings.operatorEmail')" type="email" />
+          <template v-if="!isDesktop">
+            <v-divider class="my-2" />
+            <div class="text-subtitle-2">{{ t('settings.operatorTitle') }}</div>
+            <div class="text-body-2 text-medium-emphasis">{{ t('settings.operatorHint') }}</div>
+            <v-text-field v-model="operatorName" hide-details :label="t('settings.operatorName')" />
+            <v-text-field v-model="operatorEmail" hide-details :label="t('settings.operatorEmail')" type="email" />
 
-          <v-btn class="align-self-start" color="primary" variant="tonal" @click="saveOperator">
-            {{ t('settings.save') }}
-          </v-btn>
+            <v-btn class="align-self-start" color="primary" variant="tonal" @click="saveOperator">
+              {{ t('settings.save') }}
+            </v-btn>
+          </template>
         </v-card>
       </v-window-item>
 

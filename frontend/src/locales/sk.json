@@ -1239,7 +1239,8 @@
       "note": "Poznámka o cookies je zavretá",
       "days30": "30 dní",
       "untilCleared": "kým ho nezmažeš"
-    }
+    },
+    "desktop": "Desktopová verzia: všetky údaje (zbierka, fotky, kľúče) sú len na tomto počítači v priečinku %APPDATA%\\MojeKocky. Nikam sa neposielajú, okrem otázok na služby, ktoré si sám pripojíš."
   },
   "account": {
     "title": "Moje údaje",

@@ -3,15 +3,15 @@
 ### [Stiahnuť inštalátor pre Windows](https://github.com/jakubmatisak/moje-kocky-desktop/releases/latest)
 
 Zadarmo, bez reklám a sledovania · Windows 10 a 11 (64-bit) · práva správcu netreba ·
-[stránka projektu](https://jakubmatisak.github.io/moje-kocky-website/) ·
-[webová verzia na vlastný server](https://github.com/jakubmatisak/moje-kocky)
+[stránka projektu](https://jakubmatisak.github.io/moje-kocky/) ·
+[webová verzia na vlastný server](https://github.com/jakubmatisak/moje-kocky-webapp)
 
 V časti **Releases** vpravo je vždy najnovší `MojeKocky-Setup-x.y.z.exe`
 (v zozname súborov pod **Assets**). Inštalátor nie je podpísaný, Windows preto raz
 ukáže „Windows chránil tento počítač“: **Ďalšie informácie → Spustiť aj tak**.
 
 Evidencia zbierky LEGO® setov ako **bežná inštalácia pre Windows**. Je to tá
-istá appka ako webová [Moje kocky](https://github.com/jakubmatisak/moje-kocky),
+istá appka ako webová [Moje kocky](https://github.com/jakubmatisak/moje-kocky-webapp),
 len beží v okne na tvojom počítači: bez servera, bez Dockeru a **bez
 otvoreného portu**. Všetky údaje (zbierka, fotky, kľúče) ostávajú u teba
 v `%APPDATA%\MojeKocky`.

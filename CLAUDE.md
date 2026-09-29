@@ -1,7 +1,7 @@
 # Moje kocky Desktop — poznámky pre prácu v tomto repozitári
 
 Desktopová verzia (Windows, inštalátor) webovej appky Moje kocky
-(`github.com/jakubmatisak/moje-kocky`). **Samostatná kópia kódu**: zmeny sa
+(`github.com/jakubmatisak/moje-kocky-webapp`). **Samostatná kópia kódu**: zmeny sa
 medzi repami prenášajú ručne. Spec desktopu:
 `docs/superpowers/specs/2026-09-28-desktop-design.md`.
 

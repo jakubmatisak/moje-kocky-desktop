@@ -1,7 +1,7 @@
 # Moje kocky Desktop
 
 Evidencia zbierky LEGO® setov ako **bežná inštalácia pre Windows**. Je to tá
-istá appka ako webová [Moje kocky](https://github.com/jakubmatisak/lego-app),
+istá appka ako webová [Moje kocky](https://github.com/jakubmatisak/moje-kocky),
 len beží v okne na tvojom počítači: bez servera, bez Dockeru a **bez
 otvoreného portu**. Všetky údaje (zbierka, fotky, kľúče) ostávajú u teba
 v `%APPDATA%\MojeKocky`.

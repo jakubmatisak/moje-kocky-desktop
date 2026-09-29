@@ -10,8 +10,10 @@ npm run build-desktop
 if ($LASTEXITCODE -ne 0) { throw "Zostavenie frontendu zlyhalo" }
 Pop-Location
 
-Write-Host "2/3 Program (PyInstaller)"
+Write-Host "2/3 Program (PyInstaller) a licencie tretích strán"
 Push-Location (Join-Path $root "backend")
+uv run python ..\packaging\notices.py ..\build\THIRD-PARTY-NOTICES.txt
+if ($LASTEXITCODE -ne 0) { throw "Zoznam licencií sa nevytvoril" }
 uv run pyinstaller --noconfirm --clean --distpath ..\build\dist --workpath ..\build\work ..\packaging\moje-kocky.spec
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller zlyhal" }
 Pop-Location

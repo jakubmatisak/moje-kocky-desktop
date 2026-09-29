@@ -219,7 +219,22 @@ a chartjs-plugin-zoom, [openapi-fetch](https://openapi-ts.dev) (MIT);
 ikony [Material Design Icons](https://pictogrammers.com/library/mdi/) (Apache-2.0);
 písmo [Roboto](https://github.com/googlefonts/roboto-classic) (SIL Open Font License 1.1).
 
-Žiadna závislosť nie je pod GPL, AGPL ani LGPL.
+Desktop: [Python](https://www.python.org) (PSF-2.0), [pywebview](https://pywebview.flowrl.com)
+(BSD-3-Clause), [pythonnet](https://pythonnet.github.io) (MIT),
+[Pillow](https://python-pillow.org) (MIT-CMU), zabalené cez
+[PyInstaller](https://pyinstaller.org) a [Inno Setup](https://jrsoftware.org/isinfo.php).
+
+Takmer všetko je pod voľnými licenciami (MIT, BSD, ISC, Apache-2.0, PSF). Dve
+výnimky: **PyInstaller** je pod GPL-2.0, ale s výnimkou, ktorá výslovne
+dovoľuje šíriť ním zabalený program pod vlastnou licenciou. **certifi**
+(zoznam certifikačných autorít) je pod MPL-2.0 a je v programe nezmenený;
+jeho zdroj je na [github.com/certifi/python-certifi](https://github.com/certifi/python-certifi).
+Žiadna závislosť nie je pod AGPL ani LGPL.
+
+Inštalátor pribalí `LICENSE.txt` a `THIRD-PARTY-NOTICES.txt` s textami licencií
+všetkých pribalených knižníc (v ponuke Štart: „Licencie softvéru tretích strán“).
+Zoznam vytvára `packaging/notices.py` pri každom zostavení z nainštalovaných
+balíkov a `package-lock.json`, takže nový balík sa doň dostane sám.
 
 ## Licencia
 

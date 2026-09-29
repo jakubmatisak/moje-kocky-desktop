@@ -38,10 +38,14 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "..\build\dist\MojeKocky\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Licencie MIT, BSD a Apache chcú svoj text pri šírenom programe (packaging\notices.py).
+Source: "..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
+Source: "..\build\THIRD-PARTY-NOTICES.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\Moje kocky"; Filename: "{app}\MojeKocky.exe"
 Name: "{group}\{cm:UninstallProgram,Moje kocky}"; Filename: "{uninstallexe}"
+Name: "{group}\Licencie softvéru tretích strán"; Filename: "{app}\THIRD-PARTY-NOTICES.txt"
 Name: "{userdesktop}\Moje kocky"; Filename: "{app}\MojeKocky.exe"; Tasks: desktopicon
 
 [Run]

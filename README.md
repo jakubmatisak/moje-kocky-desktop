@@ -1,5 +1,15 @@
 # Moje kocky Desktop
 
+### [Stiahnuť inštalátor pre Windows](https://github.com/jakubmatisak/moje-kocky-desktop/releases/latest)
+
+Zadarmo, bez reklám a sledovania · Windows 10 a 11 (64-bit) · práva správcu netreba ·
+[stránka projektu](https://jakubmatisak.github.io/moje-kocky-website/) ·
+[webová verzia na vlastný server](https://github.com/jakubmatisak/moje-kocky)
+
+V časti **Releases** vpravo je vždy najnovší `MojeKocky-Setup-x.y.z.exe`
+(v zozname súborov pod **Assets**). Inštalátor nie je podpísaný, Windows preto raz
+ukáže „Windows chránil tento počítač“: **Ďalšie informácie → Spustiť aj tak**.
+
 Evidencia zbierky LEGO® setov ako **bežná inštalácia pre Windows**. Je to tá
 istá appka ako webová [Moje kocky](https://github.com/jakubmatisak/moje-kocky),
 len beží v okne na tvojom počítači: bez servera, bez Dockeru a **bez
@@ -8,7 +18,11 @@ v `%APPDATA%\MojeKocky`.
 
 ![Prehľad: hodnota portfólia, zisk a rozdelenie podľa sérií](docs/screenshots/prehlad.png)
 
-*Snímka je z webovej verzie, desktop vyzerá rovnako.*
+| Zbierka | Zberateľská séria |
+| --- | --- |
+| ![Zbierka: karty setov s kúpnou cenou, hodnotou a ziskom](docs/screenshots/zbierka.png) | ![Séria minifigúrok: ktoré máš a ktoré chýbajú](docs/screenshots/figurky.png) |
+
+*Snímky sú z ukážkovej zbierky s vymyslenými, ručne zadanými cenami.*
 
 
 ## Čo to vie

@@ -52,3 +52,14 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: build/installer/*.exe
+          body: |
+            **Inštalácia:** stiahni `MojeKocky-Setup-….exe` nižšie v časti Assets a spusti ho.
+            Windows 10 a 11 (64-bit), práva správcu netreba, údaje ostávajú v `%APPDATA%\MojeKocky`.
+
+            Inštalátor nie je podpísaný. Pri „Windows chránil tento počítač“ klikni na
+            **Ďalšie informácie → Spustiť aj tak**. Ak Windows napíše, že nemôže získať
+            prístup k súboru, program zablokoval antivírus: Zabezpečenie Windows →
+            História ochrany → Povoliť v zariadení.
+
+            Nová verzia sa nainštaluje cez starú a údaje ostanú.
+            Stránka projektu: https://jakubmatisak.github.io/moje-kocky-website/

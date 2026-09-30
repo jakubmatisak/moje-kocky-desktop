@@ -50,6 +50,8 @@
     "soldSummary": "{sold} za {total}",
     "setsCount": "{count} setov",
     "piecesAndParts": "{pieces} · {parts} dielikov",
+    "figuresPiecesAndParts": "{figures} · {pieces} · {parts} dielikov",
+    "figuresPlural": "{count} figúrka | {count} figúrky | {count} figúrok",
     "priceSource": "BrickEconomy, trhová hodnota",
     "manualPrices": "ručne zadané ceny",
     "chartTitle": "Hodnota portfólia",

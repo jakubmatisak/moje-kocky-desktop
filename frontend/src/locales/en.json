@@ -50,6 +50,8 @@
     "soldSummary": "{sold} for {total}",
     "setsCount": "{count} sets",
     "piecesAndParts": "{pieces} · {parts} parts",
+    "figuresPiecesAndParts": "{figures} · {pieces} · {parts} parts",
+    "figuresPlural": "{count} minifigure | {count} minifigures",
     "priceSource": "BrickEconomy market value",
     "manualPrices": "manually entered prices",
     "chartTitle": "Portfolio value",

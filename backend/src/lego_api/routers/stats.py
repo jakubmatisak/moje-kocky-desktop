@@ -29,6 +29,7 @@ from lego_api.services.filters import (
     build_context,
     in_section,
     is_default_filter,
+    kind_of,
 )
 from lego_api.services.inflation import Deflator, deflator_for
 from lego_api.services.portfolio import (
@@ -91,6 +92,10 @@ async def get_summary(user: CurrentUser, session: SessionDep, f: FilterDep) -> S
     # Sekcia Zbierka figúrky zo sérií neukazuje (``sets_only``), jej čísla tiež nie.
     section = [v for v in valued if in_section(v, ItemFilter(sets_only=True))]
     section_owned = [v for v in section if v.item.status == ItemStatus.OWNED]
+    # Dlaždica Prehľadu: rôzne čísla v rozsahu, sety zvlášť a figúrky zo sérií zvlášť.
+    kinds: dict[str, set[str]] = {"set": set(), "minifig": set()}
+    for v in owned:
+        kinds[kind_of(v)].add(v.item.catalog_num)
     return SummaryOut(
         **asdict(summary),
         wishlist_hits=hits,
@@ -100,6 +105,8 @@ async def get_summary(user: CurrentUser, session: SessionDep, f: FilterDep) -> S
         collection_set_count=len({v.item.catalog_num for v in section_owned}),
         collection_item_count=len(section_owned),
         collection_sold_count=sum(1 for v in section if v.item.status == ItemStatus.SOLD),
+        standalone_set_count=len(kinds["set"]),
+        figure_count=len(kinds["minifig"]),
         real_month=deflator.latest_month if deflator else None,
     )
 

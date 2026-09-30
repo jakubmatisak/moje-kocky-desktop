@@ -353,7 +353,10 @@ uložený pohľad s nimi je označený a po kliknutí to oznámi
 nenašlo“, `FacetsOut.hidden_figures` povie, koľko figúrok zo sérií by filter
 našiel, a `FiguresElsewhere.vue` odkáže do Figúrok. Ponuka a hlavička
 Zbierky berú `collection_*_count` zo súhrnu, `set_count` a spol. počítajú
-všetko. Odkazy z Figúrok na detail nesú `?from=minifigs`, ponuka potom
+všetko. Dlaždica Zbierka na Prehľade delí `set_count` rozsahu na
+`standalone_set_count` (hlavné číslo) a `figure_count` (v podnadpise,
+podľa `kind_of`, aj blind-box a sáčok); `series_figures` pre ponuku sáčky
+nepočíta. Odkazy z Figúrok na detail nesú `?from=minifigs`, ponuka potom
 svieti na Figúrkach (`utils/navigation.ts::sectionRoute`). Kus pod holým
 číslom série je vždy nerozbalený sáčok (`POST /items` ho tak uloží, ako
 import), detail série sa pozná podľa `series_size`, nielen podľa kusov
@@ -687,7 +690,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 634 testov, frontend 216. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 636 testov, frontend 220. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

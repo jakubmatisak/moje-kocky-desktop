@@ -200,6 +200,45 @@ async def test_dashboard_scope_still_counts_figures(
     assert (scoped["set_count"], scoped["invested"]) == (1, "8.00")
 
 
+def _split(summary: dict) -> tuple[int, int]:
+    return summary["standalone_set_count"], summary["figure_count"]
+
+
+async def test_dashboard_tile_splits_sets_and_series_figures(
+    auth_client: AsyncClient, sessionmaker_
+) -> None:
+    """Dlaždica Zbierka: samostatné sety zvlášť, figúrky zo sérií zvlášť.
+
+    Figúrku spozná príslušnosť k sérii (``kind_of``), nie ``catalog.kind``:
+    Mighty Machines sa cení ako set, a predsa je to figúrka. Sáčok pod číslom
+    série tiež. Spolu dajú ``set_count``, duplikát sa ráta raz.
+    """
+    await _seed(auth_client, sessionmaker_)
+    await _add(auth_client, "71051-1", purchase_price_eur="5")
+
+    summary = (await auth_client.get("/stats/summary")).json()
+
+    # Titanic; figúrka (dvakrát), sáčok a Mighty Machines. Predané nie.
+    assert _split(summary) == (1, 3)
+    assert (summary["set_count"], summary["item_count"]) == (4, 5)
+    # Čísla ponuky a hlavičky Zbierky ostávajú, ako boli.
+    assert (summary["collection_set_count"], summary["series_figures"]) == (1, 2)
+
+
+async def test_dashboard_tile_split_follows_the_scope(
+    auth_client: AsyncClient, sessionmaker_
+) -> None:
+    await _seed(auth_client, sessionmaker_)
+
+    async def split(**params: str) -> tuple[int, int]:
+        return _split((await auth_client.get("/stats/summary", params=params)).json())
+
+    # Blind-box Mighty Machines je v téme Technic figúrka, nie set.
+    assert await split(theme="Technic") == (0, 1)
+    assert await split(theme="Icons") == (1, 0)
+    assert await split(q="peacock") == (0, 1)
+
+
 async def test_piece_under_the_series_number_is_a_sealed_bag(
     auth_client: AsyncClient, sessionmaker_
 ) -> None:

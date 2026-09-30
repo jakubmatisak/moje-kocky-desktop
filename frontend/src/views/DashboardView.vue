@@ -71,6 +71,20 @@
     return Number(value) >= 0 ? 'positive' : 'negative'
   })
 
+  /**
+   * Podnadpis dlaždice Zbierka. Hlavné číslo sú samostatné sety, figúrky zo
+   * sérií stoja tu; kusy a dieliky sú za všetko. Bez figúrok ich vynechá.
+   */
+  const collectionHint = computed(() => {
+    const s = summary.value
+    if (!s) return ''
+    const pieces = t('collection.piecesPlural', s.item_count, { named: { count: s.item_count } })
+    const parts = count(s.parts)
+    if (!s.figure_count) return t('dashboard.piecesAndParts', { pieces, parts })
+    const figures = t('dashboard.figuresPlural', s.figure_count, { named: { count: s.figure_count } })
+    return t('dashboard.figuresPiecesAndParts', { figures, pieces, parts })
+  })
+
   const valueHint = computed(() =>
     auth.hasPriceKey ? t('dashboard.priceSource') : t('dashboard.manualPrices'),
   )
@@ -174,12 +188,9 @@
 
       <v-col cols="12" lg="" md="6" sm="6">
         <StatTile
-          :hint="t('dashboard.piecesAndParts', {
-            pieces: t('collection.piecesPlural', summary.item_count, { named: { count: summary.item_count } }),
-            parts: count(summary.parts),
-          })"
+          :hint="collectionHint"
           :label="t('dashboard.collection')"
-          :value="t('collection.setsPlural', summary.set_count, { named: { count: summary.set_count } })"
+          :value="t('collection.setsPlural', summary.standalone_set_count, { named: { count: summary.standalone_set_count } })"
         />
       </v-col>
     </v-row>

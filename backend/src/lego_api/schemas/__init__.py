@@ -524,6 +524,11 @@ class SummaryOut(BaseModel):
     collection_set_count: int = 0
     collection_item_count: int = 0
     collection_sold_count: int = 0
+    #: Dlaždica Zbierka na Prehľade: ``set_count`` v rozsahu rozdelený na
+    #: samostatné sety a figúrky zo sérií (``filters.kind_of``, aj blind-box
+    #: a sáčok). Na rozdiel od ``series_figures`` pre ponuku ráta aj sáčok.
+    standalone_set_count: int = 0
+    figure_count: int = 0
     themes: list[ThemeSliceOut]
     top_profit: list[TopProfitOut]
     #: Pri ``real=true`` posledný mesiac indexu inflácie, ku ktorému sú sumy

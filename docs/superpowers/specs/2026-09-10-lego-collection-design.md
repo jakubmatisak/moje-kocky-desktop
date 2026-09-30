@@ -665,7 +665,11 @@ Podrobnosti:
   - trhová hodnota, s počtom kusov bez ceny;
   - nerealizovaný zisk, s percentom a CAGR;
   - realizovaný zisk;
-  - zbierka (sety, kusy, dieliky, figúrky, retired).
+  - zbierka: hlavné číslo sú samostatné sety, podnadpis „41 figúrok ·
+    189 kusov · 39 188 dielikov“ (figúrky zo sérií podľa `kind_of`, aj
+    blind-box a sáčok; bez figúrok ich vynechá). Počty `standalone_set_count`
+    a `figure_count` v `/stats/summary` idú s rozsahom, spolu dajú
+    `set_count`; ponuka a hlavička Zbierky majú svoje `collection_*_count`.
 - **Graf portfólia:**
   - tri krivky;
   - rýchle voľby (mesiac až všetko), vlastné od–do, ťahanie a zoom;

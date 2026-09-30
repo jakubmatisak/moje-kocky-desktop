@@ -3375,6 +3375,16 @@ export interface components {
              * @default 0
              */
             collection_sold_count: number;
+            /**
+             * Standalone Set Count
+             * @default 0
+             */
+            standalone_set_count: number;
+            /**
+             * Figure Count
+             * @default 0
+             */
+            figure_count: number;
             /** Themes */
             themes: components["schemas"]["ThemeSliceOut"][];
             /** Top Profit */

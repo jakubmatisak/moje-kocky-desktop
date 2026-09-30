@@ -1,8 +1,10 @@
 # Moje kocky Desktop
 
+**[English version below](#english)**
+
 ### [Stiahnuť inštalátor pre Windows](https://github.com/jakubmatisak/moje-kocky-desktop/releases/latest)
 
-Zadarmo, bez reklám a sledovania · Windows 10 a 11 (64-bit) · práva správcu netreba ·
+Verzia 1.0.0 · zadarmo, bez reklám a sledovania · Windows 10 a 11 (64-bit) · práva správcu netreba ·
 [stránka projektu](https://jakubmatisak.github.io/moje-kocky/) ·
 [webová verzia na vlastný server](https://github.com/jakubmatisak/moje-kocky-webapp)
 
@@ -14,7 +16,8 @@ Evidencia zbierky LEGO® setov ako **bežná inštalácia pre Windows**. Je to t
 istá appka ako webová [Moje kocky](https://github.com/jakubmatisak/moje-kocky-webapp),
 len beží v okne na tvojom počítači: bez servera, bez Dockeru a **bez
 otvoreného portu**. Všetky údaje (zbierka, fotky, kľúče) ostávajú u teba
-v `%APPDATA%\MojeKocky`.
+v `%APPDATA%\MojeKocky` a pri každej aktualizácii sa databáza najprv sama
+zálohuje.
 
 ![Prehľad: hodnota portfólia, zisk a rozdelenie podľa sérií](docs/screenshots/prehlad.png)
 
@@ -33,13 +36,18 @@ v `%APPDATA%\MojeKocky`.
   (v krabici, postavený, rozobratý…), cenou, dátumom a umiestnením.
 - **Umiestnenie v dvoch úrovniach**: miestnosť a číslo krabice, s našepkávačom.
 - **Mám to už?** Pri zadaní čísla sa ukáže výrazný pás, keď set v zbierke je.
-- **Zberateľské minifigúrky.** Séria sa pridáva výberom z mriežky figúrok,
-  nerozbalený sáčok sa po rozbalení priradí ku konkrétnej figúrke. Sekcia
-  Figúrky pozná všetky série, aj nezačaté, a ukáže, čo chýba. Rovnako
-  blind-box série iných radov (Mighty Machines, Super Mario a pod.).
+- **Zbierka sú sety, figúrky majú vlastnú sekciu.** Zberateľské minifigúrky
+  aj blind-box série iných radov (Mighty Machines, Super Mario a pod.) sú len
+  vo **Figúrkach**. Séria sa pridáva výberom z mriežky figúrok, nerozbalený
+  sáčok sa po rozbalení priradí ku konkrétnej figúrke. Sekcia pozná všetky
+  série, aj nezačaté, a ukáže, čo chýba. Figúrky zo série sa hromadne
+  upravujú v jej detaile. Prehľad, export aj súpis pre poistku počítajú
+  všetko, sety aj figúrky. Keď hľadanie v Zbierke nájde figúrku, appka
+  odkáže do Figúrok.
 - **Série a vlny.** Koľko setov z témy a roku máš, podľa zoznamu Brickset.
 - **Vlastné kategórie** s pravidlami (napr. všetko s „F1“ v názve naprieč
-  sériami) aj ručným zaradením.
+  sériami) aj ručným zaradením. Kategória patrí setu a vyberieš ju pri
+  pridaní setu, pri úprave kusu aj v detaile setu.
 - **Chcem**: zoznam želaných setov s cieľovou cenou a poznámkou. Set, ktorý na
   cieľ klesol, sa zvýrazní. „Kúpil som“ ho presunie do zbierky.
 - **Vlastné fotky kusu** a **súpis pre poistku** na tlač alebo do PDF.
@@ -47,10 +55,10 @@ v `%APPDATA%\MojeKocky`.
 
 **Pridávanie**
 
-- **Čítačka čiarových kódov** (USB, v režime klávesnice) aj **kamera** v
-  prehliadači. Sken funguje z ktorejkoľvek obrazovky. Rovnaký kód zvýši
-  počet, iný kód uloží rozpracovaný set a načíta nový; každé uloženie sa dá
-  vrátiť tlačidlom Späť.
+- **Čítačka čiarových kódov** (USB, v režime klávesnice) aj **kamera**
+  počítača. Sken funguje z ktorejkoľvek obrazovky. Rovnaký kód zvýši počet,
+  iný kód uloží rozpracovaný set a načíta nový; každé uloženie sa dá vrátiť
+  tlačidlom Späť.
 - **Pamäť formulára**: stav, dátum a umiestnenie z minulého setu sa predvyplnia.
 - **Hromadný import** z Excelu alebo CSV so šablónou, náhľadom a vrátením.
   Export do CSV.
@@ -65,6 +73,10 @@ v `%APPDATA%\MojeKocky`.
 - **V dnešných peniazoch**: prepočet kúpnych cien infláciou (HICP Slovensko).
 - **Odhad hodnoty** kusov v krabici o 2 a 5 rokov.
 - **Kto sa hýbe**: zmena trhovej ceny za 30, 90 a 365 dní.
+- **Bez ceny pomlčka, nie nula.** Kus bez trhovej ceny ukáže „–“ alebo „cena
+  neznáma“, nie 0 € a −100 %. Rovnako súčet skupiny, v ktorej cenu nemá
+  žiadny kus. Znak ≈ pred sumou znamená, že je to cena druhého stavu, napríklad
+  postavený kus setu, ktorý je ešte v predaji, ocenený cenou nového.
 - **Overiť cenu**: v obchode naskenuješ krabicu a hneď vidíš, čo to je, či to
   máš, cenu nového aj použitého kusu a graf histórie. Overené sety sa
   pamätajú v tabuľke.
@@ -83,42 +95,82 @@ v `%APPDATA%\MojeKocky`.
 - Viac účtov na jednom počítači (napríklad pre členov rodiny), každý so
   svojou zbierkou, heslom a kľúčmi. Ďalší účet povolí prvý (správca)
   v Nastaveniach → Aplikácia.
-- Rozhranie po slovensky aj po anglicky, svetlý a tmavý režim, telefón aj
-  počítač. Nastavenia zobrazenia sa pamätajú pri účte.
+- Rozhranie po slovensky aj po anglicky, svetlý a tmavý režim. Nastavenia
+  zobrazenia sa pamätajú pri účte.
 - Prehľad spotreby volaní cudzích služieb a prepínače, čo sa z ktorej
   služby smie sťahovať.
+- **Automatická záloha databázy** pri každej aktualizácii
+  ([nižšie](#zaloha)).
 
 ## Inštalácia
 
-1. Stiahni `MojeKocky-Setup-x.y.z.exe` z [Releases](../../releases).
-2. Spusti ho. Inštaluje sa len pre teba, práva správcu netreba.
-   Inštalátor nie je podpísaný, Windows preto raz ukáže „Windows chránil
-   tento počítač“: klikni **Ďalšie informácie → Spustiť aj tak**.
+1. Stiahni `MojeKocky-Setup-x.y.z.exe` (teraz `MojeKocky-Setup-1.0.0.exe`)
+   z [Releases](https://github.com/jakubmatisak/moje-kocky-desktop/releases/latest),
+   v zozname súborov pod **Assets**.
+2. Spusti ho. Inštaluje sa len pre teba (do `%LOCALAPPDATA%\Programs\MojeKocky`),
+   práva správcu netreba. Inštalátor nie je podpísaný, Windows preto raz
+   ukáže „Windows chránil tento počítač“: klikni **Ďalšie informácie →
+   Spustiť aj tak**.
 3. Pri prvom spustení si vytvoríš účet s heslom. Pri ďalších sa pýta heslo.
 
 Potrebuje Windows 10 alebo 11 (64-bit) a Microsoft Edge WebView2, ktorý
 v nich býva. Ak chýba, inštalátor ponúkne stránku na jeho stiahnutie.
 
 **Údaje** sú v `%APPDATA%\MojeKocky`: `lego.db` (databáza), `photos\`,
-`secret.key` (šifruje uložené kľúče k službám), `logs\` a `backups\`.
-**Záloha** je kópia celého priečinka. Nová verzia sa nainštaluje cez starú
-a údaje ostanú. Odinštalovanie sa opýta, či ich zmazať.
+`secret.key` (šifruje uložené kľúče k službám), `logs\` (denník
+`moje-kocky.log`) a `backups\` (zálohy databázy pri aktualizácii). Úplná
+záloha je kópia celého priečinka, najlepšie pri zatvorenej appke. Nová
+verzia sa nainštaluje cez starú a údaje ostanú. Odinštalovanie sa opýta,
+či ich zmazať (predvolene nie).
 
-Pri prvom spustení každej inej verzie (aktualizácia aj návrat na staršiu),
-aj keď sa schéma databázy nemení, appka najprv skopíruje databázu do
-`%APPDATA%\MojeKocky\backups`, napríklad
-`lego-20261015-083000-v1.0.0-<revízia>.db`: verzia v mene je tá, ktorá
-bežala naposledy. Po úspešnom štarte ostane posledných 5 záloh. Fotky
-záloha nenesie. Akú verziu máš, ukazuje Nastavenia → Aplikácia. Keby sa
-aktualizácia nepodarila, appka to povie v okne aj s cestou k zálohe. Na
-návrat zatvor appku, zmaž `lego.db-journal` (a `-wal`, `-shm`), ak tam sú,
-skopíruj zálohu na miesto `lego.db` a nainštaluj predchádzajúcu verziu.
-Bez zmazania žurnálu by ho SQLite vrátil do obnoveného súboru a pokazil ho.
+<a id="zaloha"></a>
 
-Ako to funguje bez servera: okno (pywebview nad WebView2) načíta stránku
-zo súborov a každé volanie appky pošle priamo Pythonu v tom istom procese
-(most `window.pywebview.api` → FastAPI cez `httpx.ASGITransport`). Na
-žiadnom porte nič nepočúva.
+### Záloha pri aktualizácii
+
+Pri prvom spustení inej verzie appky, novšej aj staršej, a aj vtedy, keď
+sa schéma databázy nemení, appka najprv skopíruje databázu do
+`%APPDATA%\MojeKocky\backups` a až potom ju prípadne zmigruje. Kópia ide
+cez zálohovacie API SQLite, takže je úplná a konzistentná.
+
+- **Meno** je `lego-RRRRMMDD-HHMMSS-v<verzia>-<revízia>.db`, napríklad
+  `lego-20261015-083000-v1.0.0-<revízia>.db`: čas zálohy a verzia appky
+  a revízia schémy, s ktorými databáza do štartu bola, teda verzia, ktorá
+  bežala naposledy. Databáza zo staršej inštalácie, ktorá si verziu ešte
+  nezapisovala, má v mene len revíziu.
+- **Koľko sa drží:** po úspešnom štarte ostane posledných 5 záloh, staršie
+  sa zmažú. Iné súbory v priečinku appka nechá. Po neúspešnom štarte sa
+  nemaže nič, aby opakované spúšťanie nevytlačilo zálohu spred aktualizácie.
+- **Fotky** v zálohe nie sú, ostávajú v `photos\` a aktualizácia na ne
+  nesiaha.
+- **Nezálohuje sa** nová databáza (prvé spustenie) ani ďalší štart tej
+  istej verzie.
+- **Keď sa záloha nepodarí** (plný disk, práva), appka databázu nezmení,
+  nespustí sa a v okne povie prečo.
+- **Keď zlyhá aktualizácia databázy**, appka ukáže okno s cestou k zálohe
+  spred aktualizácie a s postupom návratu. Kým sa databáza odvtedy nezmenila,
+  ďalšie spustenie novú zálohu nerobí a ukáže tú istú.
+
+Akú verziu máš, ukazuje Nastavenia → Aplikácia (vidí ju správca, teda prvý
+účet) a zoznam nainštalovaných aplikácií vo Windows.
+
+**Ako vrátiť zálohu**
+
+1. Zatvor Moje kocky.
+2. V `%APPDATA%\MojeKocky` zmaž `lego.db-journal`, `lego.db-wal`
+   a `lego.db-shm`, ak tam sú. Inak by ich SQLite pri ďalšom otvorení
+   vrátil do obnoveného súboru a pokazil ho.
+3. Zálohu z `backups\` skopíruj na miesto `lego.db` (pôvodný súbor si
+   môžeš odložiť pod iným menom).
+4. Keď aktualizácia zlyhala, nainštaluj z
+   [Releases](https://github.com/jakubmatisak/moje-kocky-desktop/releases)
+   predchádzajúcu verziu (tú z mena zálohy) a nechaj ju, kým nevyjde oprava.
+   Nová by databázu skúsila zmigrovať znova.
+
+### Ako to funguje bez servera
+
+Okno (pywebview nad WebView2) načíta stránku zo súborov a každé volanie
+appky pošle priamo Pythonu v tom istom procese (most `window.pywebview.api`
+→ FastAPI cez `httpx.ASGITransport`). Na žiadnom porte nič nepočúva.
 
 ## Kľúče k službám
 
@@ -189,8 +241,9 @@ Inno Setup skript skončí pri programe. Verzia musí byť tá z
 `backend/pyproject.toml`, inú skript nezostaví: appka podľa nej pri
 aktualizácii zálohuje databázu. Nové vydanie teda zvýši `version`
 v `pyproject.toml`, spustí `uv lock` a upraví verziu vo
-`frontend/package.json` aj `package-lock.json`. Na GitHube zostaví inštalátor
-workflow `release` pri každom tagu `v*` a priloží ho k Release.
+`frontend/package.json` aj `package-lock.json` (a číslo verzie na začiatku
+tohto README). Na GitHube zostaví inštalátor workflow `release` pri každom
+tagu `v*` a priloží ho k Release.
 
 ```
 backend/src/lego_api/      appka (FastAPI, SQLAlchemy 2, SQLite, Alembic)
@@ -199,6 +252,19 @@ frontend/                  Vue 3, Vuetify 4; src/desktop/ = fetch cez most
 packaging/                 PyInstaller, Inno Setup, ikona
 scripts/build.ps1          celé zostavenie
 ```
+
+## Súvisiace repozitáre
+
+- **Desktop pre Windows** (tento repozitár):
+  [github.com/jakubmatisak/moje-kocky-desktop](https://github.com/jakubmatisak/moje-kocky-desktop),
+  inštalátor v [Releases](https://github.com/jakubmatisak/moje-kocky-desktop/releases/latest).
+- **Webová verzia** na vlastný server (Docker):
+  [github.com/jakubmatisak/moje-kocky-webapp](https://github.com/jakubmatisak/moje-kocky-webapp).
+- **Stránka projektu**: [jakubmatisak.github.io/moje-kocky](https://jakubmatisak.github.io/moje-kocky/),
+  zdroj v [github.com/jakubmatisak/moje-kocky](https://github.com/jakubmatisak/moje-kocky).
+
+Desktop je samostatná kópia kódu webovej verzie; zmeny sa medzi nimi
+prenášajú ručne.
 
 ## Zdroje dát a poďakovanie
 
@@ -274,7 +340,7 @@ výrobkov LEGO; tie patria svojim vlastníkom.
 ## Súkromie a licencie
 
 Nie je to právna rada, len to, ako desktopová appka rieši súkromie
-a podmienky služieb (k septembru 2026).
+a podmienky služieb (k septembru 2026). Zásady sú aj priamo v appke.
 
 - **Údaje sú len na tvojom počítači** v `%APPDATA%\MojeKocky`. Appka nemá
   server ani prevádzkovateľa, autor k nim nemá prístup. Ide o osobné použitie
@@ -288,9 +354,9 @@ a podmienky služieb (k septembru 2026).
 - **Tvoje práva a kontrola:** v Nastaveniach → Účet si stiahneš všetky svoje
   údaje (ZIP) alebo zmažeš účet. Odinštalovanie sa opýta, či zmazať aj
   priečinok s údajmi.
-- **Zálohy pred aktualizáciou** (posledných 5) sú v
-  `%APPDATA%\MojeKocky\backups`; údaje zmazaného účtu v nich ostanú, kým sa
-  neprestriedajú.
+- **Zálohy pri aktualizácii** (posledných 5) sú v
+  `%APPDATA%\MojeKocky\backups` a nesú celú databázu; údaje zmazaného účtu
+  v nich ostanú, kým sa neprestriedajú.
 - **Fotky** sa ukladajú zmenšené a bez polohy GPS.
 - **Cookies ani sledovanie** appka nepoužíva. Okno si pamätá len nastavenia
   zobrazenia (tmavý režim, skryté ceny a pod.).
@@ -300,3 +366,406 @@ a podmienky služieb (k septembru 2026).
   zdieľaš licenciu.
 - **Nekomerčne:** pravidlá LEGO Fair Play aj licencia BrickEconomy platia
   len pre osobné, nekomerčné použitie. Logo LEGO appka nepoužíva.
+
+---
+
+<a id="english"></a>
+
+# Moje kocky Desktop (English)
+
+[Slovenská verzia vyššie](#moje-kocky-desktop)
+
+### [Download the Windows installer](https://github.com/jakubmatisak/moje-kocky-desktop/releases/latest)
+
+Version 1.0.0 · free, no ads, no tracking · Windows 10 and 11 (64-bit) · no admin rights needed ·
+[project website](https://jakubmatisak.github.io/moje-kocky/) ·
+[web version for your own server](https://github.com/jakubmatisak/moje-kocky-webapp)
+
+The **Releases** section on the right always has the latest
+`MojeKocky-Setup-x.y.z.exe` (in the file list under **Assets**). The installer
+is not code-signed, so Windows will warn you once with "Windows protected your
+PC": click **More info → Run anyway**.
+
+*Moje kocky* ("my bricks" in Slovak) keeps track of a LEGO® set collection
+and comes as a **regular Windows install**. It is the same app as the web
+version of [Moje kocky](https://github.com/jakubmatisak/moje-kocky-webapp),
+it just runs in a window on your own computer: no server, no Docker and **no
+open port**. All your data (collection, photos, keys) stays with you in
+`%APPDATA%\MojeKocky`, and the database backs itself up before every update.
+
+![Overview: portfolio value, profit and breakdown by theme](docs/screenshots/prehlad.png)
+
+| Collection | Collectible minifigure series |
+| --- | --- |
+| ![Collection: set cards with purchase price, value and profit](docs/screenshots/zbierka.png) | ![Minifigure series: which ones you have and which are missing](docs/screenshots/figurky.png) |
+
+*The screenshots show a sample collection with made-up, hand-entered prices.
+The app's interface is available in Slovak and English.*
+
+
+## Features
+
+**Keeping records**
+
+- **One record per physical copy.** Three copies of the same set are three
+  records, each with its own condition (sealed, built, taken apart…), price,
+  date and location.
+- **Two-level storage location**: room and box number, with suggestions.
+- **Do I already have it?** Typing a set number shows a prominent banner when
+  the set is already in your collection.
+- **The Collection holds sets; minifigures have a section of their own.**
+  Collectible minifigures and blind-box series from other lines (Mighty
+  Machines, Super Mario and the like) live only under **Minifigures**. You add
+  a series by picking figures from a grid, and a sealed bag can be assigned to
+  a specific figure once you open it. The section knows every series, including
+  ones you haven't started, and shows what is missing. Figures from a series
+  are bulk-edited on that series' page. The Overview, the export and the
+  insurance inventory count everything, sets and figures alike. When a search
+  in the Collection matches a figure, the app points you to Minifigures.
+- **Themes and waves.** How many sets of a theme and year you own, based on
+  Brickset's lists.
+- **Custom categories** with rules (e.g. everything with "F1" in the name,
+  across themes) as well as manual assignment. A category belongs to the set;
+  you pick it when adding a set, when editing a copy and on the set's page.
+- **Wishlist**: sets you want, with a target price and a note. A set that has
+  dropped to its target is highlighted. "I bought it" moves it into the
+  collection.
+- **Your own photos of each copy** and an **insurance inventory** to print or
+  save as PDF.
+- **A gallery of additional official set photos** from Brickset (can be
+  turned off).
+
+**Adding sets**
+
+- **Barcode scanner** (USB, in keyboard mode) or your computer's **camera**.
+  Scanning works from any screen. The same code again bumps the quantity, a
+  different code saves the set in progress and loads the new one; every save
+  can be reverted with Undo.
+- **Form memory**: condition, date and location are pre-filled from the
+  previous set.
+- **Bulk import** from Excel or CSV, with a template, a preview and undo.
+  Export to CSV.
+- **Without a Rebrickable key** you can still save a set by hand, by its
+  number alone.
+
+**Money**
+
+- **Two kinds of profit, kept apart.** Unrealised (market value minus the
+  purchase price of what you own) and realised (net from sales, after fees
+  and shipping). They are never added up into a single number.
+- **Annualised return** for a single copy, a theme, a list or the whole
+  collection, once it has been held for a year.
+- **In today's money**: purchase prices adjusted for inflation (Slovak HICP).
+- **Value forecast** for sealed copies, 2 and 5 years out.
+- **Movers**: market price change over 30, 90 and 365 days.
+- **No price means a dash, not zero.** A copy without a market price shows
+  "–" or "price unknown" instead of 0 € and −100 %, and so does the total of
+  a group in which no copy has a price. A ≈ in front of an amount means it is
+  the price for the other condition, for example a built copy of a set that
+  is still on sale, valued at the new price.
+- **Check price**: scan a box in the shop and you see right away what it is,
+  whether you have it, the price new and used, and a price history chart.
+  Checked sets are remembered in a table.
+- **Suggested price and listing text** for Aukro or Bazoš (Slovak
+  marketplaces).
+- **Hide prices** with one click when showing your portfolio to someone.
+
+**Overview and lists**
+
+- Filters that combine (OR within a group, AND between groups), search that
+  ignores diacritics, ten sort orders, saved views, cards or a table, bulk
+  editing of selected copies.
+- The Overview can be narrowed to a theme, a category or a saved view.
+
+**Other**
+
+- Several accounts on one computer (for family members, say), each with its
+  own collection, password and keys. The first account (the administrator)
+  allows new ones in Settings → Application.
+- Slovak and English interface, light and dark mode. Display settings are
+  stored with the account.
+- A usage overview of calls to third-party services, plus switches for what
+  may be downloaded from which service.
+- **Automatic database backup** on every update ([below](#backup-on-update)).
+
+## Installation
+
+1. Download `MojeKocky-Setup-x.y.z.exe` (currently `MojeKocky-Setup-1.0.0.exe`)
+   from [Releases](https://github.com/jakubmatisak/moje-kocky-desktop/releases/latest),
+   in the file list under **Assets**.
+2. Run it. It installs for your user only (into
+   `%LOCALAPPDATA%\Programs\MojeKocky`), no admin rights needed. The installer
+   is not code-signed, so Windows will warn you once with "Windows protected
+   your PC": click **More info → Run anyway**.
+3. On first launch you create an account with a password. After that it asks
+   for the password.
+
+It needs Windows 10 or 11 (64-bit) and Microsoft Edge WebView2, which usually
+comes with them. If it is missing, the installer offers a page to download it.
+
+**Your data** lives in `%APPDATA%\MojeKocky`: `lego.db` (the database),
+`photos\`, `secret.key` (encrypts the stored service keys), `logs\` (the log
+file `moje-kocky.log`) and `backups\` (database backups made on update). A
+full backup is simply a copy of the whole folder, ideally with the app
+closed. A new version installs over the old one and your data stays.
+Uninstalling asks whether to delete it (the default is no).
+
+<a id="backup-on-update"></a>
+
+### Backup on update
+
+The first time a different version of the app starts, newer or older, and
+even when the database schema does not change, the app first copies the
+database into `%APPDATA%\MojeKocky\backups` and only then migrates it if
+needed. The copy is made with SQLite's backup API, so it is complete and
+consistent.
+
+- **The name** is `lego-YYYYMMDD-HHMMSS-v<version>-<revision>.db`, for
+  example `lego-20261015-083000-v1.0.0-<revision>.db`: the time of the backup
+  plus the app version and schema revision the database had before this
+  start, i.e. the version that ran last. A database from an older install
+  that did not record its version yet has only the revision in the name.
+- **How many are kept:** after a successful start the last 5 backups remain
+  and older ones are deleted. Other files in the folder are left alone. After
+  a failed start nothing is deleted, so repeated launches cannot push out the
+  backup taken before the update.
+- **Photos** are not part of the backup; they stay in `photos\` and an update
+  does not touch them.
+- **No backup is made** for a brand-new database (first launch) or for
+  another start of the same version.
+- **If the backup fails** (disk full, permissions), the app leaves the
+  database untouched, does not start and tells you why in a window.
+- **If the database update fails**, the app shows a window (currently in
+  Slovak) with the path to the pre-update backup and how to go back. As long
+  as the database has not changed since, the next launch does not make a new
+  backup and points to the same one.
+
+You can see which version you have in Settings → Application (visible to the
+administrator, i.e. the first account) and in the Windows list of installed
+apps.
+
+**How to restore a backup**
+
+1. Close Moje kocky.
+2. In `%APPDATA%\MojeKocky`, delete `lego.db-journal`, `lego.db-wal` and
+   `lego.db-shm` if they are there. Otherwise SQLite would replay them into
+   the restored file the next time it opens it and corrupt it.
+3. Copy the backup from `backups\` over `lego.db` (you can keep the original
+   file under another name).
+4. If the update failed, install the previous version (the one in the backup's
+   name) from [Releases](https://github.com/jakubmatisak/moje-kocky-desktop/releases)
+   and stay on it until a fix is out. The new version would try to migrate the
+   database again.
+
+### How it works without a server
+
+The window (pywebview on top of WebView2) loads the page from files and sends
+every app request straight to Python in the same process (a bridge from
+`window.pywebview.api` to FastAPI via `httpx.ASGITransport`). Nothing listens
+on any port.
+
+## Service keys
+
+The app works without any keys too; it is then a catalogue where you fill in
+set names and prices yourself. Each service adds something on top.
+
+You enter keys in the app under **Settings → Data**. Wherever a key is
+missing, the app says so right next to the data (and on the Overview in the
+"What else the app can do" card), with a link to connect it. Keys are stored
+encrypted in the database on this computer and the interface only shows their
+last characters. They are encrypted with the file
+`%APPDATA%\MojeKocky\secret.key`: if it is lost, the collection stays, you
+just have to enter the keys again.
+
+| Service | What it provides | Price and limit | Key |
+|---|---|---|---|
+| [Rebrickable](https://rebrickable.com/api/) | names, years, part counts, photos, themes, minifigures | free, ~1 call/s | account settings on rebrickable.com |
+| [Brickset](https://brickset.com/article/52664/api-version-3-documentation) | retail price, barcodes, description, tags, theme waves, additional set photos | free, 100 calls/day | [request a key](https://brickset.com/tools/webservices/requestkey) |
+| [BrickEconomy](https://www.brickeconomy.com/api-reference) | market price new and used, history, forecasts | part of Premium, 100 calls/day | profile on brickeconomy.com |
+| [UPCitemdb](https://www.upcitemdb.com/) | fallback barcode lookup | free, no key, ~100 lookups/day per IP address | none, switched on in Settings |
+| [Eurostat](https://ec.europa.eu/eurostat/) | inflation for converting to today's money | free, no key | none, switched on in Settings |
+
+### How calls are rationed
+
+Nothing happens on its own; there is no scheduler. A price refresh is started
+by a button in the top bar and runs in the background. BrickEconomy's daily
+quota is 100 calls, so:
+
+1. A bulk refresh skips prices younger than a week.
+2. At most 40 items per run, oldest first; the rest next time (the batch size
+   can be changed on the BrickEconomy card).
+3. The remaining daily quota is respected, and the batch stops after a 429
+   response.
+4. One call per set: the response carries the price new and used plus the
+   history, so sealed and built copies are refreshed together.
+5. Check price does not fetch a price younger than 24 hours.
+
+The price history comes in the same response, so the chart and Movers have
+something to show right after you add a set. Brickset and Rebrickable have
+their own switches and a reserve in Settings, so that background filling does
+not eat the limit you need for adding sets.
+
+## Development
+
+You need Python 3.13 (via [uv](https://docs.astral.sh/uv/)) and Node 22.
+
+```powershell
+cd frontend; npm ci; npm run build-desktop
+cd ..\backend; uv sync; uv run moje-kocky
+```
+
+`build-desktop` builds the frontend into `frontend/dist-desktop` (relative
+paths, navigation after `#`, fetch over the bridge). Tests:
+
+```powershell
+cd backend; uv run pytest; uv run ruff check src tests
+cd ..\frontend; npm run type-check; npm run lint; npm test
+```
+
+### Building the installer
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\build.ps1 -Version 1.0.0
+```
+
+Frontend → PyInstaller (`packaging/moje-kocky.spec`, output
+`build/dist/MojeKocky/MojeKocky.exe`) → Inno Setup (`packaging/moje-kocky.iss`,
+output `build/installer/MojeKocky-Setup-1.0.0.exe`). Without Inno Setup
+installed the script stops after the program. The version must match the one
+in `backend/pyproject.toml`, otherwise the script refuses to build: the app
+relies on it to back up the database on update. A new release therefore bumps
+`version` in `pyproject.toml`, runs `uv lock` and updates the version in
+`frontend/package.json` and `package-lock.json` (and the version number at the
+top of this README). On GitHub, the `release` workflow builds the installer
+for every `v*` tag and attaches it to the Release.
+
+```
+backend/src/lego_api/      the app (FastAPI, SQLAlchemy 2, SQLite, Alembic)
+backend/src/lego_desktop/  window, bridge, %APPDATA%, single-instance lock
+frontend/                  Vue 3, Vuetify 4; src/desktop/ = fetch over the bridge
+packaging/                 PyInstaller, Inno Setup, icon
+scripts/build.ps1          the whole build
+```
+
+## Related repositories
+
+- **Windows desktop** (this repository):
+  [github.com/jakubmatisak/moje-kocky-desktop](https://github.com/jakubmatisak/moje-kocky-desktop),
+  installer under [Releases](https://github.com/jakubmatisak/moje-kocky-desktop/releases/latest).
+- **Web version** for your own server (Docker):
+  [github.com/jakubmatisak/moje-kocky-webapp](https://github.com/jakubmatisak/moje-kocky-webapp).
+- **Project website**: [jakubmatisak.github.io/moje-kocky](https://jakubmatisak.github.io/moje-kocky/),
+  source in [github.com/jakubmatisak/moje-kocky](https://github.com/jakubmatisak/moje-kocky).
+
+The desktop app is a separate copy of the web version's code; changes are
+carried over between them by hand.
+
+## Data sources and credits
+
+Moje kocky is an independent fan project. It is not affiliated with the LEGO
+Group or with any of the services listed below, and is not sponsored or
+endorsed by them.
+
+LEGO® is a trademark of the LEGO Group of companies which does not sponsor,
+authorize or endorse this site. Images of sets and minifigures are copyright
+of the LEGO Group and are shown for non-commercial, informational purposes
+only, in line with the
+[LEGO Fair Play](https://www.lego.com/en-us/legal/notices-and-policies/fair-play)
+guidelines.
+
+- **Set and minifigure catalogue and images:** [Rebrickable](https://rebrickable.com),
+  via the [Rebrickable API](https://rebrickable.com/api/).
+- **Retail prices, barcodes, descriptions, themes, waves and additional set
+  photos:** [Brickset](https://brickset.com), via the Brickset API v3.
+  Image(s) courtesy of Brickset.com.
+- **Market prices and value forecasts:** [BrickEconomy](https://www.brickeconomy.com),
+  only for users with their own BrickEconomy Premium key. Prices are
+  BrickEconomy's estimates, not investment advice.
+- **Barcode lookup (fallback):** [UPCitemdb](https://www.upcitemdb.com).
+- **Inflation (Slovak HICP):** Source: Eurostat, dataset
+  [prc_hicp_minr](https://ec.europa.eu/eurostat/databrowser/view/prc_hicp_minr/default/table).
+  The app uses the index to convert prices into today's money; this is an
+  adaptation of the data for which Eurostat bears no responsibility
+  ([reuse policy](https://ec.europa.eu/eurostat/help/copyright-notice)).
+
+Service keys belong to the individual users, and their use is governed by
+each service's terms.
+
+### Third-party software
+
+Backend: [FastAPI](https://fastapi.tiangolo.com), [SQLAlchemy](https://www.sqlalchemy.org),
+[Alembic](https://alembic.sqlalchemy.org), [Pydantic](https://docs.pydantic.dev),
+[Uvicorn](https://www.uvicorn.org), [HTTPX](https://www.python-httpx.org),
+[argon2-cffi](https://argon2-cffi.readthedocs.io), [PyJWT](https://pyjwt.readthedocs.io),
+[cryptography](https://cryptography.io), [openpyxl](https://openpyxl.readthedocs.io)
+and others (MIT, BSD, Apache-2.0).
+
+Frontend: [Vue](https://vuejs.org), [Vuetify](https://vuetifyjs.com),
+[Pinia](https://pinia.vuejs.org), [Vue Router](https://router.vuejs.org),
+[vue-i18n](https://vue-i18n.intlify.dev), [VueUse](https://vueuse.org),
+[Chart.js](https://www.chartjs.org) with [vue-chartjs](https://vue-chartjs.org)
+and chartjs-plugin-zoom, [openapi-fetch](https://openapi-ts.dev) (MIT);
+barcode reading by [ZXing-C++](https://github.com/zxing-cpp/zxing-cpp) via
+[zxing-wasm](https://github.com/Sec-ant/zxing-wasm) (Apache-2.0, MIT, BSD-3-Clause);
+[Material Design Icons](https://pictogrammers.com/library/mdi/) (Apache-2.0);
+the [Roboto](https://github.com/googlefonts/roboto-classic) font (SIL Open Font License 1.1).
+
+Desktop: [Python](https://www.python.org) (PSF-2.0), [pywebview](https://pywebview.flowrl.com)
+(BSD-3-Clause), [pythonnet](https://pythonnet.github.io) (MIT),
+[Pillow](https://python-pillow.org) (MIT-CMU), packaged with
+[PyInstaller](https://pyinstaller.org) and [Inno Setup](https://jrsoftware.org/isinfo.php).
+
+Almost everything is under permissive licences (MIT, BSD, ISC, Apache-2.0,
+PSF). Two exceptions: **PyInstaller** is GPL-2.0, but with an exception that
+explicitly allows distributing a program bundled with it under its own
+licence. **certifi** (the list of certificate authorities) is MPL-2.0 and is
+included unmodified; its source is at
+[github.com/certifi/python-certifi](https://github.com/certifi/python-certifi).
+No dependency is under AGPL or LGPL.
+
+The installer ships `LICENSE.txt` and `THIRD-PARTY-NOTICES.txt` with the
+licence texts of all bundled libraries (in the Start menu as "Licencie softvéru
+tretích strán", i.e. third-party software licences). The list is generated by
+`packaging/notices.py` on every build from the installed packages and
+`package-lock.json`, so a new package ends up in it automatically.
+
+## Licence
+
+The source code is licensed under [MIT](LICENSE). The licence does not cover
+data, prices and images from third-party services, nor the LEGO® trademark
+and images of LEGO products; those belong to their respective owners.
+
+## Privacy and licences
+
+This is not legal advice, just a description of how the desktop app handles
+privacy and the services' terms (as of September 2026). The policy is also
+available inside the app.
+
+- **Your data is only on your computer**, in `%APPDATA%\MojeKocky`. The app
+  has no server and no operator, and its author has no access to your data.
+  This is personal use within a household, to which the GDPR does not apply
+  (Art. 2(2)(c)).
+- **What leaves your computer:** only requests to the services you connect
+  (set numbers and barcodes, under your own key), the inflation index
+  download from Eurostat (if you turn it on), and set images, which are loaded
+  directly from Rebrickable and Brickset (they see your computer's IP
+  address).
+- **Until an account enters its own key, it sees nothing from that service.**
+  With several accounts on one computer, each one sees only what its own key
+  has downloaded.
+- **Your rights and control:** in Settings → Account you can download all
+  your data (ZIP) or delete your account. Uninstalling asks whether to delete
+  the data folder as well.
+- **Backups made on update** (the last 5) are in
+  `%APPDATA%\MojeKocky\backups` and contain the whole database; data of a
+  deleted account stays in them until they rotate out.
+- **Photos** are stored downsized and without GPS location.
+- The app uses **no cookies and no tracking**. The window only remembers
+  display settings (dark mode, hidden prices and the like).
+- **Services:** Rebrickable allows any use; BrickEconomy and Brickset grant
+  personal licences tied to the key, which is why their data is visible only
+  to an account with its own key. If you put your BrickEconomy key into
+  several accounts, you are sharing your licence.
+- **Non-commercial:** the LEGO Fair Play guidelines and the BrickEconomy
+  licence both cover personal, non-commercial use only. The app does not use
+  the LEGO logo.

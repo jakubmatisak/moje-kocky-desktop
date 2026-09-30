@@ -4,12 +4,16 @@ import type * as Router from 'vue-router'
 import { flushPromises, shallowMount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import PieceDialog from '@/components/PieceDialog.vue'
 import i18n from '@/plugins/i18n'
+import { useNotifyStore } from '@/stores/notify'
 import { exactMoney, money } from '@/utils/format'
 import SetDetailView from './SetDetailView.vue'
 
 const NUM = '10294-1'
 let pieces: ValuedItem[] = []
+/** Odpoveď servera na úpravu kusu. */
+let patched: { data?: unknown, error?: unknown } = { data: {} }
 
 vi.mock('vue-router', async original => ({
   ...(await original<typeof Router>()),
@@ -32,6 +36,7 @@ vi.mock('@/api/client', async original => ({
       return { data: [] }
     },
     POST: async () => ({ data: null }),
+    PATCH: async () => patched,
   },
 }))
 
@@ -185,5 +190,47 @@ describe('detail setu: kusy v jednej mriežke', () => {
 
     expect(rows).toHaveLength(1)
     expect(cellNames(rows[0]!)).toEqual(CELLS)
+  })
+})
+
+describe('detail setu: úprava kusu', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    i18n.global.locale.value = 'sk'
+    pieces = [piece(1, { location: 'Povala' })]
+  })
+
+  /** Otvorí úpravu prvého kusu a vráti dialóg (stub). */
+  async function openEdit () {
+    const wrapper = await mountDetail()
+    await wrapper.find('.piece-cell--actions v-btn[icon="mdi-pencil-outline"]').trigger('click')
+    const dialog = wrapper.findComponent(PieceDialog)
+    expect(dialog.props('modelValue')).toBe(true)
+    return { wrapper, dialog }
+  }
+
+  it('chyba servera dialóg nezavrie: úpravy ostanú a dá sa uložiť znova', async () => {
+    patched = { error: { detail: 'Poznámka je príliš dlhá' } }
+    const { dialog } = await openEdit()
+    const done = vi.fn()
+
+    dialog.vm.$emit('save', 1, { note: 'x'.repeat(600) }, done)
+    await flushPromises()
+
+    expect(dialog.props('modelValue')).toBe(true)
+    expect(done).toHaveBeenCalledWith(false)
+    expect(useNotifyStore().queue.map(n => [n.text, n.color])).toEqual([['Poznámka je príliš dlhá', 'negative']])
+  })
+
+  it('po úspechu sa dialóg zavrie', async () => {
+    patched = { data: {} }
+    const { dialog } = await openEdit()
+    const done = vi.fn()
+
+    dialog.vm.$emit('save', 1, { note: 'ok' }, done)
+    await flushPromises()
+
+    expect(dialog.props('modelValue')).toBe(false)
+    expect(done).toHaveBeenCalledWith(true)
   })
 })

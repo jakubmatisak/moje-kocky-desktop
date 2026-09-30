@@ -838,6 +838,9 @@ Podrobnosti:
   stav, príznaky, kategória).
 - Úprava kusu sa počas ukladania nedá zavrieť a uloží sa na kus, pre ktorý
   sa začala; výber kategórií hlási načítanie aj chybu so „Skúsiť znova“.
+  Keď server úpravu neuloží, dialóg ostane otvorený so zadanými poľami
+  a dá sa uložiť znova; kategórie, ktoré sa už zapísali, sa druhýkrát
+  neposielajú a dialóg povie, že ostali uložené.
 
 **Figúrky** (`/figurky`):
 

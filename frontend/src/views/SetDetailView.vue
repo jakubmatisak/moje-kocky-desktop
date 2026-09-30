@@ -141,8 +141,17 @@
     editOpen.value = true
   }
 
-  /** `id` posiela dialóg: kus, pre ktorý sa ukladanie začalo, nie ten, čo je v ňom teraz. */
-  async function savePiece (id: number, payload: Record<string, unknown>): Promise<void> {
+  /**
+   * `id` posiela dialóg: kus, pre ktorý sa ukladanie začalo, nie ten, čo je v ňom teraz.
+   * `done` mu povie výsledok. Pri chybe dialóg ostane otvorený so zadanými
+   * úpravami, inak by ich po chybe servera či výpadku spojenia bolo treba
+   * písať znova.
+   */
+  async function savePiece (
+    id: number,
+    payload: Record<string, unknown>,
+    done?: (ok: boolean) => void,
+  ): Promise<void> {
     const { error: err } = await api.PATCH('/items/{item_id}', {
       params: { path: { item_id: id } },
       body: payload as never,
@@ -150,11 +159,13 @@
     // Chyba ide do oznámenia; stránková chyba je len pre nenačítaný set.
     if (err) {
       notify.error(err, t('piece.saveFailed'))
-    } else {
-      notify.success(t('notice.pieceSaved'))
+      done?.(false)
+      return
     }
+    notify.success(t('notice.pieceSaved'))
     // Dialóg iného kusu, otvorený medzitým, ostane otvorený.
     if (editTarget.value?.id === id) editOpen.value = false
+    done?.(true)
     await loadPieces()
     collection.refreshAll()
   }

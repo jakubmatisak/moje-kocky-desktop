@@ -2,12 +2,14 @@
 
 Jediný zdroj verzie appky je ``backend/pyproject.toml`` (``lego_api.__version__``).
 PyInstaller (``moje-kocky.spec``) ju odtiaľto zapíše aj do .exe, aby súbor
-hlásil to isté ako appka a inštalátor.
+hlásil to isté ako appka a inštalátor. Inštalátoru dá ``build.ps1`` tie isté
+čísla: ``python version_info.py 1.0.0rc1`` vypíše ``1.0.0.0``.
 """
 
 from __future__ import annotations
 
 import re
+import sys
 import tomllib
 from pathlib import Path
 
@@ -33,6 +35,15 @@ def _numbers(version: str) -> tuple[int, int, int, int]:
     return (major, minor, patch, 0)
 
 
+def file_version(version: str) -> str:
+    """Číselná verzia pre Inno Setup (``VersionInfoVersion``): ``1.0.0rc1`` → ``1.0.0.0``.
+
+    Tie isté čísla ako v MojeKocky.exe. Text s príveskom dostane inštalátor
+    zvlášť; ISCC by ho vo ``VersionInfoVersion`` odmietol.
+    """
+    return ".".join(str(number) for number in _numbers(version))
+
+
 def version_resource(version: str) -> vi.VSVersionInfo:
     numbers = _numbers(version)
     strings = [
@@ -51,3 +62,7 @@ def version_resource(version: str) -> vi.VSVersionInfo:
             vi.VarFileInfo([vi.VarStruct("Translation", [_LANGUAGE, _CODEPAGE])]),
         ],
     )
+
+
+if __name__ == "__main__":
+    print(file_version(sys.argv[1]))

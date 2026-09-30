@@ -94,9 +94,9 @@ Overené skúškou na zahodenie (pywebview 6.2, WebView2, Windows 11):
 - **Zostavenie**: GitHub Actions `windows-latest` pri tagu `v*`, výsledok
   `MojeKocky-Setup-x.y.z.exe` v Releases. Lokálne `scripts\build.ps1`.
 - **Verzia**: jediný zdroj je `version` v `backend/pyproject.toml` (ako na
-  webe). Inštalátor, `MojeKocky.exe` (Podrobnosti súboru,
-  `packaging/version_info.py`) aj appka (Nastavenia → Aplikácia) hlásia to
-  isté číslo; `build.ps1` inú verziu nezostaví, takže tag `v1.2.3` musí
+  webe). Inštalátor (aj v Podrobnostiach svojho súboru), `MojeKocky.exe`
+  (Podrobnosti súboru, `packaging/version_info.py`) aj appka (Nastavenia →
+  Aplikácia) hlásia to isté číslo; `build.ps1` inú verziu nezostaví, takže tag `v1.2.3` musí
   sedieť s `pyproject.toml`. PyInstaller pribaľuje metadáta balíka
   `lego-api`, inak by program hlásil `0+unknown`.
 - **Záloha pri aktualizácii**: nová verzia sa inštaluje cez starú a pri

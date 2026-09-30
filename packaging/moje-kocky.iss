@@ -7,11 +7,19 @@
 #ifndef AppVersion
   #define AppVersion "1.0.0"
 #endif
+; Vlastnosti → Podrobnosti súboru chcú len čísla (1.0.0rc1 → 1.0.0.0);
+; build.ps1 ich berie z packaging\version_info.py, tie isté ako MojeKocky.exe.
+#ifndef AppFileVersion
+  #define AppFileVersion AppVersion
+#endif
 
 [Setup]
 AppId={{6C1B7E2A-5D43-4F7B-9B8E-4A2D6F0C9E11}
 AppName=Moje kocky
 AppVersion={#AppVersion}
+VersionInfoVersion={#AppFileVersion}
+VersionInfoTextVersion={#AppVersion}
+VersionInfoProductTextVersion={#AppVersion}
 AppPublisher=jakubmatisak
 AppPublisherURL=https://github.com/jakubmatisak
 DefaultDirName={localappdata}\Programs\MojeKocky

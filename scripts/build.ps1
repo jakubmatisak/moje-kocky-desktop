@@ -26,6 +26,9 @@ uv run python ..\packaging\notices.py ..\build\THIRD-PARTY-NOTICES.txt
 if ($LASTEXITCODE -ne 0) { throw "Zoznam licencií sa nevytvoril" }
 uv run pyinstaller --noconfirm --clean --distpath ..\build\dist --workpath ..\build\work ..\packaging\moje-kocky.spec
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller zlyhal" }
+# Podrobnosti súboru inštalátora chcú len čísla (1.0.0rc1 -> 1.0.0.0), tie isté ako MojeKocky.exe.
+$fileVersion = uv run python ..\packaging\version_info.py $Version | Select-Object -Last 1
+if ($LASTEXITCODE -ne 0 -or -not $fileVersion) { throw "Číselná verzia pre inštalátor sa nezistila" }
 Pop-Location
 
 Write-Host "3/3 Inštalátor (Inno Setup)"
@@ -39,6 +42,6 @@ if (-not $iscc) {
   Write-Warning "Inno Setup (ISCC.exe) sa nenašiel. Program je v build\dist\MojeKocky, inštalátor sa nezostavil."
   exit 0
 }
-& $iscc "/DAppVersion=$Version" (Join-Path $root "packaging\moje-kocky.iss")
+& $iscc "/DAppVersion=$Version" "/DAppFileVersion=$fileVersion" (Join-Path $root "packaging\moje-kocky.iss")
 if ($LASTEXITCODE -ne 0) { throw "Inno Setup zlyhal" }
 Write-Host "Hotovo: build\installer\MojeKocky-Setup-$Version.exe"

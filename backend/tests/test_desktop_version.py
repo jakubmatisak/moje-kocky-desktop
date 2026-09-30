@@ -7,8 +7,10 @@ program bez metadát balíka by hlásil ``0+unknown``.
 """
 
 import importlib.util
+import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tomllib
@@ -88,6 +90,101 @@ def test_exe_version_resource_accepts_local_suffix():
 
     assert (resource.ffi.fileVersionMS, resource.ffi.fileVersionLS) == (1 << 16, 0)
     assert _strings(resource)["ProductVersion"] == "1.0.0rc1"
+
+
+# --- inštalátor: Vlastnosti → Podrobnosti ------------------------------------------
+
+
+def test_installer_file_version_is_numbers_of_app_version():
+    """Inno Setup chce vo ``VersionInfoVersion`` len čísla, ako Windows v .exe."""
+    module = _version_info()
+
+    assert module.file_version("1.2.3") == "1.2.3.0"
+    assert module.file_version("1.0.0rc1") == "1.0.0.0"
+    assert module.file_version("2") == "2.0.0.0"
+
+
+def test_build_script_passes_file_version_from_version_info():
+    """build.ps1 nepočíta čísla sám, vypíše mu ich ``version_info.py`` (ako MojeKocky.exe)."""
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "packaging" / "version_info.py"), "1.0.0rc1"],
+        capture_output=True,
+        text=True,
+        timeout=120,
+        check=True,
+    )
+    script = (ROOT / "scripts" / "build.ps1").read_text(encoding="utf-8-sig")
+
+    assert result.stdout.strip() == "1.0.0.0"
+    assert "version_info.py $Version" in script
+    assert '"/DAppFileVersion=$fileVersion"' in script
+
+
+def _iscc() -> Path | None:
+    """ISCC.exe tam, kde ho hľadá build.ps1."""
+    found = shutil.which("iscc")
+    candidates = [Path(found)] if found else []
+    for variable, folder in (
+        ("ProgramFiles(x86)", "Inno Setup 6"),
+        ("ProgramFiles", "Inno Setup 6"),
+        ("LOCALAPPDATA", "Programs/Inno Setup 6"),
+    ):
+        if os.environ.get(variable):
+            candidates.append(Path(os.environ[variable]) / folder / "ISCC.exe")
+    return next((path for path in candidates if path.is_file()), None)
+
+
+def _file_details(exe: Path) -> dict[str, str]:
+    """Verzie z Vlastnosti → Podrobnosti, ako ich číta Windows."""
+    command = (
+        f"$v = (Get-Item -LiteralPath '{exe}').VersionInfo; "
+        "[ordered]@{ file = $v.FileVersion; product = $v.ProductVersion; "
+        "fileRaw = $v.FileVersionRaw.ToString(); productRaw = $v.ProductVersionRaw.ToString() }"
+        " | ConvertTo-Json"
+    )
+    result = subprocess.run(
+        ["powershell", "-NoProfile", "-Command", command],
+        capture_output=True,
+        timeout=120,
+        check=True,
+    )
+    details = json.loads(result.stdout.decode("utf-8", errors="replace"))
+    # Inno Setup dopĺňa texty v zdroji verzie medzerami, Windows ich neukáže.
+    return {key: value.strip() for key, value in details.items()}
+
+
+@pytest.mark.skipif(_iscc() is None, reason="Inno Setup (ISCC.exe) nie je nainštalovaný")
+@pytest.mark.parametrize("version", [None, "1.2.3rc1"])
+def test_installer_exe_carries_app_version(tmp_path, version):
+    """Súbor inštalátora hlási verziu appky, nie 0.0.0.0 (text celý, čísla bez prívesku).
+
+    Zostaví sa len hlavička skutočného skriptu (predvolená verzia a [Setup])
+    bez súborov programu, do dočasného priečinka. ``None`` = bez parametrov,
+    teda predvolená verzia v skripte; inak tak, ako volá ISCC build.ps1.
+    """
+    iss = (ROOT / "packaging" / "moje-kocky.iss").read_text(encoding="utf-8-sig")
+    header = iss.split("[Languages]", 1)[0]
+    # Ikona a licencia s relatívnou cestou ako pri skutočnom skripte.
+    header = header.replace("[Setup]\n", f"[Setup]\nSourceDir={ROOT / 'packaging'}\n", 1)
+    script = tmp_path / "hlavicka.iss"
+    script.write_text(header, encoding="utf-8-sig")
+    text = version or _app_version()
+    numbers = _version_info().file_version(text)
+    defines = [] if version is None else [f"/DAppVersion={text}", f"/DAppFileVersion={numbers}"]
+
+    subprocess.run(
+        [str(_iscc()), "/Q", f"/O{tmp_path}", "/Fsetup", *defines, str(script)],
+        capture_output=True,
+        timeout=300,
+        check=True,
+    )
+
+    assert _file_details(tmp_path / "setup.exe") == {
+        "file": text,
+        "product": text,
+        "fileRaw": numbers,
+        "productRaw": numbers,
+    }
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="PowerShell a zostavenie sú len pre Windows")

@@ -37,7 +37,10 @@ sa načítavajú zo súborov) → Inno Setup (`packaging/moje-kocky.iss`).
 GitHub Actions `release` pri tagu `v*`. Spec pribaľuje metadáta balíka
 `lego-api` (`copy_metadata`), inak by zabalený program hlásil `0+unknown`
 a pri aktualizácii bez migrácie nezálohoval; verziu do .exe zapíše
-`packaging/version_info.py`. Verzia inštalátora je verzia appky:
+`packaging/version_info.py`. Tie isté čísla dostane aj súbor inštalátora
+(`VersionInfoVersion` z `/DAppFileVersion`, ktoré `build.ps1` vezme
+z `version_info.py`; Inno Setup berie len čísla, text s príveskom ide
+zvlášť), inak by hlásil 0.0.0.0. Verzia inštalátora je verzia appky:
 `build.ps1` inú nepustí (tag `v1.2.3` = `version` v `pyproject.toml`),
 predvolené čísla v `build.ps1` a `moje-kocky.iss` stráži
 `tests/test_desktop_version.py`. Každé vydanie zvýši verziu.

@@ -358,7 +358,10 @@ má (pri skenoch X, Y, X druhý kus X), server nevráti a odpovie 204
 (`still_bought`, to isté pravidlo ako `drop_bought`). Import Chcem
 z importov nechá (`keep_imported`, aj zo staršieho importu; náhľad sľubuje
 vyradenie len pri ostatných a pri týchto povie, že ostanú) a vyradené si
-pamätá na vrátenie, aj s dátumom pridania (`added_at`).
+pamätá na vrátenie, aj s dátumom pridania (`added_at`). Stránka Chcem
+po pridaní či odobratí obnoví aj súhrn (odznak v ponuke) a zoznam načíta
+raz (`WishlistView.vue::afterChange`); po kúpe ho načíta watch nad
+`wishlist_count`, nie `@saved` dialógu, inak by šiel dvakrát.
 
 **Katalógové vzťahy sa načítavajú výslovným dotazom.** `CatalogItem` zámerne
 nemá ORM vzťah na členov série. Lenivé načítanie v asynchrónnej session padne

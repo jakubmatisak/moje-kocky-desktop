@@ -874,7 +874,9 @@ berie `created_at`, aby Späť vrátil položku na jej pôvodné miesto;
 rovnako ju s pôvodným dátumom obnoví vrátenie importu. Import položky
 Chcem z importov (aj zo staršieho) nevyraďuje; náhľad pri vlastnenom
 riadku sľubuje vyradenie len pri ručne pridanej položke, pri položke
-z importu povie, že ostane.
+z importu povie, že ostane. Pridanie a odobratie na stránke Chcem
+obnoví aj súhrn, takže odznak Chcem v ponuke hneď ukáže nový počet;
+zoznam sa po každej zmene, aj po kúpe, načíta raz.
 
 **Nastavenia** (`/nastavenia`):
 

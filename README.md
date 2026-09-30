@@ -21,9 +21,9 @@ zálohuje.
 
 ![Prehľad: hodnota portfólia, zisk a rozdelenie podľa sérií](docs/screenshots/prehlad.png)
 
-| Zbierka | Zberateľská séria |
+| Zbierka | Figúrky |
 | --- | --- |
-| ![Zbierka: karty setov s kúpnou cenou, hodnotou a ziskom](docs/screenshots/zbierka.png) | ![Séria minifigúrok: ktoré máš a ktoré chýbajú](docs/screenshots/figurky.png) |
+| ![Zbierka: karty setov s kúpnou cenou, hodnotou a ziskom](docs/screenshots/zbierka.png) | ![Figúrky: zberateľská séria, ktoré figúrky máš a ktoré chýbajú](docs/screenshots/figurky.png) |
 
 *Snímky sú z ukážkovej zbierky s vymyslenými, ručne zadanými cenami.*
 
@@ -40,8 +40,9 @@ zálohuje.
   aj blind-box série iných radov (Mighty Machines, Super Mario a pod.) sú len
   vo **Figúrkach**. Séria sa pridáva výberom z mriežky figúrok, nerozbalený
   sáčok sa po rozbalení priradí ku konkrétnej figúrke. Sekcia pozná všetky
-  série, aj nezačaté, a ukáže, čo chýba. Figúrky zo série sa hromadne
-  upravujú v jej detaile. Prehľad, export aj súpis pre poistku počítajú
+  série, aj nezačaté, a ukáže, čo chýba. Nerozbalené sáčky, predané figúrky,
+  obnova cien a hromadná úprava figúrok série sú v jej detaile (tlačidlo
+  **Kusy série**). Prehľad, export aj súpis pre poistku počítajú
   všetko, sety aj figúrky. Keď hľadanie v Zbierke nájde figúrku, appka
   odkáže do Figúrok.
 - **Série a vlny.** Koľko setov z témy a roku máš, podľa zoznamu Brickset.
@@ -239,11 +240,7 @@ Frontend → PyInstaller (`packaging/moje-kocky.spec`, výsledok
 výsledok `build/installer/MojeKocky-Setup-1.0.0.exe`). Bez nainštalovaného
 Inno Setup skript skončí pri programe. Verzia musí byť tá z
 `backend/pyproject.toml`, inú skript nezostaví: appka podľa nej pri
-aktualizácii zálohuje databázu. Nové vydanie teda zvýši `version`
-v `pyproject.toml`, spustí `uv lock` a upraví verziu vo
-`frontend/package.json` aj `package-lock.json` (a číslo verzie na začiatku
-tohto README). Na GitHube zostaví inštalátor workflow `release` pri každom
-tagu `v*` a priloží ho k Release.
+aktualizácii zálohuje databázu.
 
 ```
 backend/src/lego_api/      appka (FastAPI, SQLAlchemy 2, SQLite, Alembic)
@@ -251,7 +248,23 @@ backend/src/lego_desktop/  okno, most, %APPDATA%, zámok jednej inštancie
 frontend/                  Vue 3, Vuetify 4; src/desktop/ = fetch cez most
 packaging/                 PyInstaller, Inno Setup, ikona
 scripts/build.ps1          celé zostavenie
+docs/release-notes/        text vydania na GitHube
 ```
+
+### Nové vydanie
+
+1. Zvýš `version` v `backend/pyproject.toml` a spusti `uv lock`.
+2. Tú istú verziu daj do `frontend/package.json` aj `package-lock.json`,
+   ako predvolenú do `scripts/build.ps1` (`$Version`) a
+   `packaging/moje-kocky.iss` (`AppVersion`) a na začiatok tohto README.
+   Zhodu strážia `backend/tests/test_version.py` a `test_desktop_version.py`.
+3. Text vydania napíš do `docs/release-notes/vX.Y.Z.md`, po slovensky a pod
+   tým po anglicky. Bez neho dostane Release všeobecný text
+   z `docs/release-notes/default.md`.
+4. Pošli na GitHub tag `vX.Y.Z` s tou istou verziou. Workflow `release`
+   spustí testy, zostaví inštalátor a priloží `MojeKocky-Setup-X.Y.Z.exe`
+   k Release. Tag s inou verziou, než je v `pyproject.toml`, `build.ps1`
+   odmietne a Release nevznikne.
 
 ## Súvisiace repozitáre
 
@@ -395,9 +408,9 @@ open port**. All your data (collection, photos, keys) stays with you in
 
 ![Overview: portfolio value, profit and breakdown by theme](docs/screenshots/prehlad.png)
 
-| Collection | Collectible minifigure series |
+| Collection | Minifigures |
 | --- | --- |
-| ![Collection: set cards with purchase price, value and profit](docs/screenshots/zbierka.png) | ![Minifigure series: which ones you have and which are missing](docs/screenshots/figurky.png) |
+| ![Collection: set cards with purchase price, value and profit](docs/screenshots/zbierka.png) | ![Minifigures: a collectible series, which figures you have and which are missing](docs/screenshots/figurky.png) |
 
 *The screenshots show a sample collection with made-up, hand-entered prices.
 The app's interface is available in Slovak and English.*
@@ -418,10 +431,12 @@ The app's interface is available in Slovak and English.*
   Machines, Super Mario and the like) live only under **Minifigures**. You add
   a series by picking figures from a grid, and a sealed bag can be assigned to
   a specific figure once you open it. The section knows every series, including
-  ones you haven't started, and shows what is missing. Figures from a series
-  are bulk-edited on that series' page. The Overview, the export and the
-  insurance inventory count everything, sets and figures alike. When a search
-  in the Collection matches a figure, the app points you to Minifigures.
+  ones you haven't started, and shows what is missing. Sealed bags, sold
+  figures, the price refresh and bulk editing of a series' figures are on
+  that series' page (the **Series pieces** button). The Overview, the export
+  and the insurance inventory count everything, sets and figures alike. When
+  a search in the Collection matches a figure, the app points you to
+  Minifigures.
 - **Themes and waves.** How many sets of a theme and year you own, based on
   Brickset's lists.
 - **Custom categories** with rules (e.g. everything with "F1" in the name,
@@ -633,11 +648,7 @@ Frontend → PyInstaller (`packaging/moje-kocky.spec`, output
 output `build/installer/MojeKocky-Setup-1.0.0.exe`). Without Inno Setup
 installed the script stops after the program. The version must match the one
 in `backend/pyproject.toml`, otherwise the script refuses to build: the app
-relies on it to back up the database on update. A new release therefore bumps
-`version` in `pyproject.toml`, runs `uv lock` and updates the version in
-`frontend/package.json` and `package-lock.json` (and the version number at the
-top of this README). On GitHub, the `release` workflow builds the installer
-for every `v*` tag and attaches it to the Release.
+relies on it to back up the database on update.
 
 ```
 backend/src/lego_api/      the app (FastAPI, SQLAlchemy 2, SQLite, Alembic)
@@ -645,7 +656,24 @@ backend/src/lego_desktop/  window, bridge, %APPDATA%, single-instance lock
 frontend/                  Vue 3, Vuetify 4; src/desktop/ = fetch over the bridge
 packaging/                 PyInstaller, Inno Setup, icon
 scripts/build.ps1          the whole build
+docs/release-notes/        release notes on GitHub
 ```
+
+### New release
+
+1. Bump `version` in `backend/pyproject.toml` and run `uv lock`.
+2. Put the same version into `frontend/package.json` and `package-lock.json`,
+   as the default in `scripts/build.ps1` (`$Version`) and
+   `packaging/moje-kocky.iss` (`AppVersion`), and at the top of this README.
+   `backend/tests/test_version.py` and `test_desktop_version.py` check that
+   they match.
+3. Write the release notes into `docs/release-notes/vX.Y.Z.md`, in Slovak
+   with English below. Without that file the Release gets the general text
+   from `docs/release-notes/default.md`.
+4. Push the tag `vX.Y.Z` with the same version. The `release` workflow runs
+   the tests, builds the installer and attaches `MojeKocky-Setup-X.Y.Z.exe`
+   to the Release. A tag with a version other than the one in
+   `pyproject.toml` is refused by `build.ps1` and no Release is created.
 
 ## Related repositories
 

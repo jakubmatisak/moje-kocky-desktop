@@ -495,7 +495,8 @@ nie (`source_access` čísla, pri neúspechu `miss:{číslo}`, a neúspech
 z Overiť cenu v pamäti procesu), prípadne od novšej ručnej ceny. Keď zdroj
 odpovie, že set nepozná alebo preň cenu nemá, `pricing.store_miss` to
 zapíše pod `miss:{číslo}`; prístup pod samotným číslom by účtu odomkol
-ceny iného kľúča. Overiť cenu zapisuje neúspech tou istou funkciou.
+ceny iného kľúča. Overiť cenu aj obnova jednej položky
+(`POST /prices/{num}/refresh`) zapisujú neúspech tou istou funkciou.
 Výpadok siete či chyba servera (`provider.last_answered` je False) sa
 nezapíše nikde, ani v Overiť cenu, a skúsi sa pri ďalšej obnove.
 

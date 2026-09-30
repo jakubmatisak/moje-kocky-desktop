@@ -296,7 +296,8 @@ Vek je čas od posledného volania vlastného kľúča, s cenou aj bez nej
 najprv neznáme, teda kľúč sa ešte nepýtal a cena chýba (Zbierka pred Chcem,
 naposledy pridané prvé), potom ostatné od najstaršieho volania. Keď zdroj
 odpovie, že cenu nemá (400/404 alebo odpoveď bez ceny), `store_miss` zapíše
-`miss:{číslo}`, nie číslo samo, lebo to by odomklo cudzie ceny. Bez tejto
+`miss:{číslo}`, nie číslo samo, lebo to by odomklo cudzie ceny; rovnako
+obnova jednej položky (`POST /prices/{num}/refresh`). Bez tejto
 stopy by bola položka pri každom kliknutí neznáma, prvá a stála by volanie;
 rovnako postavený kus setu v predaji, ktorému použitá cena nepríde nikdy.
 Výpadok (`provider.last_answered` je False) sa nezapíše, skúsi sa nabudúce.

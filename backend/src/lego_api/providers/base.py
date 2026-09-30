@@ -66,6 +66,8 @@ class PriceProvider(Protocol):
     """
 
     name: str
+    #: Zdroj na posledné volanie odpovedal (aj „nepoznám“), nešlo o výpadok.
+    last_answered: bool
 
     @property
     def enabled(self) -> bool: ...

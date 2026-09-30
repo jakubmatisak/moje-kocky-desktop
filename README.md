@@ -202,8 +202,10 @@ Nič sa nedeje samo od seba, nie je tu plánovač. Obnovu cien spúšťa tlačid
 v hornej lište a beží na pozadí. Denná kvóta BrickEconomy je 100 volaní,
 preto:
 
-1. Hromadná obnova neťahá ceny mladšie než týždeň.
-2. Na jedno spustenie najviac 40 položiek, od najstaršej; zvyšok pri
+1. Hromadná obnova sa nepýta na položku, na ktorú sa pýtala pred menej než
+   týždňom, ani keď vtedy zdroj cenu nemal.
+2. Na jedno spustenie najviac 40 položiek. Najprv tie, ktorých cenu ešte
+   nepoznáme (naposledy pridané prvé), potom od najstaršej; zvyšok pri
    ďalšom (dávka sa dá zmeniť na karte BrickEconomy).
 3. Platí zvyšok dennej kvóty, po odpovedi 429 sa dávka zastaví.
 4. Jedno volanie na set: odpoveď nesie cenu nového aj použitého kusu
@@ -616,8 +618,10 @@ Nothing happens on its own; there is no scheduler. A price refresh is started
 by a button in the top bar and runs in the background. BrickEconomy's daily
 quota is 100 calls, so:
 
-1. A bulk refresh skips prices younger than a week.
-2. At most 40 items per run, oldest first; the rest next time (the batch size
+1. A bulk refresh skips items it asked about less than a week ago, even when
+   the source had no price then.
+2. At most 40 items per run. Items with no known price go first (most
+   recently added first), then the oldest; the rest next time (the batch size
    can be changed on the BrickEconomy card).
 3. The remaining daily quota is respected, and the batch stops after a 429
    response.

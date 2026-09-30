@@ -456,17 +456,34 @@ stoja jedno volanie. Predané kusy sa neobnovujú.
 (`POST /prices/refresh-all`), ďalej to beží cez `BackgroundTasks`. Nemá to
 plánovač a nespúšťa to ani prihlásenie. Poistky v `services/refresh.py`:
 
-- **vek snímky:** obnoví sa, len čo je staršie ako 168 h;
+- **vek posledného volania:** obnoví sa, len čo je staršie ako 168 h;
 - **strop dávky:** 40 položiek;
 - **zvyšok dennej kvóty:** počítadlo je v `providers/brickeconomy.py`,
   pri 429 sa dávka zastaví;
 - **jedno volanie na (číslo, druh);**
 - **zámok proti súbehu** a množina položiek, ktoré sa práve obnovujú.
 
-Zoradené je to od najstaršej snímky, takže pri veľkej zbierke vzniká
-rotácia. Pri ~1500 rôznych setoch a 90 volaniach denne trvá jedno kolo
-zhruba 17 dní. História tým netrpí, lebo každá odpoveď nesie ceny za
-posledné mesiace.
+**Vek** je čas od posledného volania vlastného kľúča, či cena prišla, alebo
+nie (`source_access` čísla, pri neúspechu `miss:{číslo}`, a neúspech
+z Overiť cenu v pamäti procesu), prípadne od novšej ručnej ceny. Keď zdroj
+odpovie, že set nepozná alebo preň cenu nemá, `pricing.store_miss` to
+zapíše pod `miss:{číslo}`; prístup pod samotným číslom by účtu odomkol
+ceny iného kľúča. Výpadok siete či chyba servera sa nezapíše a skúsi sa
+pri ďalšej obnove.
+
+**Poradie dávky.** Najprv neznáme ceny: kľúč sa na položku ešte nepýtal
+a niektorý jej stav nemá snímku. Medzi nimi Zbierka pred Chcem (hodnota
+zbierky ráta len vlastnené kusy) a naposledy pridané prvé (čerstvo pridaný
+set je ten, na ktorého cenu používateľ čaká). Potom ostatné od najstaršieho
+volania, takže pri veľkej zbierke vzniká rotácia. Pri ~1500 rôznych setoch
+a 90 volaniach denne trvá jedno kolo zhruba 17 dní. História tým netrpí,
+lebo každá odpoveď nesie ceny za posledné mesiace.
+
+Kým sa neúspech nezapisoval, položka bez ceny bola pri každej obnove
+neznáma, prvá na rade a stála volanie pri každom kliknutí. To isté
+postavený kus setu v predaji: zdroj mu použitú cenu nepošle, kým sa set
+nestiahne z predaja. Teraz stojí každá taká položka jedno volanie za
+168 h, ako položka s cenou.
 
 **Ručná obnova z detailu** (`refresh-all?num=`) vek snímky nepozerá, strop
 dávky a zvyšok kvóty platia aj pre ňu. **Ručná cena**

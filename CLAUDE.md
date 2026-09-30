@@ -219,6 +219,18 @@ cez `_decimal`, ktoré zahadzuje nulu a mínus ako neplatnú cenu.
 **Hromadná obnova raz za týždeň, ručná hneď.** `price_max_age_hours` je 168.
 `POST /prices/refresh-all?num=` je ručná obnova z detailu a vek snímky
 nepozerá (`force`); strop dávky a zvyšok kvóty platia aj pre ňu.
+Vek je čas od posledného volania vlastného kľúča, s cenou aj bez nej
+(`pricing.last_attempts`: `source_access` čísla a `miss:{číslo}`, k tomu
+`price_misses`), alebo od novšej ručnej ceny. Poradie v `collect_targets`:
+najprv neznáme, teda kľúč sa ešte nepýtal a cena chýba (Zbierka pred Chcem,
+naposledy pridané prvé), potom ostatné od najstaršieho volania. Keď zdroj
+odpovie, že cenu nemá (400/404 alebo odpoveď bez ceny), `store_miss` zapíše
+`miss:{číslo}`, nie číslo samo, lebo to by odomklo cudzie ceny. Bez tejto
+stopy by bola položka pri každom kliknutí neznáma, prvá a stála by volanie;
+rovnako postavený kus setu v predaji, ktorému použitá cena nepríde nikdy.
+Výpadok (`provider.last_answered` je False) sa nezapíše, skúsi sa nabudúce.
+Pamäť `price_misses` sa v desktope stratí s každým zatvorením programu,
+preto je stopa v databáze.
 
 **Zberateľské série majú na Rebrickable nečakanú štruktúru.** Séria nie je
 jeden set s dvanástimi figúrkami. Každá figúrka je samostatný set
@@ -421,9 +433,9 @@ sety sú v `price_checks` pri účte; `/prices/checks` je v routeri pred
 
 **Obnova cien nemá plánovač a nespúšťa ju prihlásenie.** Spúšťa ju výhradne
 používateľ tlačidlom v hornej lište (`POST /prices/refresh-all`), ďalej to
-beží cez `BackgroundTasks`. Poistky sú v `services/refresh.py`: vek snímky,
-strop na dávku, zvyšok dennej kvóty, jedno volanie na položku a zámok proti
-súbehu.
+beží cez `BackgroundTasks`. Poistky sú v `services/refresh.py`: vek
+posledného volania, strop na dávku, zvyšok dennej kvóty, jedno volanie na
+položku a zámok proti súbehu. Do stropu idú najprv neznáme ceny.
 
 **Registráciu otvára správca v appke, nie `.env`.** Stav je v tabuľke
 `app_settings` (`services/app_settings.py`); `ALLOW_REGISTRATION` platí,
@@ -614,7 +626,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 575 testov, frontend 200. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 588 testov, frontend 201. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

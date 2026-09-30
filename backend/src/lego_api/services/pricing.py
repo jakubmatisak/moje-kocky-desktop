@@ -24,9 +24,10 @@ from lego_api.models import (
     PriceKind,
     PriceSnapshot,
     PriceVariant,
+    SourceAccess,
 )
 from lego_api.providers.brickeconomy import MarketData
-from lego_api.services import access
+from lego_api.services import access, price_misses
 from lego_api.visibility import BRICKECONOMY
 
 
@@ -174,6 +175,41 @@ async def store_market(session: AsyncSession, data: MarketData, fp: str | None =
 
     await access.record(session, BRICKECONOMY, fp, data.catalog_num, datetime.now(UTC))
     return added
+
+
+#: Predmet prístupu pre volanie, na ktoré zdroj cenu nemal.
+MISS_PREFIX = "miss:"
+
+
+async def store_miss(session: AsyncSession, num: str, fp: str | None) -> None:
+    """Zdroj odpovedal, ale cenu pre ``num`` nemá: stopa, že sme sa pýtali.
+
+    Bez nej by obnova cien mala položku pri každom behu za neznámu, dala by
+    ju na začiatok dávky a každé kliknutie by stálo volanie. Ide do
+    ``source_access`` pod vlastným predmetom ``miss:{číslo}``: prístup pod
+    samotným číslom by účtu odomkol ceny, ktoré stiahol iný kľúč. Zapíše sa
+    aj do pamäte procesu, aby sa dnes nepýtalo ani Overiť cenu.
+    """
+    price_misses.remember(num)
+    await access.record(session, BRICKECONOMY, fp, f"{MISS_PREFIX}{num}")
+
+
+async def last_attempts(session: AsyncSession, fp: str | None) -> dict[str, datetime]:
+    """Kedy sa kľúč ``fp`` naposledy pýtal na ceny čísla, s odpoveďou aj bez nej."""
+    out: dict[str, datetime] = {}
+    if fp is None:
+        return out
+    rows = await session.execute(
+        select(SourceAccess.subject, SourceAccess.last_fetched_at).where(
+            SourceAccess.provider == BRICKECONOMY, SourceAccess.fingerprint == fp
+        )
+    )
+    for subject, at in rows:
+        num = subject.removeprefix(MISS_PREFIX)
+        at = _aware(at)
+        if num not in out or at > out[num]:
+            out[num] = at
+    return out
 
 
 async def _known_moments(

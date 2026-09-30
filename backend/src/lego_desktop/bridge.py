@@ -83,11 +83,16 @@ class Bridge:
         """Súbor sleduje obnovovacie cookie zo servera.
 
         Trvalé cookie (zaškrtnuté Zapamätať si prihlásenie) sa uloží, pri
-        každej obnove znova. Session cookie (prihlásenie bez zaškrtnutia,
-        zmena hesla) a zmazané cookie (odhlásenie, zmazanie účtu) súbor
-        zmažú, rovnako odmietnutá obnova. Tá sa neráta, keď odišlo staršie
-        cookie, než aké klient drží: dve obnovy naraz (pywebview volá most
-        z viacerých vlákien) by inak zmazali práve vydané prihlásenie.
+        každej obnove znova, aj po zmene hesla (server vydá nové v tom istom
+        režime). Session cookie (prihlásenie bez zaškrtnutia) a zmazané
+        cookie (odhlásenie, zmazanie účtu) súbor zmažú, rovnako odmietnutá
+        obnova. Tá sa neráta, keď odišlo staršie cookie, než aké klient drží.
+
+        Dve obnovy naraz (pywebview volá most z viacerých vlákien) pošlú to
+        isté cookie. Neskoršiu server v ochrannej lehote po výmene
+        (``refresh_grace_seconds``) odbaví len prístupovým tokenom bez
+        Set-Cookie: súbor ostane, drží už nástupcu. Staré cookie po lehote
+        je ukradnuté, server zruší všetky prihlásenia účtu a 401 súbor zmaže.
         """
         if self._remembered is None:
             return

@@ -102,7 +102,8 @@ zálohuje.
   (správca appky) v Nastaveniach → Aplikácia.
 - **Zapamätať si prihlásenie na tomto počítači**: so zaškrtnutým políčkom
   sa po otvorení appky netreba prihlasovať, 30 dní od posledného použitia.
-  Odhlásenie aj zmena hesla zapamätané prihlásenie zrušia.
+  Odhlásenie ho zruší. Zmena hesla zruší prihlásenia účtu všade inde, okno,
+  v ktorom heslo meníš, ostane prihlásené aj so zapamätaním.
 - Rozhranie po slovensky aj po anglicky, svetlý a tmavý režim. Nastavenia
   zobrazenia sa pamätajú pri účte. Inštalátor a odinštalovanie hovoria
   jazykom, ktorý si vyberieš na začiatku inštalácie (ponúkne jazyk
@@ -554,7 +555,9 @@ The app's interface is available in Slovak and English.*
   app's administrator) allows more in Settings → Application.
 - **Remember me on this computer**: with the box ticked you don't have to
   sign in when you open the app, for 30 days since you last used it. Signing
-  out or changing the password forgets the sign-in.
+  out forgets the sign-in. Changing the password ends the account's sign-ins
+  everywhere else; the window where you change it stays signed in and
+  remembered.
 - Slovak and English interface, light and dark mode. Display settings are
   stored with the account. The installer and the uninstaller speak the
   language you pick when the installation starts (the Windows language is

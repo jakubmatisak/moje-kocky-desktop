@@ -30,10 +30,14 @@ tomto počítači“) uloží `bridge.py::_keep_login` zašifrované cez
 kľúče, `keys_service.encrypt`) a `_restore_login` ho pri štarte vráti
 klientovi, takže frontend sa cez `/auth/refresh` prihlási sám. Session
 cookie sa neukladá. Súbor zmaže každé session alebo zmazané cookie zo
-servera (prihlásenie bez zaškrtnutia, zmena hesla, odhlásenie, zmazanie
-účtu) a 401 pri obnove, ak odišlo cookie, ktoré klient práve drží: dve
-obnovy naraz (pywebview volá most z viacerých vlákien) by inak zmazali
-práve vydané prihlásenie. Poškodený či cudzím tajomstvom zašifrovaný súbor
+servera (prihlásenie bez zaškrtnutia, odhlásenie, zmazanie účtu) a 401 pri
+obnove, ak odišlo cookie, ktoré klient práve drží. Zmena hesla v okne
+zapamätanie nechá: server pošle nové trvalé cookie a súbor sa prepíše. Dve
+obnovy naraz (pywebview volá most z viacerých vlákien) pošlú to isté
+cookie; neskoršia do ochrannej lehoty (`refresh_grace_seconds`) dostane
+200 bez Set-Cookie a súbor ostane. Obnova so starým cookie po lehote je
+ukradnuté cookie, server zruší všetky prihlásenia účtu a 401 súbor zmaže.
+Poškodený či cudzím tajomstvom zašifrovaný súbor
 sa ticho zmaže. Zápis cez dočasný súbor; chyba zápisu požiadavku nezhodí.
 Zásady to opisujú v `SK_DESKTOP`/`EN_DESKTOP`. Testy v
 `tests/test_desktop_remember.py` s priečinkom v `tmp_path`.

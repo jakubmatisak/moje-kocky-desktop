@@ -122,7 +122,9 @@ describe('zásady desktopu: zapamätané prihlásenie', () => {
     expect(body).toContain(String.raw`%APPDATA%\MojeKocky\session.bin`)
     expect(body).toContain('Zapamätať si prihlásenie')
     expect(body).toContain('zašifrovaný súborom secret.key')
-    expect(body).toContain('odhlásenie, zmena hesla aj zmazanie účtu')
+    expect(body).toContain('zmaže ho odhlásenie aj zmazanie účtu')
+    // Zmena hesla v tomto okne zapamätanie nechá, len s novým tokenom.
+    expect(body).toContain('Zmena hesla ho vymení za nový a ostatné prihlásenia účtu zruší.')
     expect(body).toContain('kým je okno otvorené, najviac 12 hodín bez použitia')
     expect(body).toContain('zašifrované kľúče, zapamätané prihlásenie (ak si ho zvolíš) a denník')
     // Okno cookie nemá; tabuľka úložiska okna ho nesmie uvádzať.
@@ -136,7 +138,8 @@ describe('zásady desktopu: zapamätané prihlásenie', () => {
     expect(body).toContain(String.raw`%APPDATA%\MojeKocky\session.bin`)
     expect(body).toContain('Remember me')
     expect(body).toContain('encrypted with secret.key')
-    expect(body).toContain('signing out, changing the password or deleting the account')
+    expect(body).toContain('signing out or deleting the account removes it')
+    expect(body).toContain('Changing the password replaces it with a new one and ends the account’s other sign-ins.')
     expect(body).toContain('while the window is open, at most 12 hours without use')
     expect(body).toContain('encrypted keys, a remembered sign-in (if you choose it) and the log')
   })

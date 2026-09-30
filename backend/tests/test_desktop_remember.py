@@ -15,6 +15,7 @@ import zipfile
 from datetime import UTC, datetime, timedelta
 from http.cookiejar import Cookie
 
+import httpx
 import pytest
 from sqlalchemy import select
 
@@ -167,11 +168,17 @@ def test_logout_deletes_the_file(start, data: DataDir) -> None:
     assert _refresh(start())["status"] == 401
 
 
-def test_password_change_deletes_the_file_but_keeps_the_window_signed_in(
-    start, data: DataDir
-) -> None:
+def test_password_change_keeps_the_remembered_login_with_a_new_token(start, data: DataDir) -> None:
+    """Zmena hesla zruší všetky prihlásenia účtu, toto okno nové heslo pozná.
+
+    Server mu vydá nový token v tom istom režime (zapamätaný ostane
+    zapamätaný), most ho uloží namiesto starého. Starý token už nič neotvorí.
+    """
     bridge = start()
     token = _register(bridge, remember=True)
+    [old] = _refresh_cookies(bridge)
+    saved_before = data.session_file.read_bytes()
+
     changed = bridge.request(
         "PATCH",
         "/api/v1/auth/me",
@@ -179,11 +186,19 @@ def test_password_change_deletes_the_file_but_keeps_the_window_signed_in(
         _body({"current_password": PASSWORD, "new_password": "noveheslo123"}),
     )
     assert changed["status"] == 200, _json(changed)
-    assert not data.session_file.exists()
-    # Okno ostane prihlásené, kým sa nezatvorí; potom sa pýta nové heslo.
+    [new] = _refresh_cookies(bridge)
+    assert new != old
+    assert data.session_file.is_file()
+    assert data.session_file.read_bytes() != saved_before
+
+    # Starý token (napr. skopírovaný súbor spred zmeny) neplatí; toto okno
+    # drží nový, takže odmietnutie starého súbor nezmaže.
+    stale = bridge.request("POST", "/api/v1/auth/refresh", {"cookie": f"lego_refresh={old}"}, None)
+    assert stale["status"] == 401
+    assert data.session_file.is_file()
+
     assert _refresh(bridge)["status"] == 200
-    assert not data.session_file.exists()
-    assert _refresh(start())["status"] == 401
+    assert _refresh(start())["status"] == 200
 
 
 def test_deleting_the_account_deletes_the_file(start, data: DataDir) -> None:
@@ -223,17 +238,61 @@ def test_refused_refresh_deletes_the_file(start, data: DataDir, sessionmaker_) -
     assert not data.session_file.exists()
 
 
-def test_refused_stale_cookie_keeps_the_current_one(start, data: DataDir) -> None:
-    """Dve obnovy naraz: tá so starým cookie dostane 401, platné prihlásenie ostane."""
+def test_stale_cookie_within_grace_keeps_the_remembered_login(start, data: DataDir) -> None:
+    """Dve obnovy naraz (pywebview volá most z viacerých vlákien).
+
+    Neskoršia príde so starým cookie do ochrannej lehoty: dostane len
+    prístupový token, bez Set-Cookie. Súbor ostane s novým prihlásením.
+    """
     bridge = start()
     _register(bridge, remember=True)
     [stale] = _refresh_cookies(bridge)
     assert _refresh(bridge)["status"] == 200
+    [current] = _refresh_cookies(bridge)
+    saved = data.session_file.read_bytes()
 
     late = bridge.request("POST", "/api/v1/auth/refresh", {"cookie": f"lego_refresh={stale}"}, None)
-    assert late["status"] == 401
-    assert data.session_file.is_file()
+    assert late["status"] == 200, _json(late)
+    assert "access_token" in _json(late)
+    assert "set-cookie" not in late["headers"]
+    assert data.session_file.read_bytes() == saved
+    assert _refresh_cookies(bridge) == [current]
     assert _refresh(start())["status"] == 200
+
+
+async def _age_revoked(sessionmaker_, seconds: int) -> None:
+    async with sessionmaker_() as s:
+        for token in (await s.scalars(select(RefreshToken))).all():
+            if token.revoked_at is not None:
+                token.revoked_at = datetime.now(UTC) - timedelta(seconds=seconds)
+        await s.commit()
+
+
+def test_copied_cookie_used_first_ends_the_remembered_login(
+    start, data: DataDir, sessionmaker_, settings
+) -> None:
+    """Niekto skopíroval cookie a obnovil prvý; okno príde s ním po lehote.
+
+    Server zruší všetky prihlásenia účtu a most súbor zmaže: okno poslalo
+    to cookie, ktoré drží, takže nejde o súbeh dvoch obnov.
+    """
+    bridge = start()
+    _register(bridge, remember=True)
+    [copied] = _refresh_cookies(bridge)
+
+    async def thief() -> int:
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=bridge._app), base_url="http://desktop"
+        ) as other:
+            other.cookies.set("lego_refresh", copied)
+            return (await other.post("/api/v1/auth/refresh")).status_code
+
+    assert bridge._run(thief()) == 200
+    asyncio.run(_age_revoked(sessionmaker_, settings.refresh_grace_seconds + 60))
+
+    assert _refresh(bridge)["status"] == 401
+    assert not data.session_file.exists()
+    assert _refresh(start())["status"] == 401
 
 
 def test_corrupt_file_is_deleted_quietly(start, data: DataDir) -> None:

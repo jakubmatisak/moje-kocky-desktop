@@ -74,10 +74,13 @@ Overené skúškou na zahodenie (pywebview 6.2, WebView2, Windows 11):
   odvodený zo `secret.key` ako pri kľúčoch k službám, žiadny nový kľúč),
   pri každej obnove znova. Pri štarte ho `_restore_login` vráti do klienta
   a frontend sa cez `/auth/refresh` prihlási sám. Súbor sleduje cookie zo
-  servera: session cookie (bez zaškrtnutia, po zmene hesla) a zmazané cookie
-  (odhlásenie, zmazanie účtu) ho zmažú, rovnako 401 pri obnove, no len keď
-  odišlo cookie, ktoré klient drží (dve obnovy naraz z dvoch vlákien
-  pywebview). Poškodený, vypršaný alebo iným tajomstvom zašifrovaný súbor
+  servera: session cookie (bez zaškrtnutia) a zmazané cookie (odhlásenie,
+  zmazanie účtu) ho zmažú, rovnako 401 pri obnove, no len keď odišlo
+  cookie, ktoré klient drží. Zmena hesla v okne pošle nové trvalé cookie
+  a súbor sa prepíše. Dve obnovy naraz z dvoch vlákien pywebview: neskoršia
+  do ochrannej lehoty dostane len prístupový token bez Set-Cookie a súbor
+  ostane; starý token po lehote server berie ako ukradnutý a zruší všetky
+  prihlásenia účtu. Poškodený, vypršaný alebo iným tajomstvom zašifrovaný súbor
   sa ticho zmaže a appka sa pýta heslo. Do exportu nepatrí; odinštalovanie
   s mazaním údajov ho zmaže s priečinkom.
 - Heslá, šifrovanie kľúčov a viditeľnosť podľa kľúča ostávajú bez zmeny.

@@ -108,23 +108,34 @@ docs/superpowers/specs/  tieto dokumenty
   databázou naposledy bežala iná verzia appky (aktualizácia aj návrat na
   staršiu, aj bez zmeny schémy), databáza sa najprv skopíruje zálohovacím
   API SQLite do `data/backups/` (`lego-RRRRMMDD-HHMMSS-v<verzia>-<revízia>.db`,
-  verzia a revízia pred štartom, posledných 5). Verzia appky je verzia
-  balíka `lego-api` z `pyproject.toml` (`lego_api.__version__`); po úspešnej
+  verzia a revízia pred štartom, posledných 5, žiadna staršia než 90 dní).
+  Verzia appky je verzia balíka `lego-api` z `pyproject.toml`
+  (`lego_api.__version__`); po úspešnej
   migrácii sa zapíše do `app_settings` → `app_version` a pred ďalšou sa
   číta surovým SQL, keďže schéma môže byť stará. Databáza bez zapísanej
   verzie (inštalácie spred tejto evidencie) sa zálohuje ako prvý štart novej
   verzie, v mene je len revízia; nová prázdna databáza sa nezálohuje. Bez
   zálohy sa migrácia nespustí; pri páde migrácie log povie, kde záloha je
-  a že pred návratom treba zmazať `lego.db-journal` (`-wal`, `-shm`)
-  (`services/db_backup.py`). Staré zálohy sa mažú až po úspešnej migrácii
-  a po zlyhanej si značka `backups/lego-failed-migration.json` pamätá
+  a že pred návratom treba zmazať `lego.db-journal` (`-wal`, `-shm`),
+  aj príkaz, ktorý to urobí sám (`python -m lego_api.cli restore-backup
+  <záloha>`, v Dockeri cez `docker compose run --rm app`;
+  `services/db_backup.py`). Príkaz odmietne súbor, ktorý nie je celá
+  databáza appky (`integrity_check`, `alembic_version`), doterajšiu
+  databázu aj so žurnálom nemaže, ale presunie do `backups/` ako
+  `lego-RRRRMMDD-HHMMSS-pred-obnovou.db` (maže sa ako záloha), zálohu
+  skopíruje zálohovacím API SQLite a pri chybe všetko vráti na miesto.
+  Staré zálohy (nad 5 a staršie než 90 dní podľa času v mene, aj so
+  žurnálom) sa mažú po každom úspešnom štarte, aj bez novej zálohy;
+  záloha tohto štartu a záloha zo značky vek nepozerajú. Po zlyhanej
+  migrácii sa nemaže nič a značka `backups/lego-failed-migration.json` pamätá
   zálohu spred aktualizácie: slučka reštartov (`restart: unless-stopped`)
   ju tak nevytlačí kópiami napoly zmigrovanej databázy, kým sa databáza
   nezmení. Každý úspešný štart značku zmaže, aj keď nič nezálohoval.
   Verzia sa pri páde nezapíše, takže to platí aj pre novú verziu bez
   migrácie. Aby sa chyba do logu dostala, appka nastaví Alembicu
   `keep_logging` a `env.py` nevolá `fileConfig`. Zálohy nesú aj údaje
-  neskôr zmazaných účtov, spomínajú ich zásady `/sukromie`.
+  neskôr zmazaných účtov, spomínajú ich zásady `/sukromie` (najdlhšie
+  do prvého štartu po 90 dňoch).
 - **Tajomstvá:** v `.env` (nie je v gite) je len `JWT_SECRET`
   a prevádzkové nastavenia. Kľúče k službám tam nie sú.
 - **Prístup:** appka beží doma a von je dostupná pod doménou.

@@ -55,6 +55,11 @@ describe('zásady desktopu: zálohy pred aktualizáciou', () => {
     expect(body).toContain('Pred každou aktualizáciou appky na inú verziu')
     expect(body).toContain('5 posledných záloh')
     expect(body).toContain('zmazaného účtu')
+    // Zálohy nemajú ostať natrvalo, ani keď nová verzia dlho nevyjde.
+    expect(body).toContain('staršiu než 90 dní')
+    expect(body).toContain('najdlhšie do prvého štartu appky po 90 dňoch')
+    // Tvoja kontrola: zmazaný účet v zálohách tiež najviac 90 dní.
+    expect(body).toContain('kým sa neprestriedajú, najdlhšie do prvého štartu appky po 90 dňoch.')
     // Desktop nemá server, zálohy sú na tomto počítači.
     expect(body).not.toContain('na server')
   })
@@ -68,6 +73,9 @@ describe('zásady desktopu: zálohy pred aktualizáciou', () => {
     expect(body).toContain('Before every update of the app to another version')
     expect(body).toContain('last 5 backups')
     expect(body).toContain('deleted account')
+    expect(body).toContain('older than 90 days')
+    expect(body).toContain('until the first start of the app after 90 days')
+    expect(body).toContain('until they rotate out, at the longest until the first start of the app after 90 days.')
     expect(body).not.toContain('on the server')
   })
 })

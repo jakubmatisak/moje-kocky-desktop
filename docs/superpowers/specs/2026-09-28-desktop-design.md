@@ -166,8 +166,10 @@ Overené skúškou na zahodenie (pywebview 6.2, WebView2, Windows 11):
   `lego-api`, inak by program hlásil `0+unknown`.
 - **Záloha pri aktualizácii**: nová verzia sa inštaluje cez starú a pri
   prvom spustení (aj bez zmeny schémy) appka skopíruje databázu do
-  `%APPDATA%\MojeKocky\backups` (posledných 5, `services/db_backup.py`, ako na
-  webe). Keď záloha alebo migrácia zlyhá, okno so správou povie dôvod,
+  `%APPDATA%\MojeKocky\backups` (posledných 5, najviac 90 dní,
+  `services/db_backup.py`, ako na webe; príkaz `restore-backup` desktop
+  neuvádza, návrat ide podľa okna). Keď záloha alebo migrácia zlyhá, okno
+  so správou povie dôvod,
   prípadne kde je záloha a ako ju vrátiť (zmazať `lego.db-journal`, `-wal`,
   `-shm`, skopírovať zálohu na miesto `lego.db`, nainštalovať predchádzajúcu
   verziu); podrobnosti ostanú v `logs\moje-kocky.log`. Zálohu zo značky

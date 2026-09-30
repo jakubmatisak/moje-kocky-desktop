@@ -221,9 +221,12 @@ Pred migráciou ju `recorded_version` číta surovým SQL, lebo schéma môže
 byť hocijaká stará; chýbajúca tabuľka či nečitateľná hodnota = verzia
 neznáma = záloha (staršie inštalácie, v mene len revízia). Nová databáza,
 pamäť ani head s tou istou verziou sa nezálohujú. Keď záloha zlyhá,
-migrácia sa nespustí (`BackupFailed`). Staré zálohy maže `prune` (ostane 5,
-iné súbory v priečinku nie) až po úspešnej migrácii: SQLite potvrdzuje každú
-migráciu zvlášť, takže po páde je databáza napoly zmigrovaná a Docker
+migrácia sa nespustí (`BackupFailed`). Staré zálohy maže `prune` (ostane
+`KEEP` 5 a žiadna staršia než `MAX_AGE_DAYS` 90 podľa času v mene, so
+zálohou aj jej `-journal`/`-wal`/`-shm`, iné súbory v priečinku nie) po
+každom úspešnom štarte, aj bez novej zálohy; záloha tohto štartu a záloha
+zo značky, ktorá ostala, vek nepozerajú. Po zlyhanom štarte sa nemaže
+nič: SQLite potvrdzuje každú migráciu zvlášť, takže po páde je databáza napoly zmigrovaná a Docker
 (`restart`) či ďalšie spustenie desktopu by inak rotáciou vytlačili
 jedinú zálohu spred aktualizácie. Zlyhanie si pamätá
 `backups/lego-failed-migration.json` (záloha, revízia, odtlačok databázy);
@@ -236,15 +239,25 @@ platí aj pre štart novej verzie bez migrácie. Nové vydanie = zvýšiť `vers
 v `build.ps1` a `moje-kocky.iss`, `tests/test_desktop_version.py`), inak sa
 pri aktualizácii bez migrácie nezálohuje. Verziu hlási `/health`, OpenAPI
 a Nastavenia → Aplikácia (`components/AppVersion.vue`, v desktope bez
-prevádzkovateľa, verzia ostáva). Log pri páde povie, kde je záloha
-a že pred jej skopírovaním treba zmazať `lego.db-journal` (`-wal`, `-shm`), inak ho SQLite vráti do
-obnoveného súboru. Aby sa to do logu dostalo, `_migrate` nastaví
+prevádzkovateľa, verzia ostáva). Log pri páde povie, kde je záloha,
+príkaz na návrat `python -m lego_api.cli restore-backup <záloha>` (v Dockeri
+cez `docker compose run --rm app`) a ručný postup: pred skopírovaním zálohy
+treba zmazať `lego.db-journal` (`-wal`, `-shm`), inak ho SQLite vráti do
+obnoveného súboru. Príkaz (`db_backup.restore_backup`) odmietne súbor bez
+`integrity_check` ok a bez `alembic_version`, doterajšiu databázu aj so
+žurnálom nemaže, ale presunie do `backups/` ako
+`lego-RRRRMMDD-HHMMSS-pred-obnovou.db` (tvar zálohy, takže ju rotácia aj
+vek zmažú ako zálohu; zásady to spomínajú), zálohu skopíruje zálohovacím
+API a pri chybe všetko vráti. V desktope je príkaz len v kóde zdieľanom
+s webom: README ho neuvádza a používateľ ide podľa okna pri páde štartu
+(ručný postup), zásady desktopu odloženú databázu nespomínajú. Aby sa to do logu dostalo, `_migrate` nastaví
 `config.attributes["keep_logging"]` a `alembic/env.py` potom nevolá
 `fileConfig`, ktorý by vypol loggery appky aj uvicornu. Fotky záloha
 nenesie. Zálohy obsahujú aj údaje neskôr zmazaných účtov, preto to
-spomínajú zásady `/sukromie` (Ako dlho, Vymazanie; v desktope `SK_DESKTOP`
-a `EN_DESKTOP` v sekciách Čo appka ukladá a Tvoja kontrola);
-`data/backups/` je v `.gitignore`.
+spomínajú zásady `/sukromie` (Ako dlho, Vymazanie: najdlhšie do prvého
+štartu po 90 dňoch; v desktope `SK_DESKTOP` a `EN_DESKTOP` v sekciách Čo
+appka ukladá a Tvoja kontrola); zmena `KEEP` či `MAX_AGE_DAYS` = text zásad
+a `privacy_version`. `data/backups/` je v `.gitignore`.
 
 **Bez trhovej ceny sa nezobrazuje nula.** Keď `price_source == "missing"`,
 rozhranie ukáže pomlčku alebo „cena neznáma“, nie `0 €` a `−100 %`.

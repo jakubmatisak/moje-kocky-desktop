@@ -48,7 +48,7 @@
       body: [
         'Údaje účtu a zbierky, kým účet nezmažeš. Záznam volaní 30 dní.',
         'Prihlásenie do zatvorenia prehliadača, na serveri najviac 12 hodín bez použitia. Keď pri prihlásení zaškrtneš Zapamätať si prihlásenie, 30 dní od posledného použitia. Odhlásenie ho zruší hneď.',
-        'Pred každou aktualizáciou appky na inú verziu sa celá databáza zálohuje na server do priečinka backups. Uchováva sa 5 posledných záloh, staršie sa mažú. Údaje zmazaného účtu v nich môžu ostať, kým sa zálohy neprestriedajú.',
+        'Pred každou aktualizáciou appky na inú verziu sa celá databáza zálohuje na server do priečinka backups. Uchováva sa 5 posledných záloh, staršie sa mažú, a zálohu staršiu než 90 dní appka zmaže pri najbližšom štarte. Rovnako sa maže aj databáza, ktorú správca pri návrate zálohy odloží do toho istého priečinka. Údaje zmazaného účtu v nich môžu ostať, kým sa zálohy neprestriedajú, najdlhšie do prvého štartu appky po 90 dňoch.',
       ],
     },
     {
@@ -68,7 +68,7 @@
       body: [
         'Prístup a prenosnosť: v Nastaveniach → Účet si stiahneš všetky svoje údaje aj fotky (ZIP).',
         'Oprava: údaje zmeníš priamo v appke.',
-        'Vymazanie: v Nastaveniach → Účet zmažeš účet so všetkým, čo k nemu patrí. V zálohách pred aktualizáciou ostane, kým sa neprestriedajú (pozri Ako dlho).',
+        'Vymazanie: v Nastaveniach → Účet zmažeš účet so všetkým, čo k nemu patrí. V zálohách pred aktualizáciou ostane, kým sa neprestriedajú, najdlhšie do prvého štartu appky po 90 dňoch (pozri Ako dlho).',
         'Námietka a obmedzenie spracúvania: napíš prevádzkovateľovi.',
         'Sťažnosť: Úrad na ochranu osobných údajov Slovenskej republiky, dataprotection.gov.sk.',
       ],
@@ -99,7 +99,7 @@
       body: [
         'Account and collection data until you delete the account. Call log 30 days.',
         'Sign-in until you close the browser, on the server at most 12 hours without use. If you tick Remember me when signing in, 30 days since last use. Signing out ends it at once.',
-        'Before every update of the app to another version, the whole database is backed up on the server to the backups folder. The last 5 backups are kept, older ones are deleted. Data of a deleted account may remain in them until the backups rotate out.',
+        'Before every update of the app to another version, the whole database is backed up on the server to the backups folder. The last 5 backups are kept, older ones are deleted, and the app deletes a backup older than 90 days the next time it starts. The same applies to the database the operator sets aside in that folder when restoring a backup. Data of a deleted account may remain in them until the backups rotate out, at the longest until the first start of the app after 90 days.',
       ],
     },
     {
@@ -119,7 +119,7 @@
       body: [
         'Access and portability: in Settings → Account you download all your data and photos (ZIP).',
         'Rectification: change your data directly in the app.',
-        'Erasure: in Settings → Account you delete the account with everything that belongs to it. It stays in the pre-update backups until they rotate out (see How long).',
+        'Erasure: in Settings → Account you delete the account with everything that belongs to it. It stays in the pre-update backups until they rotate out, at the longest until the first start of the app after 90 days (see How long).',
         'Objection and restriction: write to the operator.',
         'Complaint: the Office for Personal Data Protection of the Slovak Republic, dataprotection.gov.sk.',
       ],
@@ -143,7 +143,7 @@
         'Fotky kusov, zmenšené a bez údajov fotoaparátu vrátane polohy GPS.',
         'Kľúče k službám zašifrované súborom secret.key a záznam volaní služieb za posledných 30 dní.',
         String.raw`Keď pri prihlásení zaškrtneš Zapamätať si prihlásenie, prihlasovací token v súbore %APPDATA%\MojeKocky\session.bin, zašifrovaný súborom secret.key. Platí 30 dní od posledného použitia a zmaže ho odhlásenie, zmena hesla aj zmazanie účtu. Bez zaškrtnutia je prihlásenie len v pamäti, kým je okno otvorené, najviac 12 hodín bez použitia.`,
-        String.raw`Pred každou aktualizáciou appky na inú verziu kópiu celej databázy v priečinku %APPDATA%\MojeKocky\backups. Uchováva sa 5 posledných záloh, staršie sa mažú. Údaje zmazaného účtu v nich môžu ostať, kým sa zálohy neprestriedajú.`,
+        String.raw`Pred každou aktualizáciou appky na inú verziu kópiu celej databázy v priečinku %APPDATA%\MojeKocky\backups. Uchováva sa 5 posledných záloh, staršie sa mažú, a zálohu staršiu než 90 dní appka zmaže pri najbližšom štarte. Údaje zmazaného účtu v nich môžu ostať, kým sa zálohy neprestriedajú, najdlhšie do prvého štartu appky po 90 dňoch.`,
       ],
     },
     {
@@ -157,7 +157,7 @@
     {
       title: 'Tvoja kontrola',
       body: [
-        'V Nastaveniach → Účet si stiahneš všetky svoje údaje (ZIP) alebo zmažeš účet so všetkým, čo k nemu patrí. V zálohách pred aktualizáciou ostane, kým sa neprestriedajú.',
+        'V Nastaveniach → Účet si stiahneš všetky svoje údaje (ZIP) alebo zmažeš účet so všetkým, čo k nemu patrí. V zálohách pred aktualizáciou ostane, kým sa neprestriedajú, najdlhšie do prvého štartu appky po 90 dňoch.',
         String.raw`Pri odinštalovaní sa appka opýta, či zmazať aj priečinok s údajmi účtu Windows, pod ktorým odinštalovanie beží. Keď na bežnom účte zadáš heslo iného účtu správcu, nezmaže nič a svoj priečinok %APPDATA%\MojeKocky zmažeš sám. Záloha je kópia tohto priečinka.`,
       ],
     },
@@ -179,7 +179,7 @@
         'Photos of pieces, shrunk and without camera data including the GPS location.',
         'Keys to services encrypted with secret.key and a log of service calls for the last 30 days.',
         String.raw`If you tick Remember me when signing in, the sign-in token in the file %APPDATA%\MojeKocky\session.bin, encrypted with secret.key. It lasts 30 days since last use and signing out, changing the password or deleting the account removes it. Without the tick the sign-in stays only in memory while the window is open, at most 12 hours without use.`,
-        String.raw`Before every update of the app to another version, a copy of the whole database in %APPDATA%\MojeKocky\backups. The last 5 backups are kept, older ones are deleted. Data of a deleted account may remain in them until the backups rotate out.`,
+        String.raw`Before every update of the app to another version, a copy of the whole database in %APPDATA%\MojeKocky\backups. The last 5 backups are kept, older ones are deleted, and the app deletes a backup older than 90 days the next time it starts. Data of a deleted account may remain in them until the backups rotate out, at the longest until the first start of the app after 90 days.`,
       ],
     },
     {
@@ -193,7 +193,7 @@
     {
       title: 'Your control',
       body: [
-        'In Settings → Account you download all your data (ZIP) or delete the account with everything that belongs to it. It stays in the pre-update backups until they rotate out.',
+        'In Settings → Account you download all your data (ZIP) or delete the account with everything that belongs to it. It stays in the pre-update backups until they rotate out, at the longest until the first start of the app after 90 days.',
         String.raw`Uninstalling asks whether to delete the data folder of the Windows account it runs as. If you enter a different administrator's password on a standard account, it deletes nothing and you delete your own %APPDATA%\MojeKocky folder yourself. A backup is a copy of that folder.`,
       ],
     },

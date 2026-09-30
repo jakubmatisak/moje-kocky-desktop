@@ -174,9 +174,10 @@ cez zálohovacie API SQLite, takže je úplná a konzistentná.
   a revízia schémy, s ktorými databáza do štartu bola, teda verzia, ktorá
   bežala naposledy. Databáza zo staršej inštalácie, ktorá si verziu ešte
   nezapisovala, má v mene len revíziu.
-- **Koľko sa drží:** po úspešnom štarte ostane posledných 5 záloh, staršie
-  sa zmažú. Iné súbory v priečinku appka nechá. Po neúspešnom štarte sa
-  nemaže nič, aby opakované spúšťanie nevytlačilo zálohu spred aktualizácie.
+- **Koľko sa drží:** po každom úspešnom štarte, aj keď sa nič nezálohovalo,
+  ostane posledných 5 záloh a žiadna staršia než 90 dní; ostatné sa zmažú.
+  Iné súbory v priečinku appka nechá. Po neúspešnom štarte sa nemaže nič,
+  aby opakované spúšťanie nevytlačilo zálohu spred aktualizácie.
 - **Fotky** v zálohe nie sú, ostávajú v `photos\` a aktualizácia na ne
   nesiaha.
 - **Nezálohuje sa** nová databáza (prvé spustenie) ani ďalší štart tej
@@ -414,9 +415,10 @@ a podmienky služieb (k septembru 2026). Zásady sú aj priamo v appke.
   priečinok s údajmi účtu Windows, pod ktorým beží; údaje ostatných
   používateľov počítača ostanú. S heslom iného účtu správcu nezmaže nič
   a svoj priečinok `%APPDATA%\MojeKocky` zmažeš sám.
-- **Zálohy pri aktualizácii** (posledných 5) sú v
+- **Zálohy pri aktualizácii** (posledných 5, najviac 90 dní) sú v
   `%APPDATA%\MojeKocky\backups` a nesú celú databázu; údaje zmazaného účtu
-  v nich ostanú, kým sa neprestriedajú.
+  v nich ostanú, kým sa neprestriedajú, najdlhšie do prvého štartu appky
+  po 90 dňoch.
 - **Fotky** sa ukladajú zmenšené a bez polohy GPS.
 - **Sledovanie** appka nepoužíva. Okno si pamätá nastavenia zobrazenia
   (tmavý režim, skryté ceny a pod.) a appka zapamätané prihlásenie, ak si
@@ -629,20 +631,21 @@ consistent.
   plus the app version and schema revision the database had before this
   start, i.e. the version that ran last. A database from an older install
   that did not record its version yet has only the revision in the name.
-- **How many are kept:** after a successful start the last 5 backups remain
-  and older ones are deleted. Other files in the folder are left alone. After
-  a failed start nothing is deleted, so repeated launches cannot push out the
-  backup taken before the update.
+- **How many are kept:** after every successful start, even one that backed
+  nothing up, the last 5 backups remain and none older than 90 days; the rest
+  are deleted. Other files in the folder are left alone. After a failed start
+  nothing is deleted, so repeated launches cannot push out the backup taken
+  before the update.
 - **Photos** are not part of the backup; they stay in `photos\` and an update
   does not touch them.
 - **No backup is made** for a brand-new database (first launch) or for
   another start of the same version.
 - **If the backup fails** (disk full, permissions), the app leaves the
   database untouched, does not start and tells you why in a window.
-- **If the database update fails**, the app shows a window (currently in
-  Slovak) with the path to the pre-update backup and how to go back. As long
-  as the database has not changed since, the next launch does not make a new
-  backup and points to the same one.
+- **If the database update fails**, the app shows a window (Slovak on
+  Slovak Windows, English otherwise) with the path to the pre-update
+  backup and how to go back. As long as the database has not changed since,
+  the next launch does not make a new backup and points to the same one.
 
 You can see which version you have in Settings → Application (visible to the
 administrator, i.e. the first account) and in the Windows list of installed
@@ -885,9 +888,10 @@ available inside the app.
   the data folder of the Windows account it runs as; other users' data on the
   PC stays. With a different administrator's password it deletes nothing, and
   you delete your own `%APPDATA%\MojeKocky` folder yourself.
-- **Backups made on update** (the last 5) are in
+- **Backups made on update** (the last 5, at most 90 days) are in
   `%APPDATA%\MojeKocky\backups` and contain the whole database; data of a
-  deleted account stays in them until they rotate out.
+  deleted account stays in them until they rotate out, at the longest until
+  the first start of the app after 90 days.
 - **Photos** are stored downsized and without GPS location.
 - The app uses **no tracking**. The window remembers display settings
   (dark mode, hidden prices and the like) and the app, if you ticked it,

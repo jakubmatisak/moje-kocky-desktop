@@ -155,7 +155,7 @@
       title: 'Tvoja kontrola',
       body: [
         'V Nastaveniach → Účet si stiahneš všetky svoje údaje (ZIP) alebo zmažeš účet so všetkým, čo k nemu patrí. V zálohách pred aktualizáciou ostane, kým sa neprestriedajú.',
-        String.raw`Pri odinštalovaní sa appka opýta, či zmazať aj priečinok s údajmi. Záloha je kópia priečinka %APPDATA%\MojeKocky.`,
+        String.raw`Pri odinštalovaní sa appka opýta, či zmazať aj priečinok s údajmi účtu Windows, pod ktorým odinštalovanie beží. Keď na bežnom účte zadáš heslo iného účtu správcu, nezmaže nič a svoj priečinok %APPDATA%\MojeKocky zmažeš sám. Záloha je kópia tohto priečinka.`,
       ],
     },
   ]
@@ -190,7 +190,7 @@
       title: 'Your control',
       body: [
         'In Settings → Account you download all your data (ZIP) or delete the account with everything that belongs to it. It stays in the pre-update backups until they rotate out.',
-        String.raw`Uninstalling asks whether to delete the data folder too. A backup is a copy of %APPDATA%\MojeKocky.`,
+        String.raw`Uninstalling asks whether to delete the data folder of the Windows account it runs as. If you enter a different administrator's password on a standard account, it deletes nothing and you delete your own %APPDATA%\MojeKocky folder yourself. A backup is a copy of that folder.`,
       ],
     },
   ]

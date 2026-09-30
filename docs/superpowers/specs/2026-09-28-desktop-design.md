@@ -53,7 +53,8 @@ Overené skúškou na zahodenie (pywebview 6.2, WebView2, Windows 11):
 - **Údaje**: `%APPDATA%\MojeKocky\` → `lego.db`, `photos\`, `secret.key`
   (tajomstvo na šifrovanie kľúčov, vygeneruje sa pri prvom spustení,
   prístupné len používateľovi), `logs\`. Odinštalovanie údaje nemaže, len
-  keď to používateľ v otázke potvrdí (a len svoje).
+  keď to používateľ v otázke potvrdí (a len údaje účtu, pod ktorým beží;
+  s heslom iného správcu nič).
 - **Jedna inštancia**: zámok v `%APPDATA%`; druhé spustenie len vytiahne
   okno do popredia.
 
@@ -105,17 +106,31 @@ Overené skúškou na zahodenie (pywebview 6.2, WebView2, Windows 11):
   odinštalovať. Najprv sa maže `MojeKocky.exe`: bežiaci program Windows
   zmazať nedovolí (premenovať priečinok áno, to preto nestačí) a vtedy
   inštalácia skončí s „Zavri Moje kocky a spusti inštaláciu znova.“ bez
-  zmeny. Obmedzenie: HKCU a profil sú účtu, pod ktorým inštalátor po UAC
+  zmeny. Keď program nebeží, ale `DelTree` nezmaže všetko (súbor v
+  `_internal` drží antivírus či konzola), hláška povie, že priečinok sa
+  nepodarilo celý zmazať; kľúč v HKCU a skratky ostanú, aby opakovaná
+  inštalácia starú inštaláciu našla a dokončila. Obmedzenie: HKCU a profil sú účtu, pod ktorým inštalátor po UAC
   beží. Pri zadaní hesla iného účtu správcu na bežnom účte, alebo keď mal
   0.1.x ďalší používateľ, jeho stará inštalácia ostane a odinštaluje si ju
   sám (údaje nechá). Návrat na 0.1.x: najprv odinštalovať 1.0.0.
 - **Odinštalovanie** sa opýta, či zmazať aj údaje, predvolene Nie
   (`SuppressibleMsgBox`, aj v tichom režime s `/SUPPRESSMSGBOXES`), a zmaže
   len `{userappdata}\MojeKocky` účtu, pod ktorým beží; údaje ostatných
-  používateľov ostanú. Manifest inštalátora je aj s `admin` `asInvoker`,
+  používateľov ostanú. Otázka menuje účet Windows aj priečinok, nie „tvoje
+  údaje“. Na bežnom účte s heslom iného správcu beží odinštalovanie pod
+  týmto správcom a `{userappdata}` je jeho: keď sa účet procesu
+  (`GetUserNameString`) líši od používateľa relácie Windows
+  (`WTSQuerySessionInformationW`, `WTSUserName`), otázka sa nekladie, nemaže
+  sa nič a hláška povie, že údaje toho, kto odinštaluje, ostali v jeho
+  `%APPDATA%\MojeKocky` (`packaging/uninstall-data.iss`). Neznámy
+  používateľ relácie sa neráta, otázka potom len menuje účet. Manifest inštalátora je aj s `admin` `asInvoker`,
   Inno Setup si práva vypýta sám hneď po spustení.
-- **WebView2**: vo Windows 10/11 býva; inštalátor ho overí a pri chýbajúcom
-  spustí Evergreen bootstrapper od Microsoftu.
+- **WebView2**: vo Windows 10/11 býva; inštalátor ho overí (HKLM aj HKCU)
+  a pri chýbajúcom ponúkne stránku Microsoftu na stiahnutie. Otvára ju
+  `ShellExecAsOriginalUser`, teda v prehliadači toho, kto inštalátor spustil,
+  nie ako správca. HKCU je účtu, pod ktorým Setup beží: pri hesle iného
+  správcu sa WebView2 nainštalovaný len pre bežného používateľa nenájde
+  a inštalátor zbytočne ponúkne stiahnutie (zriedkavé, nerieši sa).
 - **Veľkosť**: odhad 60–90 MB.
 - **Podpis**: nepodpísané (SmartScreen raz upozorní). Podpisový certifikát
   je voliteľný neskôr.

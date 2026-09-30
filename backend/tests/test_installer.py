@@ -6,10 +6,14 @@ Staršie verzie (0.1.x) boli len pre jedného používateľa
 v ``%LOCALAPPDATA%\\Programs\\MojeKocky``. Inštalátor ich odstráni sám, bez
 starého odinštalátora (ten sa pýta, či zmazať aj údaje), a údajov sa nedotkne.
 
-Logiku v Pascale (``packaging/old-install.iss``) skúša malý testovací
-inštalátor: v ``InitializeSetup`` zavolá funkcie s cestami v dočasnom
-priečinku, zapíše výsledok a skončí, takže nič neinštaluje. Skutočný kľúč
-v registri ani skutočné priečinky používateľa test nepozná.
+Odinštalovanie sa pýta len na údaje účtu, pod ktorým beží, a keď to nie je
+ten, kto sedí pri počítači (heslo iného správcu), nemaže nič.
+
+Logiku v Pascale (``packaging/old-install.iss``, ``packaging/uninstall-data.iss``)
+skúša malý testovací inštalátor: v ``InitializeSetup`` zavolá funkcie
+s cestami v dočasnom priečinku, zapíše výsledok a skončí, takže nič
+neinštaluje. Skutočný kľúč v registri ani skutočné priečinky používateľa
+test nepozná.
 """
 
 import os
@@ -28,8 +32,11 @@ from tests.test_desktop_version import ROOT, _iscc
 PACKAGING = ROOT / "packaging"
 ISS = PACKAGING / "moje-kocky.iss"
 OLD_INSTALL = PACKAGING / "old-install.iss"
+UNINSTALL_DATA = PACKAGING / "uninstall-data.iss"
+INCLUDES = (OLD_INSTALL, UNINSTALL_DATA)
 APP_ID = "{6C1B7E2A-5D43-4F7B-9B8E-4A2D6F0C9E11}"
 RUNNING = "Zavri Moje kocky a spusti inštaláciu znova."
+LEFTOVERS = "sa nepodarilo celý zmazať"
 
 needs_iscc = pytest.mark.skipif(
     sys.platform != "win32" or _iscc() is None,
@@ -125,8 +132,24 @@ def test_program_started_after_install_runs_as_the_user():
 
 def test_scripts_are_utf8_with_bom():
     """Bez BOM by Inno Setup čítal diakritiku v hláškach zle."""
-    for path in (ISS, OLD_INSTALL):
+    for path in (ISS, *INCLUDES):
         assert path.read_bytes().startswith(b"\xef\xbb\xbf"), path
+
+
+def test_webview2_page_opens_as_the_original_user():
+    """Stránka Microsoftu sa otvorí v prehliadači toho, kto inštalátor spustil.
+
+    Setup beží so zvýšenými právami, pri hesle iného správcu pod jeho účtom.
+    Obyčajný ShellExec by spustil prehliadač ako správca, s jeho profilom
+    a jeho priečinkom Stiahnuté.
+    """
+    code = _code()
+
+    assert (
+        "ShellExecAsOriginalUser('open', 'https://developer.microsoft.com/microsoft-edge/webview2/',"
+        in code
+    )
+    assert not re.search(r"\bShellExec\(", code)
 
 
 # --- skript: prechod zo starej inštalácie a odinštalovanie ----------------------
@@ -157,14 +180,37 @@ def test_prepare_to_install_removes_the_old_install_of_this_user():
 
 def test_uninstall_asks_before_deleting_data_and_defaults_to_no():
     code = _code()
+    included = re.findall(r'#include "([^"]+)"', _text(ISS).split("[Code]", 1)[1])
     uninstall = code.split("procedure CurUninstallStepChanged", 1)[1]
 
+    assert UNINSTALL_DATA.name in included
     assert "usPostUninstall" in uninstall
     assert "DataDir := ExpandConstant('{userappdata}\\MojeKocky');" in uninstall
     # Druhé tlačidlo (Nie) je predvolené, v tichom režime s /SUPPRESSMSGBOXES tiež Nie.
-    assert "SuppressibleMsgBox(" in uninstall
-    assert "MB_YESNO or MB_DEFBUTTON2, IDNO) = IDYES" in uninstall
+    assert (
+        "SuppressibleMsgBox(DeleteDataQuestion(RunAs, DataDir), mbConfirmation,"
+        " MB_YESNO or MB_DEFBUTTON2, IDNO) = IDYES" in uninstall
+    )
     assert re.findall(r"DelTree\((\w+)", uninstall) == ["DataDir"]
+    assert "tvoje údaje" not in code
+
+
+def test_uninstall_elevated_by_another_account_does_not_ask():
+    """Na bežnom účte s heslom iného správcu je {userappdata} profil toho správcu.
+
+    Otázka by sa týkala cudzej zbierky, preto sa nekladie a nič sa nemaže;
+    hláška povie, kde ostali údaje toho, kto sedí pri počítači.
+    """
+    uninstall = _code().split("procedure CurUninstallStepChanged", 1)[1]
+
+    assert "RunAs := GetUserNameString;" in uninstall
+    assert "SessionUser := SessionUserName();" in uninstall
+    elevated = uninstall.index("if OtherAccountElevated(RunAs, SessionUser) then")
+    notice = uninstall.index(
+        "SuppressibleMsgBox(OtherAccountNotice(RunAs, SessionUser), mbInformation, MB_OK, IDOK);"
+    )
+    asked = uninstall.index("else if DirExists(DataDir) then")
+    assert elevated < notice < asked < uninstall.index("DelTree(")
 
 
 # --- kompilácia celého skriptu ------------------------------------------------------
@@ -179,7 +225,7 @@ def test_full_installer_script_compiles(tmp_path):
     """
     packaging = tmp_path / "packaging"
     packaging.mkdir()
-    for name in ("moje-kocky.iss", "old-install.iss", "icon.ico"):
+    for name in ("moje-kocky.iss", "old-install.iss", "uninstall-data.iss", "icon.ico"):
         shutil.copy2(PACKAGING / name, packaging / name)
     shutil.copy2(ROOT / "LICENSE", tmp_path / "LICENSE")
     program = tmp_path / "build" / "dist" / "MojeKocky"
@@ -217,6 +263,7 @@ OutputBaseFilename=harness
 
 [Code]
 #include "old-install.iss"
+#include "uninstall-data.iss"
 
 function Flag(Value: Boolean): String;
 begin
@@ -248,6 +295,28 @@ begin
   begin
     SetArrayLength(Output, 1);
     Output[0] := RemoveOldInstall(Args[1], Args[2], Args[3], Args[4], Args[5]);
+  end
+  else if Args[0] = 'session' then
+  begin
+    SetArrayLength(Output, 2);
+    Output[0] := SessionUserName();
+    Output[1] := GetUserNameString;
+  end
+  else if Args[0] = 'other' then
+  begin
+    SetArrayLength(Output, (GetArrayLength(Args) - 2) div 2);
+    for I := 0 to GetArrayLength(Output) - 1 do
+      Output[I] := Flag(OtherAccountElevated(Args[1 + 2 * I], Args[2 + 2 * I]));
+  end
+  else if Args[0] = 'question' then
+  begin
+    SetArrayLength(Output, 1);
+    Output[0] := DeleteDataQuestion(Args[1], Args[2]);
+  end
+  else if Args[0] = 'notice' then
+  begin
+    SetArrayLength(Output, 1);
+    Output[0] := OtherAccountNotice(Args[1], Args[2]);
   end;
   SaveStringsToUTF8File(ExpandConstant('{{param:TOUT}}'), Output, False);
 end;
@@ -260,7 +329,8 @@ def harness(tmp_path_factory):
     if sys.platform != "win32" or _iscc() is None:
         pytest.skip("Inno Setup (ISCC.exe) nie je nainštalovaný")
     folder = tmp_path_factory.mktemp("harness")
-    shutil.copy2(OLD_INSTALL, folder / OLD_INSTALL.name)
+    for include in INCLUDES:
+        shutil.copy2(include, folder / include.name)
     script = folder / "harness.iss"
     script.write_text(HARNESS.format(out=folder), encoding="utf-8-sig")
     subprocess.run([str(_iscc()), "/Q", str(script)], capture_output=True, timeout=300, check=True)
@@ -472,3 +542,82 @@ def test_migration_without_program_folder_removes_shortcuts(harness, tmp_path):
     assert not profile.group.exists()
     assert not profile.desktop_link.exists()
     assert (profile.data / "lego.db").is_file()
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="zamknutý súbor len vo Windows")
+def test_migration_reports_a_folder_it_could_not_delete_completely(harness, tmp_path):
+    """Program nebeží, ale súbor v _internal drží iný proces (antivírus, konzola).
+
+    DelTree zmaže, čo môže, a hláška to povie tak, ako to je: nie „je ešte
+    otvorená“. Údaje ostanú, skratky tiež a opakovaná inštalácia mazanie
+    dokončí.
+    """
+    profile = Profile(tmp_path)
+    data = profile.files(profile.data)
+
+    # open() v Pythone nepovoľuje zmazanie, kým je súbor otvorený.
+    with open(profile.program / "_internal" / "python313.dll", "rb"):
+        answer = profile.migrate(harness)
+
+    assert LEFTOVERS in answer
+    assert RUNNING not in answer
+    assert str(profile.program) in answer
+    assert profile.files(profile.data) == data
+    assert profile.group.is_dir()
+    assert profile.desktop_link.is_file()
+
+    assert profile.migrate(harness) == ""
+    assert not profile.program.exists()
+    assert not profile.group.exists()
+    assert profile.files(profile.data) == data
+
+
+# --- odinštalovanie: čie údaje ---------------------------------------------------
+
+OTHER_ACCOUNT_CASES = [
+    # (účet, pod ktorým odinštalovanie beží, používateľ relácie, je to iný účet)
+    ("Jana", "Jana", False),
+    ("jana", "JANA", False),
+    ("Rodič", "Dieťa", True),
+    ("Administrator", "Jana", True),
+    # Používateľa relácie sa nepodarilo zistiť: otázka s menom účtu.
+    ("Administrator", "", False),
+]
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="relácia Windows len vo Windows")
+def test_session_user_is_the_user_at_the_computer(harness):
+    """Bez zvýšenia práv iným účtom je používateľ relácie ten, pod kým proces beží."""
+    session, run_as = harness("session").splitlines()
+
+    assert session
+    assert session.lower() == run_as.lower() == os.environ["USERNAME"].lower()
+
+
+def test_another_account_is_told_apart_from_the_user_at_the_computer(harness):
+    args = [value for case in OTHER_ACCOUNT_CASES for value in case[:2]]
+
+    answer = harness("other", *args).splitlines()
+
+    assert answer == ["1" if case[2] else "0" for case in OTHER_ACCOUNT_CASES]
+
+
+def test_uninstall_question_names_the_account_and_its_folder(harness):
+    """Otázka nehovorí „tvoje“: povie, čí priečinok to je a že ostatní o nič neprídu."""
+    folder = r"C:\Users\Ján Š\AppData\Roaming\MojeKocky"
+
+    question = harness("question", "Ján Š", folder)
+
+    assert "používateľa Windows „Ján Š“" in question
+    assert folder in question
+    assert "Údaje ostatných používateľov počítača ostanú." in question
+    assert "tvoje" not in question.lower()
+
+
+def test_uninstall_under_another_account_says_nothing_was_deleted(harness):
+    notice = harness("notice", "Rodič", "Dieťa")
+
+    assert "„Rodič“" in notice
+    assert "„Dieťa“" in notice
+    assert "nemazalo nikomu" in notice
+    assert r"%APPDATA%\MojeKocky" in notice

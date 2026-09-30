@@ -6,10 +6,11 @@ poistka na vek snímky nezaberie a každý pokus by stál ďalšie volanie
 z dennej kvóty. Odpoveď zdroja nezávisí od účtu, pamätá sa teda raz pre
 celý proces; po reštarte sa zabudne, čo stojí najviac jedno volanie.
 
-Obnova cien sem zapisuje svoje neúspechy a číta odtiaľ, takže Overiť cenu
-a dávka sa o to isté číslo nepýtajú dvakrát za deň. Sama si neúspech
-navyše pamätá natrvalo pri kľúči (``pricing.store_miss``), lebo jej
-týždeň by pamäť procesu neprežil.
+Obnova cien aj Overiť cenu sem zapisujú neúspechy cez ``pricing.store_miss``
+a obe odtiaľ čítajú, takže sa o to isté číslo nepýtajú dvakrát za deň.
+``store_miss`` si neúspech navyše pamätá natrvalo pri kľúči, lebo týždeň
+dávky by pamäť procesu neprežil. Zapisuje sa len odpoveď zdroja, nie
+výpadok siete či chyba servera: tie sa skúsia pri najbližšej príležitosti.
 """
 
 from datetime import UTC, datetime, timedelta

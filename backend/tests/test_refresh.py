@@ -627,3 +627,22 @@ async def test_unknown_set_in_every_form_is_one_call(session, fast_settings) -> 
     plan = await collect_targets(session, 1, fast_settings)
 
     assert [t.call_key() for t in plan.targets] == [("10294-1", "SET")]
+
+
+async def test_bare_figure_is_not_planned(session, fast_settings) -> None:
+    """Holá figúrka (fig-…) v Zbierke ani v Chcem nestojí volanie.
+
+    Overiť cenu ju necení, lebo ju zdroj pod týmto číslom nepozná; dávka by
+    ju inak mala medzi neznámymi cenami navrchu a volanie by vždy zlyhalo.
+    """
+    session.add(User(id=1, email="u1@x.sk", password_hash="x"))
+    for num in ("fig-000123", "fig-000999"):
+        session.add(CatalogItem(catalog_num=num, name=num, kind=CatalogKind.MINIFIG))
+    session.add(CollectionItem(user_id=1, catalog_num="fig-000123", flags=[]))
+    session.add(WishlistItem(user_id=1, catalog_num="fig-000999"))
+    await session.commit()
+
+    plan = await collect_targets(session, 1, fast_settings)
+
+    assert plan.targets == []
+    assert plan.skipped_fresh == 0

@@ -373,7 +373,7 @@
     "registrationOpenHint": "Ktokoľvek s adresou appky si môže založiť účet. Keď si ho založia všetci, čo majú, registráciu zavri.",
     "registrationClosedHint": "Nové účty sa zakladať nedajú, na prihlasovacej stránke nie je „Nový účet“. Existujúce účty fungujú ďalej.",
     "registrationFirstHint": "Platí hneď, bez reštartu. Hodnota v .env je len východisko pre novú inštaláciu.",
-    "registrationOpenHintDesktop": "Ďalší účet si na tomto počítači môže založiť každý, kto appku otvorí. Keď ho už majú všetci, registráciu zavri.",
+    "registrationOpenHintDesktop": "Ďalší účet si môže založiť každý, kto appku otvorí pod týmto používateľom Windows (ostatní používatelia počítača majú vlastné údaje). Keď ho už majú všetci, registráciu zavri.",
     "registrationFirstHintDesktop": "Platí hneď, bez reštartu.",
     "shareKindCollection": "Zbierka",
     "shareKindCollectionHint": "Čo mám, bez úprav",
@@ -908,7 +908,7 @@
     "reserve": "Rezerva volaní",
     "reserveHint": "Práca na pozadí skončí, keď zostane toľko volaní; zvyšok ostane na pridávanie a skenovanie.",
     "batch": "Najviac setov na jednu obnovu cien",
-    "batchHint": "Pri veľkej zbierke sa ceny obnovia postupne, najstaršie najskôr.",
+    "batchHint": "Pri veľkej zbierke sa ceny obnovia postupne: najprv sety bez známej ceny (naposledy pridané prvé), potom od najdlhšie neobnovených.",
     "loadFailed": "Služby sa nepodarilo načítať",
     "saveFailed": "Nastavenie sa nepodarilo uložiť",
     "rebrickable": {

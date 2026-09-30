@@ -95,9 +95,11 @@ zálohuje.
 
 **Ostatné**
 
-- Viac účtov na jednom počítači (napríklad pre členov rodiny), každý so
-  svojou zbierkou, heslom a kľúčmi. Ďalší účet povolí prvý (správca)
-  v Nastaveniach → Aplikácia.
+- Viac ľudí na jednom počítači (napríklad členovia rodiny), každý so
+  svojou zbierkou, heslom a kľúčmi. Každý používateľ Windows má vlastné
+  údaje a prvý účet si v nich založí sám, bez povolenia. Pod jedným
+  používateľom Windows môže byť aj viac účtov appky; ďalší povolí prvý účet
+  (správca appky) v Nastaveniach → Aplikácia.
 - Rozhranie po slovensky aj po anglicky, svetlý a tmavý režim. Nastavenia
   zobrazenia sa pamätajú pri účte.
 - Prehľad spotreby volaní cudzích služieb a prepínače, čo sa z ktorej
@@ -131,15 +133,21 @@ v nich býva. Ak chýba, inštalátor ponúkne stránku na jeho stiahnutie.
 `moje-kocky.log`) a `backups\` (zálohy databázy pri aktualizácii). Úplná
 záloha je kópia celého priečinka, najlepšie pri zatvorenej appke. Nová
 verzia sa nainštaluje cez starú a údaje ostanú. Odinštalovanie sa opýta,
-či zmazať údaje toho, kto ho spustil (predvolene nie); údaje ostatných
-používateľov počítača ostanú.
+či zmazať údaje účtu Windows, pod ktorým po otázke UAC beží; otázka ho
+menuje aj s priečinkom (predvolene nie) a údaje ostatných používateľov
+počítača ostanú. Keď na bežnom účte zadáš heslo iného účtu správcu, beží
+pod ním: nezmaže nič, ani jemu, ani tebe, a povie, že tvoje údaje ostali
+v `%APPDATA%\MojeKocky`. Ten priečinok potom zmažeš sám.
 
 **Aktualizácia zo staršej verzie 0.1.x.** Tá bola len pre jedného
 používateľa, v `%LOCALAPPDATA%\Programs\MojeKocky`. Inštalátor 1.0.0 ju
 sám odstráni (program, skratky a položku v zozname aplikácií, bez starého
 odinštalátora) a údaje v `%APPDATA%\MojeKocky` nechá; pred prvým štartom
 novej verzie sa databáza zálohuje. Keď stará verzia ešte beží, inštalátor
-povie „Zavri Moje kocky a spusti inštaláciu znova.“ a nič nezmení. Ikonu
+povie „Zavri Moje kocky a spusti inštaláciu znova.“ a nič nezmení. Keď
+súbor v jej priečinku drží otvorený iný program (antivírus, okno
+Prieskumníka), inštalátor povie, že priečinok sa nepodarilo celý zmazať;
+po zatvorení toho programu ho spusti znova a dokončí to. Ikonu
 pripnutú na paneli úloh treba pripnúť znova. Odstráni sa len stará
 inštalácia účtu, pod ktorým inštalátor beží. Keď mal 0.1.x aj ďalší
 používateľ počítača, alebo keď na bežnom účte zadáš heslo iného účtu
@@ -265,6 +273,7 @@ powershell -ExecutionPolicy Bypass -File scripts\build.ps1
 Frontend → PyInstaller (`packaging/moje-kocky.spec`, výsledok
 `build/dist/MojeKocky/MojeKocky.exe`) → Inno Setup (`packaging/moje-kocky.iss`,
 odstránenie starej inštalácie 0.1.x v `packaging/old-install.iss`,
+otázka na údaje pri odinštalovaní v `packaging/uninstall-data.iss`,
 výsledok `build/installer/MojeKocky-Setup-<verzia>.exe`). Bez nainštalovaného
 Inno Setup skript skončí pri programe. Bez `-Version` zostaví svoju predvolenú
 verziu, tú istú ako v `backend/pyproject.toml`. Inú verziu (`-Version X.Y.Z`)
@@ -397,7 +406,9 @@ a podmienky služieb (k septembru 2026). Zásady sú aj priamo v appke.
   účtoch na jednom počítači vidí každý len to, čo stiahol jeho vlastný kľúč.
 - **Tvoje práva a kontrola:** v Nastaveniach → Účet si stiahneš všetky svoje
   údaje (ZIP) alebo zmažeš účet. Odinštalovanie sa opýta, či zmazať aj
-  tvoj priečinok s údajmi; údaje ostatných používateľov počítača ostanú.
+  priečinok s údajmi účtu Windows, pod ktorým beží; údaje ostatných
+  používateľov počítača ostanú. S heslom iného účtu správcu nezmaže nič
+  a svoj priečinok `%APPDATA%\MojeKocky` zmažeš sám.
 - **Zálohy pri aktualizácii** (posledných 5) sú v
   `%APPDATA%\MojeKocky\backups` a nesú celú databázu; údaje zmazaného účtu
   v nich ostanú, kým sa neprestriedajú.
@@ -527,9 +538,11 @@ The app's interface is available in Slovak and English.*
 
 **Other**
 
-- Several accounts on one computer (for family members, say), each with its
-  own collection, password and keys. The first account (the administrator)
-  allows new ones in Settings → Application.
+- Several people on one computer (family members, say), each with their own
+  collection, password and keys. Every Windows user of the PC has their own
+  data and creates their own first account in it, no approval needed. One
+  Windows user can also hold several app accounts; the first account (the
+  app's administrator) allows more in Settings → Application.
 - Slovak and English interface, light and dark mode. Display settings are
   stored with the account.
 - A usage overview of calls to third-party services, plus switches for what
@@ -564,8 +577,12 @@ comes with them. If it is missing, the installer offers a page to download it.
 file `moje-kocky.log`) and `backups\` (database backups made on update). A
 full backup is simply a copy of the whole folder, ideally with the app
 closed. A new version installs over the old one and your data stays.
-Uninstalling asks whether to delete the data of the user who runs it (the
-default is no); other users' data stays.
+Uninstalling asks whether to delete the data of the Windows account it runs
+as after the UAC prompt; the question names that account and its folder (the
+default is no), and other users' data stays. If you enter a different
+administrator's password on a standard account, it runs as that
+administrator: it deletes nobody's data and tells you (in Slovak) that yours
+stayed in `%APPDATA%\MojeKocky`. You then delete that folder yourself.
 
 **Updating from an older 0.1.x version.** Those were installed for one user
 only, in `%LOCALAPPDATA%\Programs\MojeKocky`. The 1.0.0 installer removes
@@ -574,7 +591,10 @@ without running the old uninstaller) and leaves your data in
 `%APPDATA%\MojeKocky` alone; the database is backed up before the new
 version first starts. If the old version is still running, the installer
 says so (in Slovak: close Moje kocky and run the installer again) and
-changes nothing. A taskbar pin needs to be pinned again. Only the old
+changes nothing. If another program (antivirus, an Explorer window) holds a
+file in that folder open, the installer says it could not delete the folder
+completely; close that program and run the installer again to finish. A
+taskbar pin needs to be pinned again. Only the old
 install of the account the installer runs as is removed. If another user of
 the PC also had 0.1.x, or if you enter the password of a different
 administrator account on a standard account, that user's old version stays:
@@ -706,6 +726,7 @@ powershell -ExecutionPolicy Bypass -File scripts\build.ps1
 Frontend → PyInstaller (`packaging/moje-kocky.spec`, output
 `build/dist/MojeKocky/MojeKocky.exe`) → Inno Setup (`packaging/moje-kocky.iss`,
 removal of an old 0.1.x install in `packaging/old-install.iss`,
+the question about data on uninstall in `packaging/uninstall-data.iss`,
 output `build/installer/MojeKocky-Setup-<version>.exe`). Without Inno Setup
 installed the script stops after the program. Without `-Version` it builds
 its default version, the same as in `backend/pyproject.toml`. Any other
@@ -848,7 +869,9 @@ available inside the app.
   has downloaded.
 - **Your rights and control:** in Settings → Account you can download all
   your data (ZIP) or delete your account. Uninstalling asks whether to delete
-  your data folder as well; other users' data on the PC stays.
+  the data folder of the Windows account it runs as; other users' data on the
+  PC stays. With a different administrator's password it deletes nothing, and
+  you delete your own `%APPDATA%\MojeKocky` folder yourself.
 - **Backups made on update** (the last 5) are in
   `%APPDATA%\MojeKocky\backups` and contain the whole database; data of a
   deleted account stays in them until they rotate out.

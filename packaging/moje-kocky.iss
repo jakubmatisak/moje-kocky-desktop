@@ -3,7 +3,8 @@
 ; Inštalátor si vypýta práva správcu (Windows ukáže otázku UAC) a program ide
 ; do Program Files pre všetkých používateľov počítača. Údaje má každý používateľ
 ; vlastné v %APPDATA%\MojeKocky; založí si ich appka sama, inštalátor na ne
-; nesiaha a odinštalovanie ich zmaže, len keď to používateľ chce.
+; nesiaha a odinštalovanie ich zmaže, len keď to používateľ chce (pozri
+; uninstall-data.iss).
 ; Staršiu inštaláciu len pre jedného používateľa (0.1.x v %LOCALAPPDATA%)
 ; odstráni PrepareToInstall, pozri old-install.iss.
 
@@ -70,11 +71,17 @@ Filename: "{app}\MojeKocky.exe"; Description: "{cm:LaunchProgram,Moje kocky}"; F
 
 [Code]
 #include "old-install.iss"
+#include "uninstall-data.iss"
 
 const
   WebView2Key = 'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}';
   WebView2UserKey = 'Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}';
 
+// WebView2 pre všetkých (HKLM) alebo len pre používateľa (HKCU). HKCU je účtu,
+// pod ktorým Setup po otázke UAC beží: pri hesle iného správcu na bežnom
+// účte je to HKCU správcu, takže WebView2 nainštalovaný len pre bežného
+// používateľa sa nenájde a inštalátor zbytočne ponúkne stiahnutie. Vo
+// Windows 10/11 býva WebView2 pre všetkých, preto sa to ďalej nerieši.
 function WebView2Installed(): Boolean;
 var
   Version: String;
@@ -83,6 +90,10 @@ begin
     or (RegQueryStringValue(HKCU, WebView2UserKey, 'pv', Version) and (Version <> '') and (Version <> '0.0.0.0'));
 end;
 
+// Stránka sa otvorí v prehliadači toho, kto inštalátor spustil
+// (ShellExecAsOriginalUser), nie ako správca: Setup beží so zvýšenými
+// právami a pri hesle iného správcu pod jeho účtom, s jeho profilom
+// a priečinkom Stiahnuté.
 function InitializeSetup(): Boolean;
 var
   ErrorCode: Integer;
@@ -92,12 +103,13 @@ begin
   begin
     if MsgBox('Moje kocky potrebujú súčasť Microsoft Edge WebView2, ktorá na tomto počítači chýba.' + #13#10 +
               'Otvoriť stránku Microsoftu na jej stiahnutie?', mbConfirmation, MB_YESNO) = IDYES then
-      ShellExec('open', 'https://developer.microsoft.com/microsoft-edge/webview2/', '', '', SW_SHOWNORMAL, ewNoWait, ErrorCode);
+      ShellExecAsOriginalUser('open', 'https://developer.microsoft.com/microsoft-edge/webview2/', '', '', SW_SHOWNORMAL, ewNoWait, ErrorCode);
   end;
 end;
 
 // Starú inštaláciu len pre tohto používateľa (0.1.x) odstráni pred kopírovaním
-// súborov; keď to nejde, inštalácia skončí s hláškou a nič nezmení.
+// súborov; keď to nejde, inštalácia skončí s hláškou (čo vtedy ostane, popisuje
+// RemoveOldInstall).
 // {localappdata}, {userappdata} a HKCU sú účtu, pod ktorým inštalátor po otázke
 // UAC beží (obmedzenie popisuje old-install.iss).
 function PrepareToInstall(var NeedsRestart: Boolean): String;
@@ -110,19 +122,27 @@ begin
 end;
 
 // Program je pre všetkých, údaje má každý používateľ vlastné. {userappdata} je
-// profil účtu, pod ktorým odinštalovanie beží (po otázke UAC), údaje ostatných
-// používateľov ostanú. Predvolená odpoveď je Nie, aj v tichom režime
-// s /SUPPRESSMSGBOXES.
+// profil účtu, pod ktorým odinštalovanie beží (po otázke UAC); údaje ostatných
+// používateľov ostanú. Keď to nie je ten, kto sedí pri počítači (bežný účet
+// s heslom iného správcu), nemaže sa nič a hláška povie, kde údaje ostali
+// (uninstall-data.iss). Otázka menuje účet a jeho priečinok, predvolená
+// odpoveď je Nie, aj v tichom režime s /SUPPRESSMSGBOXES.
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
-  DataDir: String;
+  DataDir, RunAs, SessionUser: String;
 begin
   if CurUninstallStep = usPostUninstall then
   begin
     DataDir := ExpandConstant('{userappdata}\MojeKocky');
-    if DirExists(DataDir) then
-      if SuppressibleMsgBox('Zmazať aj tvoje údaje (zbierku, fotky, kľúče) v ' + DataDir + '?' + #13#10 +
-                'Ak ich necháš, nová inštalácia ich znova použije.', mbConfirmation, MB_YESNO or MB_DEFBUTTON2, IDNO) = IDYES then
+    RunAs := GetUserNameString;
+    SessionUser := SessionUserName();
+    if OtherAccountElevated(RunAs, SessionUser) then
+    begin
+      Log('Odinštalovanie beží pod účtom ' + RunAs + ', pri počítači je ' + SessionUser + ': údaje sa nemažú.');
+      SuppressibleMsgBox(OtherAccountNotice(RunAs, SessionUser), mbInformation, MB_OK, IDOK);
+    end
+    else if DirExists(DataDir) then
+      if SuppressibleMsgBox(DeleteDataQuestion(RunAs, DataDir), mbConfirmation, MB_YESNO or MB_DEFBUTTON2, IDNO) = IDYES then
         DelTree(DataDir, True, True, True);
   end;
 end;

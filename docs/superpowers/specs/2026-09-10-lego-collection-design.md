@@ -437,6 +437,13 @@ nevstupuje, len sa spočíta.
 Holá figúrka bez `minifig_no` spadne na set. Volanie s katalógovým číslom
 by skončilo chybou a zbytočne ukrojilo z kvóty.
 
+Figúrka z Rebrickable mimo série (`fig-…`, `pricing.is_bare_figure`) set
+nie je a zdroj ju pod týmto číslom nepozná. O volaní von rozhoduje
+`pricing.source_prices`: cieľ „set pod fig-…“ sa nevolá nikdy, Overiť cenu
+vráti `unsupported` a dávka ho do plánu nedá (ani z Chcem). Pod vlastným
+`minifig_no` sa cení ako figúrka. Ručná cena pod katalógovým číslom platí
+ďalej, snímky číta `resolve_price_target`.
+
 **Jedno volanie na položku.** Odpoveď nesie cenu novej aj použitej
 položky a históriu. Dávka sa preto delí podľa `PriceTarget.call_key()`
 (číslo a druh), nie podľa stavu. Tri kusy toho istého setu v rôznom stave
@@ -468,8 +475,9 @@ nie (`source_access` čísla, pri neúspechu `miss:{číslo}`, a neúspech
 z Overiť cenu v pamäti procesu), prípadne od novšej ručnej ceny. Keď zdroj
 odpovie, že set nepozná alebo preň cenu nemá, `pricing.store_miss` to
 zapíše pod `miss:{číslo}`; prístup pod samotným číslom by účtu odomkol
-ceny iného kľúča. Výpadok siete či chyba servera sa nezapíše a skúsi sa
-pri ďalšej obnove.
+ceny iného kľúča. Overiť cenu zapisuje neúspech tou istou funkciou.
+Výpadok siete či chyba servera (`provider.last_answered` je False) sa
+nezapíše nikde, ani v Overiť cenu, a skúsi sa pri ďalšej obnove.
 
 **Poradie dávky.** Najprv neznáme ceny: kľúč sa na položku ešte nepýtal
 a niektorý jej stav nemá snímku. Medzi nimi Zbierka pred Chcem (hodnota

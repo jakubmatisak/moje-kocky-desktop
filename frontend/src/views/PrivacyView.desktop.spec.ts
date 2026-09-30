@@ -61,3 +61,29 @@ describe('zásady desktopu: zálohy pred aktualizáciou', () => {
     expect(body).not.toContain('on the server')
   })
 })
+
+describe('zásady desktopu: odinštalovanie', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  afterEach(() => {
+    i18n.global.locale.value = 'sk'
+  })
+
+  it('slovenský text povie, čí priečinok sa pri odinštalovaní zmaže a čo pri hesle iného správcu', async () => {
+    i18n.global.locale.value = 'sk'
+    const body = await text()
+
+    expect(body).toContain('priečinok s údajmi účtu Windows, pod ktorým odinštalovanie beží')
+    expect(body).toContain('heslo iného účtu správcu, nezmaže nič')
+  })
+
+  it('anglický text povie to isté', async () => {
+    i18n.global.locale.value = 'en'
+    const body = await text()
+
+    expect(body).toContain('data folder of the Windows account it runs as')
+    expect(body).toContain('different administrator\'s password on a standard account, it deletes nothing')
+  })
+})

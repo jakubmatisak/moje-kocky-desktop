@@ -55,3 +55,15 @@ def test_release_notes_carry_the_fair_warning():
             "https://github.com/jakubmatisak/moje-kocky-desktop/issues",
         ):
             assert needed in text, (path, needed)
+
+
+def test_privacy_version_covers_uninstall_under_another_account():
+    """Zásady desktopu od 2026-09-30.3 hovoria, čo odinštalovanie s heslom iného správcu urobí.
+
+    Text zásad desktopu je vlastný (PrivacyView, desktopové sekcie), preto
+    verzia môže byť vyššia než na webe. Pri prenose config.py z webu sa
+    nesmie znížiť, inak by používatelia oznámenie o zmene nevideli.
+    """
+    from lego_api.config import Settings
+
+    assert Settings().privacy_version >= "2026-09-30.3"

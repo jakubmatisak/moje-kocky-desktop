@@ -20,6 +20,11 @@
 const
   OldUninstallKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{6C1B7E2A-5D43-4F7B-9B8E-4A2D6F0C9E11}_is1';
   OldProgramDirEnd = '\programs\mojekocky';
+  // Ako dopadlo mazanie priečinka starého programu (RemoveOldProgramDir).
+  OldDirGone = 0;
+  OldDirRunning = 1;
+  OldDirLeftovers = 2;
+  OldDirRefused = 3;
 
 function NormalPath(const Path: String): String;
 begin
@@ -56,14 +61,16 @@ begin
 end;
 
 // Zmaže priečinok starého programu. Najprv MojeKocky.exe: bežiaci program
-// Windows zmazať nedovolí, a vtedy sa nezmaže nič iné (DelTree by zmazal, čo
-// stihol, a nechal polovičný program). Premenovanie priečinka to nepozná,
-// to Windows dovolí aj s bežiacim programom.
-function RemoveOldProgramDir(const Dir, UserAppData: String): Boolean;
+// Windows zmazať nedovolí, a vtedy sa nezmaže nič iné (OldDirRunning).
+// Premenovanie priečinka to nepozná, to Windows dovolí aj s bežiacim
+// programom. Keď potom DelTree niečo nezmaže (súbor drží otvorený iný
+// proces: antivírus, konzola či Prieskumník v priečinku), program je už
+// preč a ostane len zvyšok (OldDirLeftovers).
+function RemoveOldProgramDir(const Dir, UserAppData: String): Integer;
 var
   D: String;
 begin
-  Result := False;
+  Result := OldDirRefused;
   if not IsOldProgramDir(Dir, UserAppData) then
     Exit;
   D := RemoveBackslash(Trim(Dir));
@@ -72,11 +79,18 @@ begin
     if FileExists(D + '\MojeKocky.exe') and not DeleteFile(D + '\MojeKocky.exe') then
     begin
       Log('Stará inštalácia beží, MojeKocky.exe sa nedá zmazať: ' + D);
+      Result := OldDirRunning;
       Exit;
     end;
     DelTree(D, True, True, True);
   end;
-  Result := not DirExists(D);
+  if DirExists(D) then
+  begin
+    Log('Priečinok starej inštalácie sa nepodarilo celý zmazať: ' + D);
+    Result := OldDirLeftovers;
+  end
+  else
+    Result := OldDirGone;
 end;
 
 // Skratky starej inštalácie: ponuka Štart (priečinok Moje kocky, zmaže sa, len
@@ -134,9 +148,13 @@ begin
 end;
 
 // Odstráni starú inštaláciu: priečinok programu, kľúč odinštalovania a skratky.
-// Vráti prázdny text, alebo hlášku, pre ktorú inštalácia nepokračuje (a vtedy
-// nie je zmazané nič). Údaje v UserAppData ostávajú vždy.
+// Vráti prázdny text, alebo hlášku, pre ktorú inštalácia nepokračuje. Pri
+// cudzom priečinku a bežiacom programe nie je zmazané nič. Keď z priečinka
+// ostal zvyšok, kľúč a skratky ostanú tiež: opakovaná inštalácia podľa nich
+// starú inštaláciu nájde a mazanie dokončí. Údaje v UserAppData ostávajú vždy.
 function RemoveOldInstall(const UninstallKey, OldDir, UserAppData, StartMenuDir, DesktopLink: String): String;
+var
+  Removed: Integer;
 begin
   Result := '';
   if (Trim(OldDir) <> '') and DirExists(OldDir) then
@@ -148,7 +166,14 @@ begin
         'Odinštaluj ju v Nastaveniach → Aplikácie (otázku, či zmazať aj údaje, zamietni; zbierka ostane) a spusti inštaláciu znova.';
       Exit;
     end;
-    if not RemoveOldProgramDir(OldDir, UserAppData) then
+    Removed := RemoveOldProgramDir(OldDir, UserAppData);
+    if Removed = OldDirLeftovers then
+    begin
+      Result := 'Priečinok staršej verzie ' + OldDir + ' sa nepodarilo celý zmazať, niečo v ňom ešte používa iný program.' + #13#10 +
+        'Zavri programy, ktoré ho môžu používať (aj okno Prieskumníka alebo príkazového riadka v ňom), a spusti inštaláciu znova.';
+      Exit;
+    end;
+    if Removed <> OldDirGone then
     begin
       Result := 'Zavri Moje kocky a spusti inštaláciu znova.' + #13#10 +
         'Staršia verzia z priečinka ' + OldDir + ' je ešte otvorená.';

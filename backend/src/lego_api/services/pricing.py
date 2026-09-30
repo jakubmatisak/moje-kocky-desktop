@@ -76,6 +76,22 @@ def resolve_price_target(item: CollectionItem, catalog: CatalogItem) -> PriceTar
     return PriceTarget(catalog.catalog_num, PriceKind.SET, condition)
 
 
+def is_bare_figure(catalog: CatalogItem) -> bool:
+    """Figúrka z Rebrickable (fig-…), ktorá nie je členom žiadnej série."""
+    return catalog.kind == CatalogKind.MINIFIG and catalog.parent_num is None
+
+
+def source_prices(target: PriceTarget, catalog: CatalogItem) -> bool:
+    """Oplatí sa na cieľ pýtať zdroja cien, alebo by volanie vždy zlyhalo?
+
+    Holá figúrka nie je set: zdroj ju pod číslom fig-… nepozná a volanie by
+    len ukrojilo z kvóty. Pod vlastným číslom figúrky (``minifig_no``) ju
+    pozná. Snímky pod katalógovým číslom (ručná cena) ``resolve_price_target``
+    číta ďalej, toto rozhoduje len o volaní von.
+    """
+    return not (is_bare_figure(catalog) and target.price_kind == PriceKind.SET)
+
+
 async def latest_snapshot(
     session: AsyncSession,
     catalog_num: str,

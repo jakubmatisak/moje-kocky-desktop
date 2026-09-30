@@ -41,6 +41,7 @@ from lego_api.services.pricing import (
     last_attempts,
     resolve_price_target,
     snapshot_age_hours,
+    source_prices,
     store_market,
     store_miss,
 )
@@ -125,7 +126,8 @@ async def collect_targets(
 
     ``only`` obmedzí obnovu na jeden set, pri sérii na jej členov. Samotné
     číslo série si vyrába appka a zdroj cien ho nepozná, volanie naň by
-    len minulo kvótu.
+    len minulo kvótu. Rovnako holá figúrka (fig-…), ktorú zdroj ako set
+    nepozná (``pricing.source_prices``); v pláne nie je vôbec.
 
     ``force`` vynechá poistku na vek. Používa ju len ručná obnova jednej
     položky z detailu: používateľ chce cenu teraz a vie, čo to stojí.
@@ -142,7 +144,12 @@ async def collect_targets(
 
     candidates: dict[tuple[str, str], _Candidate] = {}
 
-    async def consider(target: PriceTarget, owned: bool, added_at: datetime) -> None:
+    async def consider(
+        target: PriceTarget, catalog: CatalogItem, owned: bool, added_at: datetime
+    ) -> None:
+        if not source_prices(target, catalog):
+            # Holá figúrka (fig-…): zdroj ju ako set nepozná, volanie by zlyhalo vždy.
+            return
         age = await snapshot_age_hours(session, target)
         added_at = _aware(added_at)
         known = candidates.get(target.call_key())
@@ -158,7 +165,7 @@ async def collect_targets(
         catalog = item.catalog or await session.get(CatalogItem, item.catalog_num)
         if catalog is None:
             continue
-        await consider(resolve_price_target(item, catalog), True, item.created_at)
+        await consider(resolve_price_target(item, catalog), catalog, True, item.created_at)
 
     wish_stmt = select(WishlistItem).where(WishlistItem.user_id == user_id)
     if only is not None:
@@ -170,7 +177,7 @@ async def collect_targets(
         # Aj figúrka zo série je pre zdroj cien set, rovnako ako v
         # resolve_price_target. /minifig s číslom 71046-1 vráti chybu.
         target = PriceTarget(catalog.catalog_num, PriceKind.SET, PriceCondition.NEW)
-        await consider(target, False, wish.created_at)
+        await consider(target, catalog, False, wish.created_at)
 
     attempts = await last_attempts(session, fingerprint)
     now = datetime.now(UTC)

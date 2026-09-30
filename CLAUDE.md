@@ -58,16 +58,25 @@ Poistka `IsOldProgramDir`: len úplná cesta končiaca `\Programs\MojeKocky`
 mimo `{userappdata}`; iný priečinok nemaže a povie, ako odinštalovať.
 Najprv ide `MojeKocky.exe`: bežiaci program Windows zmazať nedovolí
 (premenovať priečinok áno, to nestačí) a inštalácia skončí s „Zavri Moje
-kocky a spusti inštaláciu znova.“ bez zmeny. HKCU a profil sú účtu, pod
-ktorým inštalátor po UAC beží; stará inštalácia iného účtu ostane (zdokumentované
-v README). Odinštalovanie zmaže len `{userappdata}\MojeKocky` toho, kto ho
-spustil, a len po otázke s predvolenou odpoveďou Nie (`SuppressibleMsgBox`).
-Funkcie v `old-install.iss` berú cesty a kľúč ako parametre:
-`tests/test_installer.py` ich skúša testovacím inštalátorom, ktorý skončí
-v `InitializeSetup`, na dočasných priečinkoch a vymyslenom kľúči. Skutočné
-cesty ani kľúč do testu nepatria. Komentáre v `[Code]` sú `//`, lebo
-komentár v zložených zátvorkách skončí pri prvej konštante ako `{app}`.
-Oba skripty sú v UTF-8 s BOM.
+kocky a spusti inštaláciu znova.“ bez zmeny. Keď potom `DelTree` nezmaže
+všetko (súbor drží iný proces), program je preč a hláška je iná („sa
+nepodarilo celý zmazať“, `OldDirLeftovers`); kľúč a skratky ostanú, aby
+opakovaná inštalácia starú inštaláciu našla a dokončila. HKCU a profil sú
+účtu, pod ktorým inštalátor po UAC beží; stará inštalácia iného účtu ostane
+(zdokumentované v README). Aj preto stránku WebView2 otvára
+`ShellExecAsOriginalUser`, nie `ShellExec` (prehliadač by bežal ako správca).
+Odinštalovanie zmaže len `{userappdata}\MojeKocky` účtu, pod ktorým po UAC
+beží, a len po otázke s menom toho účtu a predvolenou odpoveďou Nie
+(`SuppressibleMsgBox`). Keď to nie je používateľ relácie Windows (bežný
+účet s heslom iného správcu: `uninstall-data.iss`, `SessionUserName` cez
+`WTSQuerySessionInformationW`, `OtherAccountElevated`), nepýta sa a nemaže
+nič, len povie, kde údaje ostali. Nikde „tvoje údaje“: nemusia byť.
+Funkcie v `old-install.iss` a `uninstall-data.iss` berú všetko ako
+parametre: `tests/test_installer.py` ich skúša testovacím inštalátorom,
+ktorý skončí v `InitializeSetup`, na dočasných priečinkoch a vymyslenom
+kľúči. Skutočné cesty ani kľúč do testu nepatria. Komentáre v `[Code]` sú
+`//`, lebo komentár v zložených zátvorkách skončí pri prvej konštante ako
+`{app}`. Všetky tri skripty sú v UTF-8 s BOM.
 
 Nižšie sú pravidlá appky prevzaté z webového repa; platia aj tu, okrem
 Dockeru, portu 8000 a zdieľania odkazom.
@@ -136,7 +145,10 @@ dnešnú hodnotu tých istých kusov, aby sa rast dal porovnať.
 **GDPR je v appke, nie v dokumente.** Zásady `/sukromie`
 (`views/PrivacyView.vue`, prevádzkovateľ v `app_settings` → `operator`),
 registrácia vyžaduje `accept_privacy` a ukladá `privacy_version`; po zmene
-textu zvýš `settings.privacy_version`, používateľ uvidí oznámenie.
+textu zvýš `settings.privacy_version`, používateľ uvidí oznámenie. Desktop
+má v zásadách vlastné sekcie, preto jeho verzia môže byť vyššia než na webe
+(2026-09-30.3: odinštalovanie s heslom iného správcu); pri prenose
+`config.py` z webu ju nezníž (stráži `tests/test_install_texts.py`).
 `services/account.py` maže účet výslovne po tabuľkách aj so súbormi fotiek
 (SQLite nemá zapnuté `foreign_keys`) a exportuje ZIP bez kľúčov. Nová
 tabuľka s `user_id` = pridať ju do `_OWNED` a do exportu. Obrázky zo
@@ -218,8 +230,10 @@ Zdroj pozná dve podoby: set (`/api/v1/set/{num}`) a samotnú figúrku
 (`/api/v1/minifig/{num}`). Zatvorený sáčok ani komplet so stojanom vlastné
 číslo nemajú, cenia sa pod katalógovým číslom ako set. Holá figúrka sa cení
 pod `minifig_no`, a keď ho nepoznáme, spadne to na set: volanie s katalógovým
-číslom by skončilo chybou a zbytočne ukrojilo z kvóty. Nič z toho nepatrí do
-routera ani do komponentu.
+číslom by skončilo chybou a zbytočne ukrojilo z kvóty. Či sa na cieľ vôbec
+volá, rozhoduje `pricing.source_prices`: figúrka z Rebrickable mimo série
+(`fig-…`, `is_bare_figure`) ako set nie, Overiť cenu ju necení a dávka ju
+do plánu nedá. Nič z toho nepatrí do routera ani do komponentu.
 
 **Jedno volanie na položku, nikdy viac.** Denná kvóta je 100 volaní.
 Odpoveď nesie cenu novej aj použitej položky a k tomu históriu, takže sa
@@ -458,8 +472,11 @@ nepozná nikto, odpoveď BrickEconomy o cene poslúži aj ako metadáta (názov,
 séria, rok, dieliky; `MarketData.name` a spol.), takže jedno volanie dá
 set aj cenu. Holé číslo skúša len variant `-1`. Cena mladšia než 24 h sa
 neťahá (`price="cached"`). Neúspech (zdroj set nepozná alebo nemá
-cenu) si `services/price_misses.py` pamätá 24 h v procese, holá figúrka
-(`fig-…`) sa neceni vôbec: inak by každý opakovaný sken stál volanie. `outcome` a `price` sú kódy, texty robí
+cenu) zapíše `pricing.store_miss` ako v obnove cien: 24 h v procese
+(`services/price_misses.py`) a `miss:` pri kľúči, takže set vynechá aj
+dávka. Výpadok siete, 5xx či 429 (`provider.last_answered` je False) sa
+nezapíše nikde. Holá figúrka (`fig-…`) sa neceni vôbec: inak by každý
+opakovaný sken stál volanie. `outcome` a `price` sú kódy, texty robí
 frontend; `no_sources` = neznámy set a nie je kto ho dohľadať. Overené
 sety sú v `price_checks` pri účte; `/prices/checks` je v routeri pred
 `/prices/{num}`, inak by ho zhltol. Klik na riadok tabuľky nevolá von.
@@ -659,7 +676,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 607 testov, frontend 207. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 625 testov, frontend 209. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

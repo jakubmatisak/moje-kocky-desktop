@@ -46,6 +46,11 @@ class DataDir:
     def database(self) -> Path:
         return self.root / "lego.db"
 
+    @property
+    def session_file(self) -> Path:
+        """Zapamätané prihlásenie (``lego_desktop.remember``), len keď si ho používateľ zvolí."""
+        return self.root / "session.bin"
+
     def secret(self) -> str:
         """Tajomstvo na šifrovanie kľúčov a podpis tokenov; vznikne pri prvom spustení.
 

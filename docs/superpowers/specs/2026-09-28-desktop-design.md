@@ -64,8 +64,22 @@ Overené skúškou na zahodenie (pywebview 6.2, WebView2, Windows 11):
   heslo). Ďalšie spustenia: heslo. Registrácia potom zatvorená (správca ju
   vie otvoriť pre ďalšieho člena domácnosti).
 - Relácia žije, kým je okno otvorené: prístupový token v pamäti ako dnes.
-  Obnovovacie cookie netreba (nie je prehliadač ani server); po zatvorení
-  okna sa pri ďalšom spustení pýta heslo.
+  Obnovovacie cookie drží most v klientovi httpx (okno cookie nemá); po
+  zatvorení okna sa pri ďalšom spustení pýta heslo. Bez zapamätania platí
+  na serveri najviac 12 hodín bez použitia, ako na webe.
+- **Zapamätať si prihlásenie na tomto počítači** (políčko pri prihlásení
+  ako na webe): server pošle trvalé cookie a most
+  (`lego_desktop/bridge.py::_keep_login`) ho uloží zašifrované do
+  `%APPDATA%\MojeKocky\session.bin` (`lego_desktop/remember.py`, Fernet
+  odvodený zo `secret.key` ako pri kľúčoch k službám, žiadny nový kľúč),
+  pri každej obnove znova. Pri štarte ho `_restore_login` vráti do klienta
+  a frontend sa cez `/auth/refresh` prihlási sám. Súbor sleduje cookie zo
+  servera: session cookie (bez zaškrtnutia, po zmene hesla) a zmazané cookie
+  (odhlásenie, zmazanie účtu) ho zmažú, rovnako 401 pri obnove, no len keď
+  odišlo cookie, ktoré klient drží (dve obnovy naraz z dvoch vlákien
+  pywebview). Poškodený, vypršaný alebo iným tajomstvom zašifrovaný súbor
+  sa ticho zmaže a appka sa pýta heslo. Do exportu nepatrí; odinštalovanie
+  s mazaním údajov ho zmaže s priečinkom.
 - Heslá, šifrovanie kľúčov a viditeľnosť podľa kľúča ostávajú bez zmeny.
 
 ## Čo sa oproti webu mení alebo vypne

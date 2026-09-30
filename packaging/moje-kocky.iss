@@ -10,7 +10,7 @@
 
 ; Verzia je verzia appky (backend/pyproject.toml); build.ps1 inú nepustí.
 #ifndef AppVersion
-  #define AppVersion "1.0.0"
+  #define AppVersion "1.0.1"
 #endif
 ; Vlastnosti → Podrobnosti súboru chcú len čísla (1.0.0rc1 → 1.0.0.0);
 ; build.ps1 ich berie z packaging\version_info.py, tie isté ako MojeKocky.exe.

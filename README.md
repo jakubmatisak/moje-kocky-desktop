@@ -4,7 +4,7 @@
 
 ### [Stiahnuť inštalátor pre Windows](https://github.com/jakubmatisak/moje-kocky-desktop/releases/latest)
 
-Verzia 1.0.0 · zadarmo, bez reklám a sledovania · Windows 10 a 11 (64-bit) ·
+Verzia 1.0.1 · zadarmo, bez reklám a sledovania · Windows 10 a 11 (64-bit) ·
 pre všetkých používateľov počítača, inštalátor si vypýta práva správcu ·
 [stránka projektu](https://jakubmatisak.github.io/moje-kocky/) ·
 [webová verzia na vlastný server](https://github.com/jakubmatisak/moje-kocky-webapp)
@@ -100,6 +100,9 @@ zálohuje.
   údaje a prvý účet si v nich založí sám, bez povolenia. Pod jedným
   používateľom Windows môže byť aj viac účtov appky; ďalší povolí prvý účet
   (správca appky) v Nastaveniach → Aplikácia.
+- **Zapamätať si prihlásenie na tomto počítači**: so zaškrtnutým políčkom
+  sa po otvorení appky netreba prihlasovať, 30 dní od posledného použitia.
+  Odhlásenie aj zmena hesla zapamätané prihlásenie zrušia.
 - Rozhranie po slovensky aj po anglicky, svetlý a tmavý režim. Nastavenia
   zobrazenia sa pamätajú pri účte.
 - Prehľad spotreby volaní cudzích služieb a prepínače, čo sa z ktorej
@@ -413,8 +416,10 @@ a podmienky služieb (k septembru 2026). Zásady sú aj priamo v appke.
   `%APPDATA%\MojeKocky\backups` a nesú celú databázu; údaje zmazaného účtu
   v nich ostanú, kým sa neprestriedajú.
 - **Fotky** sa ukladajú zmenšené a bez polohy GPS.
-- **Cookies ani sledovanie** appka nepoužíva. Okno si pamätá len nastavenia
-  zobrazenia (tmavý režim, skryté ceny a pod.).
+- **Sledovanie** appka nepoužíva. Okno si pamätá nastavenia zobrazenia
+  (tmavý režim, skryté ceny a pod.) a zapamätané prihlásenie, ak si ho
+  zaškrtol: zašifrované v `%APPDATA%MojeKockysession.bin`, odhlásenie
+  ho zmaže.
 - **Služby:** Rebrickable dovoľuje akékoľvek použitie; BrickEconomy a
   Brickset dávajú osobné licencie ku kľúču, preto ich údaje vidí len účet
   s vlastným kľúčom. Ak svoj kľúč BrickEconomy vložíš do viacerých účtov,
@@ -432,7 +437,7 @@ a podmienky služieb (k septembru 2026). Zásady sú aj priamo v appke.
 
 ### [Download the Windows installer](https://github.com/jakubmatisak/moje-kocky-desktop/releases/latest)
 
-Version 1.0.0 · free, no ads, no tracking · Windows 10 and 11 (64-bit) ·
+Version 1.0.1 · free, no ads, no tracking · Windows 10 and 11 (64-bit) ·
 for every user of the PC, the installer asks for administrator rights ·
 [project website](https://jakubmatisak.github.io/moje-kocky/) ·
 [web version for your own server](https://github.com/jakubmatisak/moje-kocky-webapp)
@@ -543,6 +548,9 @@ The app's interface is available in Slovak and English.*
   data and creates their own first account in it, no approval needed. One
   Windows user can also hold several app accounts; the first account (the
   app's administrator) allows more in Settings → Application.
+- **Remember me on this computer**: with the box ticked you don't have to
+  sign in when you open the app, for 30 days since you last used it. Signing
+  out or changing the password forgets the sign-in.
 - Slovak and English interface, light and dark mode. Display settings are
   stored with the account.
 - A usage overview of calls to third-party services, plus switches for what
@@ -876,8 +884,10 @@ available inside the app.
   `%APPDATA%\MojeKocky\backups` and contain the whole database; data of a
   deleted account stays in them until they rotate out.
 - **Photos** are stored downsized and without GPS location.
-- The app uses **no cookies and no tracking**. The window only remembers
-  display settings (dark mode, hidden prices and the like).
+- The app uses **no tracking**. The window remembers display settings
+  (dark mode, hidden prices and the like) and, if you ticked it, your
+  sign-in: encrypted in `%APPDATA%MojeKockysession.bin`, deleted when you
+  sign out.
 - **Services:** Rebrickable allows any use; BrickEconomy and Brickset grant
   personal licences tied to the key, which is why their data is visible only
   to an account with its own key. If you put your BrickEconomy key into

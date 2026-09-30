@@ -269,7 +269,10 @@ def test_startup_failure_shows_the_message(appdata, monkeypatch):
 
     reason = db_backup.BackupFailed("Záloha databázy pred aktualizáciou zlyhala: plný disk.")
 
-    def failing_bridge(app):
+    received = []
+
+    def failing_bridge(app, remembered=None):
+        received.append(remembered)
         raise reason
 
     shown: list[str] = []
@@ -285,6 +288,8 @@ def test_startup_failure_shows_the_message(appdata, monkeypatch):
     desktop_main.main()
 
     assert shown == [desktop_main.startup_failure_text(data, reason)]
+    # Most dostane zapamätané prihlásenie z priečinka údajov.
+    assert [r.path for r in received] == [data.session_file]
     lock = data.lock()
     assert lock is not None
     lock.release()

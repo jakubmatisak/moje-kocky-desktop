@@ -17,10 +17,26 @@ zdieľanie odkazom je skryté. Klient API hľadá `fetch` až pri volaní, inak
 by si zapamätal pôvodný a prvé volanie by sa zaseklo.
 
 **Údaje v `%APPDATA%\MojeKocky`** (`lego_desktop/paths.py`): databáza,
-fotky, `secret.key` (vznikne pri prvom spustení), denníky, zálohy databázy
+fotky, `secret.key` (vznikne pri prvom spustení), zapamätané prihlásenie
+(`session.bin`, len keď si ho používateľ zvolí), denníky, zálohy databázy
 pred aktualizáciou (`backups\`, vedľa databázy podľa absolútnej
 `DATABASE_URL`); zámok proti druhému spusteniu. Kamera sa pre `file://`
 povolí bez pýtania (`_allow_camera` v `lego_desktop/main.py`).
+
+**Zapamätané prihlásenie je `session.bin`.** Okno cookie nemá, obnovovacie
+cookie drží most. Trvalé cookie (zaškrtnuté „Zapamätať si prihlásenie na
+tomto počítači“) uloží `bridge.py::_keep_login` zašifrované cez
+`lego_desktop/remember.py` (Fernet zo `secret.key`, tá istá šifra ako
+kľúče, `keys_service.encrypt`) a `_restore_login` ho pri štarte vráti
+klientovi, takže frontend sa cez `/auth/refresh` prihlási sám. Session
+cookie sa neukladá. Súbor zmaže každé session alebo zmazané cookie zo
+servera (prihlásenie bez zaškrtnutia, zmena hesla, odhlásenie, zmazanie
+účtu) a 401 pri obnove, ak odišlo cookie, ktoré klient práve drží: dve
+obnovy naraz (pywebview volá most z viacerých vlákien) by inak zmazali
+práve vydané prihlásenie. Poškodený či cudzím tajomstvom zašifrovaný súbor
+sa ticho zmaže. Zápis cez dočasný súbor; chyba zápisu požiadavku nezhodí.
+Zásady to opisujú v `SK_DESKTOP`/`EN_DESKTOP`. Testy v
+`tests/test_desktop_remember.py` s priečinkom v `tmp_path`.
 
 **Pád pri štarte ukáže okno so správou**, denník používateľ nevidí.
 `lego_desktop/main.py::startup_failure_text`: pri `BackupFailed` jej text
@@ -147,8 +163,9 @@ dnešnú hodnotu tých istých kusov, aby sa rast dal porovnať.
 registrácia vyžaduje `accept_privacy` a ukladá `privacy_version`; po zmene
 textu zvýš `settings.privacy_version`, používateľ uvidí oznámenie. Desktop
 má v zásadách vlastné sekcie, preto jeho verzia môže byť vyššia než na webe
-(2026-09-30.3: odinštalovanie s heslom iného správcu); pri prenose
-`config.py` z webu ju nezníž (stráži `tests/test_install_texts.py`).
+(2026-09-30.3: odinštalovanie s heslom iného správcu; od 2026-09-30.4,
+zapamätané prihlásenie, sú zas rovnaké); pri prenose `config.py` z webu
+ju nezníž (stráži `tests/test_install_texts.py`).
 `services/account.py` maže účet výslovne po tabuľkách aj so súbormi fotiek
 (SQLite nemá zapnuté `foreign_keys`) a exportuje ZIP bez kľúčov. Nová
 tabuľka s `user_id` = pridať ju do `_OWNED` a do exportu. Obrázky zo
@@ -665,6 +682,22 @@ v pamäti, nie cookie, takže `<a href="/api/v1/...">` odíde bez neho a stiahne
 sa 401. Sťahuje sa cez klienta a blob (`components/ExportCsvButton.vue`).
 CSV začína BOM, inak Excel rozbije diakritiku.
 
+**Zapamätanie prihlásenia volí používateľ políčkom.** „Zapamätať si
+prihlásenie na tomto počítači“ je pri prihlásení aj registrácii, predvolene
+nezaškrtnuté, a posiela `remember`. So zapamätaním je `lego_refresh` trvalé
+cookie na `refresh_token_days` (30), bez neho session cookie bez Max-Age
+a token na serveri platí `refresh_session_hours` (12 h): prehliadač
+s obnovou kariet vráti aj session cookie. Režim je v `refresh_tokens.remember`,
+obnova tokenu ho zdedí a platnosť posunie (kĺzavé). Tokeny spred stĺpca sú
+bez zapamätania, inak by kĺzavých 30 dní ostalo trvalých naveky. Vypršané
+tokeny všetkých účtov maže `_issue_refresh`, zásady sľubujú najviac 30 dní.
+Odhlásenie token zmaže (nielen zruší), zmazanie účtu tiež (`_OWNED`). Zmena
+hesla (`_end_logins`) zmaže všetky tokeny účtu, aj na iných počítačoch;
+tento prehliadač dostane nový token bez zapamätania (session cookie), takže
+sa nemusí hneď prihlasovať, no zapamätanie treba zaškrtnúť znova.
+Zmena trvania = text zásad (Ako dlho, tabuľka cookies) a `privacy_version`.
+V desktope cookie drží most a trvalé ukladá do `session.bin` (pozri hore).
+
 **Filter Zbierky si pamätá účet, nie prehliadač.** `users.preferences`
 (JSON, kľúč `collection`) cez `/auth/me/preferences`, v prehliadači
 `stores/preferences.ts` s oneskoreným ukladaním. Príchod bez filtra v adrese
@@ -725,6 +758,16 @@ pravidlo je v `plugins/i18n.ts`, kľúče končia na `Plural` a volajú sa cez
 Čísla formátuje `utils/format.ts`. Tisíce oddeľuje nezlomiteľná medzera, aby
 sa suma nezlomila do dvoch riadkov. Desatinná čiarka, znak eura za číslom.
 
+## Triedy písma sú z Vuetify 4
+
+Vuetify 4 nemá `text-caption`, `text-body-2`, `text-h6` a ostatné triedy
+z Vuetify 3; trieda bez štýlu nič nehlási a text ostane veľký ako rodič.
+Používaj `text-body-small` (namiesto caption), `text-body-medium` (body-2),
+`text-body-large` (body-1, subtitle-1), `text-title-small` (subtitle-2),
+`text-title-large` (h6, s `font-weight-medium`), `text-headline-small` (h5),
+`text-headline-large` (h4) a `text-label-medium text-uppercase` (overline).
+Stráži to `utils/typography.spec.ts`.
+
 ## Vlastné komponenty treba importovať
 
 Vuetify komponenty sa doťahujú samé, tie moje nie. Chýbajúci import sa
@@ -733,7 +776,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 650 testov, frontend 238. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 678 testov, frontend 248. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

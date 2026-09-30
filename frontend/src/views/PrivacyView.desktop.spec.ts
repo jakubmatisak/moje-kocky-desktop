@@ -87,3 +87,39 @@ describe('zásady desktopu: odinštalovanie', () => {
     expect(body).toContain('different administrator\'s password on a standard account, it deletes nothing')
   })
 })
+
+describe('zásady desktopu: zapamätané prihlásenie', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  afterEach(() => {
+    i18n.global.locale.value = 'sk'
+  })
+
+  it('slovenský text povie, kde je súbor so zapamätaným prihlásením a čo ho zmaže', async () => {
+    i18n.global.locale.value = 'sk'
+    const body = await text()
+
+    expect(body).toContain(String.raw`%APPDATA%\MojeKocky\session.bin`)
+    expect(body).toContain('Zapamätať si prihlásenie')
+    expect(body).toContain('zašifrovaný súborom secret.key')
+    expect(body).toContain('odhlásenie, zmena hesla aj zmazanie účtu')
+    expect(body).toContain('kým je okno otvorené, najviac 12 hodín bez použitia')
+    expect(body).toContain('zašifrované kľúče, zapamätané prihlásenie (ak si ho zvolíš) a denník')
+    // Okno cookie nemá; tabuľka úložiska okna ho nesmie uvádzať.
+    expect(body).not.toContain('lego_refresh')
+  })
+
+  it('anglický text povie to isté', async () => {
+    i18n.global.locale.value = 'en'
+    const body = await text()
+
+    expect(body).toContain(String.raw`%APPDATA%\MojeKocky\session.bin`)
+    expect(body).toContain('Remember me')
+    expect(body).toContain('encrypted with secret.key')
+    expect(body).toContain('signing out, changing the password or deleting the account')
+    expect(body).toContain('while the window is open, at most 12 hours without use')
+    expect(body).toContain('encrypted keys, a remembered sign-in (if you choose it) and the log')
+  })
+})

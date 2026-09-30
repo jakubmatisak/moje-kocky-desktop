@@ -139,6 +139,18 @@ def _allow_camera(window) -> None:
         logging.exception("Povolenie kamery sa nepodarilo nastaviť")
 
 
+def remembered_login(data: DataDir):
+    """Zapamätané prihlásenie v priečinku údajov, šifrované tajomstvom zo secret.key.
+
+    Volá sa až po ``os.environ.update(data.environment())``: nastavenia appky
+    si ``JWT_SECRET`` prečítajú z prostredia.
+    """
+    from lego_api.config import get_settings
+    from lego_desktop.remember import RememberedLogin
+
+    return RememberedLogin(data.session_file, get_settings())
+
+
 def main() -> None:
     data = DataDir()
     lock = data.lock()
@@ -158,7 +170,7 @@ def main() -> None:
     from lego_desktop.bridge import Bridge
 
     try:
-        bridge = Bridge(create_app())
+        bridge = Bridge(create_app(), remembered=remembered_login(data))
     except Exception as exc:
         logging.exception("Appku sa nepodarilo spustiť")
         _fatal(data, exc)

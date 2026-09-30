@@ -29,7 +29,9 @@ záloh; iné súbory v priečinku ostanú. Pred migráciou sa nemaže nič: keď
 desktopu), rotácia by inak vytlačila jedinú zálohu spred aktualizácie
 kópiami napoly zmigrovanej databázy. Zlyhanie si pamätá značka
 (``failure_marker``) s odtlačkom databázy; kým sa databáza odvtedy
-nezmenila, ďalší pokus novú zálohu nerobí a hlási tú pôvodnú.
+nezmenila, ďalší pokus novú zálohu nerobí a hlási tú pôvodnú. Každý
+úspešný štart značku zmaže, aj ten, ktorý nič nezálohoval (návrat zálohy
+a predchádzajúcej verzie).
 """
 
 import json
@@ -380,7 +382,7 @@ def upgrade_with_backup(
 
     Keď migrácia spadne, zapíše značku, zaloguje, kde je záloha a ako ju
     vrátiť, a výnimku nechá ísť ďalej; verzia ostane stará. Po úspechu
-    zapíše verziu a zmaže staré zálohy.
+    zapíše verziu, zmaže značku a staré zálohy.
     """
     version = version or _app_version()
     saved = backup_before_upgrade(database_url, config, version=version)
@@ -400,9 +402,13 @@ def upgrade_with_backup(
                 db_path,
             )
         raise
-    if db_path is not None and db_path.is_file():
+    if db_path is None:
+        return saved
+    if db_path.is_file():
         record_version(db_path, version)
-    if saved is not None and db_path is not None:
-        _forget_failure(db_path)
+    # Aj po štarte bez zálohy (vrátená záloha a predchádzajúca verzia): značka
+    # by inak ukazovala na zálohu, ktorá k databáze už nepatrí.
+    _forget_failure(db_path)
+    if saved is not None:
         prune(saved.parent, db_path.stem)
     return saved

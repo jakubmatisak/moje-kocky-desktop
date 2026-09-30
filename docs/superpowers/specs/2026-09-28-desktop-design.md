@@ -105,7 +105,10 @@ Overené skúškou na zahodenie (pywebview 6.2, WebView2, Windows 11):
   webe). Keď záloha alebo migrácia zlyhá, okno so správou povie dôvod,
   prípadne kde je záloha a ako ju vrátiť (zmazať `lego.db-journal`, `-wal`,
   `-shm`, skopírovať zálohu na miesto `lego.db`, nainštalovať predchádzajúcu
-  verziu); podrobnosti ostanú v `logs\moje-kocky.log`.
+  verziu); podrobnosti ostanú v `logs\moje-kocky.log`. Zálohu zo značky
+  zlyhanej migrácie správa ukáže, len keď databáza je tá, ktorú zlyhaný
+  štart nechal (revízia a odtlačok); po návrate zálohy a ďalšej práci by
+  jej opätovný návrat zobral nové údaje.
 
 ## Fázy
 

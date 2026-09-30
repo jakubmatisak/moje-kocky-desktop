@@ -26,6 +26,9 @@ povolí bez pýtania (`_allow_camera` v `lego_desktop/main.py`).
 `lego_desktop/main.py::startup_failure_text`: pri `BackupFailed` jej text
 (databáza ostala bez zmeny), pri spadnutej migrácii záloha zo značky
 `backups/lego-failed-migration.json` a ako ju vrátiť, inak cesta k denníku.
+Značke verí, len keď revízia a odtlačok sedia na databázu (tá istá kontrola
+ako `db_backup._earlier_backup`): po návrate zálohy a práci v starej verzii
+by rada vrátiť ju znova zobrala všetko zadané odvtedy.
 Testy v `tests/test_desktop_backup.py` majú vlastný `APPDATA` v `tmp_path`.
 
 **Balenie:** `scripts/build.ps1` → `npm run build-desktop` → PyInstaller
@@ -153,8 +156,9 @@ migráciu zvlášť, takže po páde je databáza napoly zmigrovaná a Docker
 jedinú zálohu spred aktualizácie. Zlyhanie si pamätá
 `backups/lego-failed-migration.json` (záloha, revízia, odtlačok databázy);
 kým sa databáza odvtedy nezmenila, ďalší štart novú zálohu nerobí a hlási
-tú pôvodnú. Verzia sa pri páde nezapíše, takže to platí aj pre štart novej
-verzie bez migrácie. Nové vydanie = zvýšiť `version` v `pyproject.toml`,
+tú pôvodnú. Každý úspešný štart značku zmaže, aj bez zálohy (vrátená
+záloha a predchádzajúca verzia). Verzia sa pri páde nezapíše, takže to
+platí aj pre štart novej verzie bez migrácie. Nové vydanie = zvýšiť `version` v `pyproject.toml`,
 `uv lock` a verziu vo `frontend/package.json` aj `package-lock.json`
 (zhodu stráži `tests/test_version.py`; v desktope aj predvolenú verziu
 v `build.ps1` a `moje-kocky.iss`, `tests/test_desktop_version.py`), inak sa

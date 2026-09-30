@@ -8,6 +8,7 @@ vznikne kópia v ``backups`` vedľa databázy.
 import json
 import logging
 import re
+import shutil
 import sqlite3
 from contextlib import closing
 from datetime import datetime, timedelta
@@ -586,6 +587,28 @@ def test_successful_upgrade_after_failure_forgets_it(tmp_path, clock):
     assert saved is not None
     assert not db_backup.failure_marker(db).exists()
     assert _backups(db) == [saved.name]
+
+
+def test_start_without_backup_forgets_failure_too(tmp_path, clock):
+    """Návrat zálohy a štart predchádzajúcej verzie: značka zmizne aj bez novej zálohy.
+
+    Stará verzia nad vrátenou zálohou nemá čo zálohovať (head, jej verzia),
+    no značka by inak ostala a ukazovala na zálohu, ktorá už k databáze
+    nepatrí; po ďalšej práci v starej verzii by jej návrat zobral nové údaje.
+    """
+    db = tmp_path / "lego.db"
+    _make_db(db, _head())
+    _stamp_version(db, PREV)
+    with pytest.raises(RuntimeError):
+        db_backup.upgrade_with_backup(_url(db), _config(), _broken, version=NEW)
+    (name,) = _backups(db)
+    shutil.copy2(tmp_path / "backups" / name, db)
+
+    saved = db_backup.upgrade_with_backup(_url(db), _config(), lambda: None, version=PREV)
+
+    assert saved is None
+    assert not db_backup.failure_marker(db).exists()
+    assert _backups(db) == [name], "záloha ostáva, maže ju len rotácia"
 
 
 # --- zlyhanie ------------------------------------------------------------------

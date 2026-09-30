@@ -120,8 +120,9 @@ docs/superpowers/specs/  tieto dokumenty
   a po zlyhanej si značka `backups/lego-failed-migration.json` pamätá
   zálohu spred aktualizácie: slučka reštartov (`restart: unless-stopped`)
   ju tak nevytlačí kópiami napoly zmigrovanej databázy, kým sa databáza
-  nezmení. Verzia sa pri páde nezapíše, takže to platí aj pre novú verziu
-  bez migrácie. Aby sa chyba do logu dostala, appka nastaví Alembicu
+  nezmení. Každý úspešný štart značku zmaže, aj keď nič nezálohoval.
+  Verzia sa pri páde nezapíše, takže to platí aj pre novú verziu bez
+  migrácie. Aby sa chyba do logu dostala, appka nastaví Alembicu
   `keep_logging` a `env.py` nevolá `fileConfig`. Zálohy nesú aj údaje
   neskôr zmazaných účtov, spomínajú ich zásady `/sukromie`.
 - **Tajomstvá:** v `.env` (nie je v gite) je len `JWT_SECRET`

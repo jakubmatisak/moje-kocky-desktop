@@ -12,7 +12,9 @@ desktopu ostanú bokom.
 import asyncio
 import json
 import re
+import shutil
 import sqlite3
+from collections.abc import Callable
 from contextlib import closing
 from pathlib import Path
 
@@ -75,6 +77,55 @@ def _broken() -> None:
     raise RuntimeError("no such table: users")
 
 
+def _database_of(db: Path, version: str) -> None:
+    """Databáza na head, nad ktorou naposledy bežala verzia ``version``."""
+    with closing(sqlite3.connect(db)) as conn:
+        conn.execute("CREATE TABLE sety (num TEXT PRIMARY KEY)")
+        conn.execute("CREATE TABLE alembic_version (version_num VARCHAR(32) PRIMARY KEY)")
+        conn.execute("INSERT INTO alembic_version VALUES (?)", (_head(),))
+        conn.execute(
+            "CREATE TABLE app_settings (key VARCHAR(64) PRIMARY KEY, value JSON NOT NULL, "
+            "updated_at DATETIME NOT NULL)"
+        )
+        conn.commit()
+    _stamp_version(db, version)
+
+
+def _add_set(db: Path, num: str) -> None:
+    with closing(sqlite3.connect(db)) as conn:
+        conn.execute("INSERT INTO sety VALUES (?)", (num,))
+        conn.commit()
+
+
+def _half_done(db: Path) -> Callable[[], None]:
+    """Migrácia, ktorá stihne niečo potvrdiť a potom spadne (SQLite potvrdzuje každú zvlášť)."""
+    attempts = 0
+
+    def upgrade() -> None:
+        nonlocal attempts
+        attempts += 1
+        _add_set(db, f"POKAZENE-{attempts}")
+        raise RuntimeError("no such table: users")
+
+    return upgrade
+
+
+def _failed_update(data: DataDir, upgrade: Callable[[], None]) -> Path:
+    """Štart verzie 1.1.0, ktorej migrácia spadne; vráti zálohu spred neho."""
+    url = data.environment()["DATABASE_URL"]
+    with pytest.raises(RuntimeError):
+        db_backup.upgrade_with_backup(url, _config(), upgrade, version="1.1.0")
+    (saved,) = (data.root / "backups").glob("lego-*.db")
+    return saved
+
+
+def _restore(data: DataDir, saved: Path) -> None:
+    """Postup zo správy: zvyšky žurnálu preč, záloha na miesto databázy (čas súboru ostane)."""
+    for suffix in ("journal", "wal", "shm"):
+        data.database.with_name(f"{data.database.name}-{suffix}").unlink(missing_ok=True)
+    shutil.copy2(saved, data.database)
+
+
 # --- kde sú zálohy -----------------------------------------------------------------
 
 
@@ -130,6 +181,61 @@ def test_failed_migration_message_names_backup_and_how_to_restore(appdata):
     assert "lego.db-journal" in text
     assert str(data.database) in text
     assert str(data.logs / "moje-kocky.log") in text
+
+
+def test_repeated_failed_update_still_names_backup_from_before_it(appdata):
+    """Ďalší štart tej istej verzie spadne znova: správa ukáže tú istú zálohu."""
+    data = DataDir()
+    _database_of(data.database, "1.0.0")
+    upgrade = _half_done(data.database)
+    saved = _failed_update(data, upgrade)
+    with pytest.raises(RuntimeError) as failure:
+        db_backup.upgrade_with_backup(
+            data.environment()["DATABASE_URL"], _config(), upgrade, version="1.1.0"
+        )
+
+    text = desktop_main.startup_failure_text(data, failure.value)
+
+    assert list((data.root / "backups").glob("lego-*.db")) == [saved]
+    assert str(saved) in text
+
+
+def test_failure_after_restore_and_more_work_does_not_offer_old_backup(appdata):
+    """Záloha späť, predchádzajúca verzia nabehne a používateľ pracuje ďalej.
+
+    Keby neskorší pád z iného dôvodu ukázal starú zálohu ako stav pred
+    aktualizáciou, jej návrat by zobral všetko zadané od jej vrátenia.
+    """
+    data = DataDir()
+    _database_of(data.database, "1.0.0")
+    saved = _failed_update(data, _half_done(data.database))
+    _restore(data, saved)
+    url = data.environment()["DATABASE_URL"]
+    assert db_backup.upgrade_with_backup(url, _config(), lambda: None, version="1.0.0") is None
+    _add_set(data.database, "75192-1")
+
+    text = desktop_main.startup_failure_text(data, RuntimeError("access_backfill spadol"))
+
+    assert str(saved) not in text
+    assert "záloh" not in text
+    assert str(data.logs / "moje-kocky.log") in text
+
+
+def test_restored_database_is_not_the_one_the_failed_update_left(appdata):
+    """Značka ešte je (stará verzia po návrate nenabehla), no databáza je už iná.
+
+    Pád teraz so zlyhanou aktualizáciou nesúvisí, správa zálohu neponúka.
+    """
+    data = DataDir()
+    _database_of(data.database, "1.0.0")
+    saved = _failed_update(data, _half_done(data.database))
+    _restore(data, saved)
+
+    text = desktop_main.startup_failure_text(data, RuntimeError("iný pád"))
+
+    assert db_backup.failure_marker(data.database).is_file()
+    assert str(saved) not in text
+    assert "záloh" not in text
 
 
 def test_backup_failure_message_says_why(appdata):

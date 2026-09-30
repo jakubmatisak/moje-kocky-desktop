@@ -5,9 +5,9 @@ prostredia pri prvom importe, preto sa premenné pre %APPDATA% nastavia
 skôr, než sa appka naimportuje.
 """
 
-import json
 import logging
 import os
+import sqlite3
 import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -52,20 +52,24 @@ def _failed_update_backup(data: DataDir) -> Path | None:
     """Záloha spred aktualizácie, po ktorej migrácia spadla; inak None.
 
     Značku (``db_backup.failure_marker``) zapíše appka, keď migrácia po
-    zálohe spadne, a zmaže ju po úspešnom štarte. Keď je tu, patrí k tomuto
-    pádu (alebo k predchádzajúcemu s tou istou databázou, záloha je tá istá).
+    zálohe spadne, a zmaže ju každý úspešný štart. Samotná značka nestačí:
+    platí, len keď databáza stojí na revízii zo značky a je presne taká,
+    ako ju zlyhaný pokus nechal. Je to tá istá kontrola, podľa ktorej ďalší
+    štart zálohu spred aktualizácie použije znova (``_earlier_backup``).
+    Po návrate zálohy je databáza iná a pád so zlyhanou aktualizáciou
+    nesúvisí; rada vrátiť starú zálohu by zobrala všetko zadané odvtedy.
     """
     from lego_api.services import db_backup
 
-    marker = db_backup.failure_marker(data.database)
+    db = data.database
+    # Bez značky sa databáza neotvára: sqlite3 by chýbajúci súbor založil.
+    if not db.is_file() or not db_backup.failure_marker(db).is_file():
+        return None
     try:
-        name = json.loads(marker.read_text(encoding="utf-8"))["backup"]
-    except (OSError, ValueError, KeyError, TypeError):
+        revision = "_".join(sorted(db_backup.current_revisions(db)))
+    except sqlite3.Error:
         return None
-    saved = marker.parent / str(name)
-    if saved.parent != marker.parent or not saved.is_file():
-        return None
-    return saved
+    return db_backup._earlier_backup(db, revision)
 
 
 def startup_failure_text(data: DataDir, exc: BaseException) -> str:

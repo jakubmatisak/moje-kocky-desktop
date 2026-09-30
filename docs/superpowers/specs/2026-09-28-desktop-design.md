@@ -145,6 +145,14 @@ Overené skúškou na zahodenie (pywebview 6.2, WebView2, Windows 11):
   nie ako správca. HKCU je účtu, pod ktorým Setup beží: pri hesle iného
   správcu sa WebView2 nainštalovaný len pre bežného používateľa nenájde
   a inštalátor zbytočne ponúkne stiahnutie (zriedkavé, nerieši sa).
+- **Jazyk inštalátora**: slovenčina a angličtina; Inno Setup ponúkne jazyk
+  Windows a odinštalovanie ide v jazyku inštalácie. Všetky vlastné texty
+  (otázka na WebView2, položka licencií v ponuke Štart, otázky
+  odinštalovania, hlášky o starej inštalácii) sú v `packaging/messages.iss`
+  ako `slovak.*` a `english.*`, skripty ich berú cez `CustomMessage` a
+  `{cm:…}`. Okná so správou appky (pád štartu, „už bežia“) sú skôr, než
+  appka pozná jazyk účtu, preto hovoria jazykom Windows
+  (`GetUserDefaultUILanguage`: slovenčina, inak angličtina).
 - **Veľkosť**: odhad 60–90 MB.
 - **Podpis**: nepodpísané (SmartScreen raz upozorní). Podpisový certifikát
   je voliteľný neskôr.

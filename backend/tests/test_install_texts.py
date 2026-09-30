@@ -104,3 +104,15 @@ def test_privacy_version_covers_remembered_login_in_window_storage():
     from lego_api.config import Settings
 
     assert Settings().privacy_version >= "2026-09-30.5"
+
+
+def test_texts_do_not_say_the_installer_speaks_only_slovak():
+    """Od 1.0.1 má inštalátor, odinštalovanie aj okno pri páde štartu obidva jazyky.
+
+    Texty starších vydaní (v1.0.0) ostávajú, ako boli: vtedy to pravda bola.
+    """
+    for path in (README, ROOT / "docs" / "release-notes" / "default.md"):
+        text = _text(path)
+
+        assert "(in Slovak" not in text, path
+        assert "is in Slovak)" not in text, path

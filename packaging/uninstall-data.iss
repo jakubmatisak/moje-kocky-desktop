@@ -65,14 +65,13 @@ begin
   Result := (Trim(SessionUser) <> '') and (CompareText(Trim(RunAs), Trim(SessionUser)) <> 0);
 end;
 
+// Texty sú v messages.iss (slovak.* a english.*), jazyk je jazyk inštalácie.
 function DeleteDataQuestion(const Account, DataDir: String): String;
 begin
-  Result := 'Zmazať aj údaje Moje kocky (zbierku, fotky, kľúče) používateľa Windows „' + Account + '“ v priečinku ' + DataDir + '?' + #13#10 +
-    'Údaje ostatných používateľov počítača ostanú. Ak ich necháš, nová inštalácia ich znova použije.';
+  Result := FmtMessage(CustomMessage('DeleteDataQuestion'), [Account, DataDir]);
 end;
 
 function OtherAccountNotice(const RunAs, SessionUser: String): String;
 begin
-  Result := 'Odinštalovanie bežalo pod účtom správcu „' + RunAs + '“, nie pod tvojím („' + SessionUser + '“), preto údaje Moje kocky nemazalo nikomu.' + #13#10 +
-    'Tvoje údaje (zbierka, fotky, kľúče) ostali v priečinku %APPDATA%\MojeKocky tvojho účtu. Keď ich už nechceš, zmaž ho sám; ak ho necháš, nová inštalácia ich znova použije.';
+  Result := FmtMessage(CustomMessage('OtherAccountNotice'), [RunAs, SessionUser]);
 end;

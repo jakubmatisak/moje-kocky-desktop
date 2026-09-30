@@ -33,10 +33,17 @@ PACKAGING = ROOT / "packaging"
 ISS = PACKAGING / "moje-kocky.iss"
 OLD_INSTALL = PACKAGING / "old-install.iss"
 UNINSTALL_DATA = PACKAGING / "uninstall-data.iss"
-INCLUDES = (OLD_INSTALL, UNINSTALL_DATA)
+MESSAGES = PACKAGING / "messages.iss"
+INCLUDES = (OLD_INSTALL, UNINSTALL_DATA, MESSAGES)
+SCRIPTS = (ISS, OLD_INSTALL, UNINSTALL_DATA)
+LANGUAGES = ("slovak", "english")
+#: Hlášky Inno Setup (Default.isl, Slovak.isl), nie vlastné z messages.iss.
+BUILTIN_MESSAGES = {"CreateDesktopIcon", "AdditionalIcons", "UninstallProgram", "LaunchProgram"}
 APP_ID = "{6C1B7E2A-5D43-4F7B-9B8E-4A2D6F0C9E11}"
 RUNNING = "Zavri Moje kocky a spusti inštaláciu znova."
 LEFTOVERS = "sa nepodarilo celý zmazať"
+RUNNING_EN = "Close Moje kocky and run the installer again."
+LEFTOVERS_EN = "could not be deleted completely"
 
 needs_iscc = pytest.mark.skipif(
     sys.platform != "win32" or _iscc() is None,
@@ -152,6 +159,84 @@ def test_webview2_page_opens_as_the_original_user():
     assert not re.search(r"\bShellExec\(", code)
 
 
+# --- skript: texty po slovensky aj po anglicky -----------------------------------
+
+
+def _custom_messages() -> dict[str, dict[str, str]]:
+    """[CustomMessages] z messages.iss podľa jazyka: {jazyk: {meno: text}}."""
+    found: dict[str, dict[str, str]] = {}
+    for line in _sections(_text(MESSAGES))["CustomMessages"]:
+        key, text = line.split("=", 1)
+        language, name = key.split(".", 1)
+        found.setdefault(language, {})[name] = text
+    return found
+
+
+def _used_messages() -> set[str]:
+    """Vlastné hlášky, ktoré skripty používajú: ``CustomMessage('…')`` a ``{cm:…}``."""
+    used: set[str] = set()
+    for path in SCRIPTS:
+        text = _text(path)
+        used |= set(re.findall(r"CustomMessage\('(\w+)'\)", text))
+        used |= set(re.findall(r"\{cm:(\w+)", text))
+    return used - BUILTIN_MESSAGES
+
+
+def test_installer_offers_slovak_and_english_with_own_messages():
+    lines = _sections(_text(ISS))["Languages"]
+    languages = [re.match(r'Name: "(\w+)"', line).group(1) for line in lines if "Name:" in line]
+
+    assert tuple(languages) == LANGUAGES
+    assert '#include "messages.iss"' in _text(ISS).split("[Code]", 1)[0]
+
+
+def test_every_custom_message_is_in_both_languages():
+    """Kto si vyberie English, dostane anglické otázky aj hlášky, nie slovenské."""
+    messages = _custom_messages()
+    used = _used_messages()
+
+    assert set(messages) == set(LANGUAGES)
+    assert used, "skripty nepoužívajú žiadnu vlastnú hlášku"
+    for language in LANGUAGES:
+        assert set(messages[language]) == used, language
+    for name in used:
+        slovak, english = messages["slovak"][name], messages["english"][name]
+        assert slovak != english, name
+        # Argumenty (%1, %2) a nové riadky (%n) sedia v oboch jazykoch.
+        assert sorted(re.findall(r"%[1-9n]", slovak)) == sorted(re.findall(r"%[1-9n]", english))
+
+
+def test_scripts_have_no_texts_outside_custom_messages():
+    """Text pre používateľa je len v messages.iss; v skriptoch ostávajú len záznamy do denníka.
+
+    Slovenský text poznať podľa diakritiky: reťazec s ňou mimo ``Log(…)``
+    by sa ukázal aj v anglickom inštalátore. V sekciách mimo [Code] (skratky,
+    úlohy) sa kontroluje celý riadok.
+    """
+    for path in SCRIPTS:
+        in_code = path != ISS
+        for raw in _text(path).splitlines():
+            line = raw.strip()
+            if line == "[Code]":
+                in_code = True
+            if not line or line.startswith(("//", ";")) or "Log(" in line:
+                continue
+            texts = re.findall(r"'([^']*)'", line) if in_code else [line]
+            assert all(text.isascii() for text in texts), (path.name, line)
+
+
+def test_start_menu_licence_item_follows_the_language():
+    icons = _sections(_text(ISS))["Icons"]
+
+    assert any(r'Name: "{group}\{cm:ThirdPartyNotices}"' in line for line in icons), icons
+
+
+def test_webview2_question_follows_the_language():
+    code = _code()
+
+    assert "MsgBox(CustomMessage('WebView2Missing'), mbConfirmation, MB_YESNO) = IDYES" in code
+
+
 # --- skript: prechod zo starej inštalácie a odinštalovanie ----------------------
 
 
@@ -221,12 +306,13 @@ def test_full_installer_script_compiles(tmp_path):
     """Celý skript (aj [Code] a include) prejde cez ISCC bez chýb a varovaní.
 
     Program a licencie nahradia malé súbory v rovnakom rozložení ako
-    po PyInstaller, skript sa kompiluje z kópie priečinka packaging.
+    po PyInstaller, skript sa kompiluje z kópie priečinka packaging. ISCC
+    zostaví obidva jazyky naraz, chýbajúca hláška niektorého by bola chyba.
     """
     packaging = tmp_path / "packaging"
     packaging.mkdir()
-    for name in ("moje-kocky.iss", "old-install.iss", "uninstall-data.iss", "icon.ico"):
-        shutil.copy2(PACKAGING / name, packaging / name)
+    for path in (ISS, *INCLUDES, PACKAGING / "icon.ico"):
+        shutil.copy2(path, packaging / path.name)
     shutil.copy2(ROOT / "LICENSE", tmp_path / "LICENSE")
     program = tmp_path / "build" / "dist" / "MojeKocky"
     program.mkdir(parents=True)
@@ -260,6 +346,12 @@ Uninstallable=no
 PrivilegesRequired=lowest
 OutputDir={out}
 OutputBaseFilename=harness
+
+[Languages]
+Name: "slovak"; MessagesFile: "compiler:Languages\\Slovak.isl"
+Name: "english"; MessagesFile: "compiler:Default.isl"
+
+#include "messages.iss"
 
 [Code]
 #include "old-install.iss"
@@ -317,6 +409,11 @@ begin
   begin
     SetArrayLength(Output, 1);
     Output[0] := OtherAccountNotice(Args[1], Args[2]);
+  end
+  else if Args[0] = 'message' then
+  begin
+    SetArrayLength(Output, 1);
+    Output[0] := CustomMessage(Args[1]);
   end;
   SaveStringsToUTF8File(ExpandConstant('{{param:TOUT}}'), Output, False);
 end;
@@ -325,7 +422,11 @@ end;
 
 @pytest.fixture(scope="module")
 def harness(tmp_path_factory):
-    """Skompilovaný testovací inštalátor; ``run(scenár, *argumenty)`` vráti jeho výstup."""
+    """Skompilovaný testovací inštalátor; ``run(scenár, *argumenty)`` vráti jeho výstup.
+
+    Beží po slovensky, s ``lang="english"`` po anglicky (``/LANG``, akoby
+    jazyk vybral používateľ; bez neho by rozhodol jazyk Windows).
+    """
     if sys.platform != "win32" or _iscc() is None:
         pytest.skip("Inno Setup (ISCC.exe) nie je nainštalovaný")
     folder = tmp_path_factory.mktemp("harness")
@@ -337,7 +438,7 @@ def harness(tmp_path_factory):
     setup = folder / "harness.exe"
     runs = iter(range(1_000_000))
 
-    def run(scenario: str, *args: str) -> str:
+    def run(scenario: str, *args: str, lang: str = "slovak") -> str:
         n = next(runs)
         given, answer = folder / f"in-{n}.txt", folder / f"out-{n}.txt"
         given.write_text("\n".join([scenario, *args, "."]), encoding="utf-8-sig")
@@ -347,6 +448,7 @@ def harness(tmp_path_factory):
                 "/VERYSILENT",
                 "/SUPPRESSMSGBOXES",
                 "/NORESTART",
+                f"/LANG={lang}",
                 f"/TIN={given}",
                 f"/TOUT={answer}",
             ],
@@ -398,7 +500,7 @@ class Profile:
     def files(self, folder: Path) -> set[str]:
         return {str(p.relative_to(folder)) for p in folder.rglob("*")}
 
-    def migrate(self, run, old_dir: Path | str | None = None) -> str:
+    def migrate(self, run, old_dir: Path | str | None = None, lang: str = "slovak") -> str:
         return run(
             "migrate",
             _fake_key(),
@@ -406,6 +508,7 @@ class Profile:
             str(self.appdata),
             str(self.group),
             str(self.desktop_link),
+            lang=lang,
         )
 
 
@@ -621,3 +724,86 @@ def test_uninstall_under_another_account_says_nothing_was_deleted(harness):
     assert "„Dieťa“" in notice
     assert "nemazalo nikomu" in notice
     assert r"%APPDATA%\MojeKocky" in notice
+
+
+# --- texty v testovacom inštalátore po slovensky aj po anglicky -------------------
+
+
+def test_custom_messages_reach_the_installer_in_both_languages(harness):
+    """Inno Setup vyberie hlášku jazyka inštalátora a %n zmení na nový riadok."""
+    messages = _custom_messages()
+
+    for language in LANGUAGES:
+        for name, text in messages[language].items():
+            shown = harness("message", name, lang=language)
+
+            assert shown == text.replace("%n", "\n"), (language, name)
+
+
+def test_english_uninstall_question_names_the_account_and_its_folder(harness):
+    folder = r"C:\Users\Ján Š\AppData\Roaming\MojeKocky"
+
+    question = harness("question", "Ján Š", folder, lang="english")
+
+    assert 'Windows user "Ján Š"' in question
+    assert folder in question
+    assert "The data of other users of this computer stays." in question
+    assert "your" not in question.lower()
+    assert "%n" not in question
+
+
+def test_english_notice_under_another_account(harness):
+    notice = harness("notice", "Rodič", "Dieťa", lang="english")
+
+    assert '"Rodič"' in notice
+    assert '"Dieťa"' in notice
+    assert "deleted no one's Moje kocky data" in notice
+    assert r"%APPDATA%\MojeKocky" in notice
+
+
+def test_english_installer_explains_a_folder_it_does_not_recognise(harness, tmp_path):
+    profile = Profile(tmp_path)
+    custom = tmp_path / "Hry" / "MojeKocky"
+    shutil.copytree(profile.program, custom)
+
+    answer = profile.migrate(harness, custom, lang="english")
+
+    assert str(custom) in answer
+    assert "Uninstall it in Settings → Apps" in answer
+    assert "Odinštaluj" not in answer
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="bežiaci program len vo Windows")
+def test_english_installer_asks_to_close_the_old_version(harness, tmp_path):
+    profile = Profile(tmp_path)
+    ping = Path(os.environ["SYSTEMROOT"]) / "System32" / "PING.EXE"
+    shutil.copy2(ping, profile.program / "MojeKocky.exe")
+    running = subprocess.Popen(
+        [str(profile.program / "MojeKocky.exe"), "-n", "60", "127.0.0.1"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    try:
+        time.sleep(0.5)
+        assert running.poll() is None
+
+        answer = profile.migrate(harness, lang="english")
+    finally:
+        running.kill()
+        running.wait(timeout=30)
+
+    assert RUNNING_EN in answer
+    assert str(profile.program) in answer
+    assert RUNNING not in answer
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="zamknutý súbor len vo Windows")
+def test_english_installer_reports_leftovers(harness, tmp_path):
+    profile = Profile(tmp_path)
+
+    with open(profile.program / "_internal" / "python313.dll", "rb"):
+        answer = profile.migrate(harness, lang="english")
+
+    assert LEFTOVERS_EN in answer
+    assert str(profile.program) in answer
+    assert LEFTOVERS not in answer

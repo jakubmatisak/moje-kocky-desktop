@@ -38,6 +38,15 @@ def appdata(tmp_path, monkeypatch) -> Path:
     return tmp_path
 
 
+@pytest.fixture(autouse=True)
+def slovak_windows(monkeypatch) -> None:
+    """Správy po slovensky bez ohľadu na jazyk Windows, na ktorých test beží.
+
+    Anglické testy si jazyk nastavia samy (``lang="en"`` alebo ``ui_language``).
+    """
+    monkeypatch.setattr(desktop_main, "ui_language", lambda: "sk")
+
+
 def _config() -> Config:
     config = Config()
     config.set_main_option("script_location", str(ALEMBIC_DIR))
@@ -261,6 +270,78 @@ def test_other_failure_points_to_the_log(appdata):
 
     assert str(data.logs / "moje-kocky.log") in text
     assert "záloh" not in text
+
+
+# --- správa pri zlyhanom štarte po anglicky ---------------------------------------
+
+#: Slová slovenských správ; v anglickej správe nesmie byť ani jedno.
+SLOVAK_WORDS = ("nepodarilo", "Podrobnosti", "denník", "záloh", "Migrácia", "zatvor")
+
+
+def _is_english(text: str) -> bool:
+    return not any(word in text for word in SLOVAK_WORDS)
+
+
+def test_failed_migration_message_in_english(appdata):
+    data = DataDir()
+    url = data.environment()["DATABASE_URL"]
+    _old_database(data.database)
+    with pytest.raises(RuntimeError) as failure:
+        db_backup.upgrade_with_backup(url, _config(), _broken, version="1.0.0")
+    (saved,) = (appdata / "MojeKocky" / "backups").glob("lego-*.db")
+
+    text = desktop_main.startup_failure_text(data, failure.value, lang="en")
+
+    assert text.startswith("Moje kocky could not start: the database update failed.")
+    assert str(saved) in text
+    assert "lego.db-journal" in text
+    assert str(data.database) in text
+    assert "install the previous version of the app" in text
+    assert str(data.logs / "moje-kocky.log") in text
+    assert _is_english(text), text
+
+
+def test_backup_failure_message_in_english_says_why(appdata):
+    """Text ``BackupFailed`` je slovenský; anglická správa povie to isté sama a pridá príčinu."""
+    data = DataDir()
+    url = data.environment()["DATABASE_URL"]
+    _old_database(data.database)
+    (data.root / "backups").write_text("nie som priečinok", encoding="utf-8")
+    with pytest.raises(db_backup.BackupFailed) as failure:
+        db_backup.upgrade_with_backup(url, _config(), _broken, version="1.0.0")
+
+    text = desktop_main.startup_failure_text(data, failure.value, lang="en")
+
+    assert "the database is unchanged" in text
+    assert str(failure.value.__cause__) in text
+    assert str(data.root / "backups") in text
+    assert str(data.logs / "moje-kocky.log") in text
+    assert str(failure.value) not in text
+    assert _is_english(text), text
+
+
+def test_other_failure_in_english_points_to_the_log(appdata):
+    data = DataDir()
+
+    text = desktop_main.startup_failure_text(data, RuntimeError("niečo iné"), lang="en")
+
+    assert text.startswith("Moje kocky could not start.")
+    assert str(data.logs / "moje-kocky.log") in text
+    assert "backup" not in text
+    assert _is_english(text), text
+
+
+def test_startup_failure_follows_the_windows_language(appdata, monkeypatch):
+    """Bez výslovného jazyka správa hovorí jazykom Windows (``ui_language``)."""
+    data = DataDir()
+    shown: list[str] = []
+    monkeypatch.setattr(desktop_main, "_message_box", lambda text, flags: shown.append(text))
+    monkeypatch.setattr(desktop_main, "ui_language", lambda: "en")
+
+    desktop_main._fatal(data, RuntimeError("niečo iné"))
+
+    assert shown == [desktop_main.startup_failure_text(data, RuntimeError("x"), lang="en")]
+    assert shown[0].startswith("Moje kocky could not start.")
 
 
 def test_startup_failure_shows_the_message(appdata, monkeypatch):

@@ -37,6 +37,76 @@ def _logging(data: DataDir) -> None:
 _ICON_ERROR = 0x10
 _ICON_INFO = 0x40
 
+#: Primárny jazyk slovenčiny v identifikátore jazyka Windows (LANGID & 0x3FF).
+_LANG_SLOVAK = 0x1B
+
+#: Texty okien so správou. Ukazujú sa skôr, než appka pozná jazyk účtu
+#: (databáza nemusí ísť otvoriť), preto idú podľa jazyka Windows.
+_TEXTS = {
+    "sk": {
+        "running": "Moje kocky už bežia. Pozri sa na panel úloh.",
+        "details": "Podrobnosti sú v denníku:\n{log}",
+        "failed": "Moje kocky sa nepodarilo spustiť. {details}",
+        "backup_failed": "Moje kocky sa nepodarilo spustiť.\n\n{reason}\n\n{details}",
+        "update_failed": (
+            "Moje kocky sa nepodarilo spustiť: aktualizácia databázy zlyhala.\n\n"
+            "Zbierka spred aktualizácie je v zálohe:\n{saved}\n\n"
+            "Na návrat zatvor appku, v priečinku {folder} zmaž súbory {leftovers}, "
+            "ak tam sú, a zálohu skopíruj na miesto databázy {db}. Kým nebude oprava, "
+            "nainštaluj predchádzajúcu verziu appky.\n\n"
+            "{details}"
+        ),
+    },
+    # Text BackupFailed je slovenský (zdieľaný kód appky), anglická správa
+    # preto povie to isté sama a z výnimky vezme len príčinu (__cause__).
+    "en": {
+        "running": "Moje kocky is already running. Look for it on the taskbar.",
+        "details": "Details are in the log:\n{log}",
+        "failed": "Moje kocky could not start. {details}",
+        "backup_failed": (
+            "Moje kocky could not start: before updating the database, the app could "
+            "not back it up or read its version. The update did not run and the "
+            "database is unchanged.\n\n"
+            "Cause: {cause}\n\n"
+            "Check the free space on the disk and the access rights to the folder "
+            "{backups}.\n\n"
+            "{details}"
+        ),
+        "update_failed": (
+            "Moje kocky could not start: the database update failed.\n\n"
+            "The collection from before the update is in the backup:\n{saved}\n\n"
+            "To go back, close the app, delete the files {leftovers} in the folder "
+            "{folder} if they are there, and copy the backup over the database {db}. "
+            "Until there is a fix, install the previous version of the app.\n\n"
+            "{details}"
+        ),
+    },
+}
+
+
+def _windows_ui_language_id() -> int | None:
+    """Jazyk rozhrania Windows (LANGID, napr. 0x041B), alebo None, keď neodpovie."""
+    try:
+        import ctypes
+
+        return int(ctypes.windll.kernel32.GetUserDefaultUILanguage())
+    except (AttributeError, OSError):
+        return None
+
+
+def ui_language() -> str:
+    """Jazyk okien so správou: ``sk`` pri slovenských Windows, inak ``en``.
+
+    Ten istý jazyk ponúkne aj Inno Setup pri inštalácii. Mimo Windows (testy)
+    a keď Windows neodpovie, slovenčina.
+    """
+    if sys.platform != "win32":
+        return "sk"
+    lang_id = _windows_ui_language_id()
+    if lang_id is None:
+        return "sk"
+    return "sk" if lang_id & 0x3FF == _LANG_SLOVAK else "en"
+
 
 def _message_box(text: str, flags: int) -> None:
     import ctypes
@@ -45,7 +115,7 @@ def _message_box(text: str, flags: int) -> None:
 
 
 def _already_running() -> None:
-    _message_box("Moje kocky už bežia. Pozri sa na panel úloh.", _ICON_INFO)
+    _message_box(_TEXTS[ui_language()]["running"], _ICON_INFO)
 
 
 def _failed_update_backup(data: DataDir) -> Path | None:
@@ -72,30 +142,32 @@ def _failed_update_backup(data: DataDir) -> Path | None:
     return db_backup._earlier_backup(db, revision)
 
 
-def startup_failure_text(data: DataDir, exc: BaseException) -> str:
+def startup_failure_text(data: DataDir, exc: BaseException, lang: str | None = None) -> str:
     """Správa pre používateľa, keď appka nenabehne.
 
     Denník ani konzolu nevidí, preto mu správa povie, čo sa stalo: pri
     zlyhanej zálohe dôvod z ``BackupFailed`` (databáza ostala bez zmeny),
     pri zlyhanej migrácii kde je záloha spred aktualizácie a ako ju vrátiť.
+    Jazyk je ``sk`` alebo ``en``, predvolene podľa Windows (``ui_language``).
     """
     from lego_api.services import db_backup
 
-    details = f"Podrobnosti sú v denníku:\n{data.logs / 'moje-kocky.log'}"
+    texts = _TEXTS[lang or ui_language()]
+    db = data.database
+    details = texts["details"].format(log=data.logs / "moje-kocky.log")
     if isinstance(exc, db_backup.BackupFailed):
-        return f"Moje kocky sa nepodarilo spustiť.\n\n{exc}\n\n{details}"
+        return texts["backup_failed"].format(
+            reason=exc,
+            cause=exc.__cause__ or exc,
+            backups=db.parent / db_backup.FOLDER,
+            details=details,
+        )
     saved = _failed_update_backup(data)
     if saved is None:
-        return f"Moje kocky sa nepodarilo spustiť. {details}"
-    db = data.database
+        return texts["failed"].format(details=details)
     leftovers = ", ".join(f"{db.name}-{suffix}" for suffix in ("journal", "wal", "shm"))
-    return (
-        "Moje kocky sa nepodarilo spustiť: aktualizácia databázy zlyhala.\n\n"
-        f"Zbierka spred aktualizácie je v zálohe:\n{saved}\n\n"
-        f"Na návrat zatvor appku, v priečinku {db.parent} zmaž súbory {leftovers}, "
-        f"ak tam sú, a zálohu skopíruj na miesto databázy {db}. Kým nebude oprava, "
-        "nainštaluj predchádzajúcu verziu appky.\n\n"
-        f"{details}"
+    return texts["update_failed"].format(
+        saved=saved, folder=db.parent, leftovers=leftovers, db=db, details=details
     )
 
 

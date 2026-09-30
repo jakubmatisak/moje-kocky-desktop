@@ -104,7 +104,9 @@ zálohuje.
   sa po otvorení appky netreba prihlasovať, 30 dní od posledného použitia.
   Odhlásenie aj zmena hesla zapamätané prihlásenie zrušia.
 - Rozhranie po slovensky aj po anglicky, svetlý a tmavý režim. Nastavenia
-  zobrazenia sa pamätajú pri účte.
+  zobrazenia sa pamätajú pri účte. Inštalátor a odinštalovanie hovoria
+  jazykom, ktorý si vyberieš na začiatku inštalácie (ponúkne jazyk
+  Windows), okno pri zlyhanom štarte jazykom Windows.
 - Prehľad spotreby volaní cudzích služieb a prepínače, čo sa z ktorej
   služby smie sťahovať.
 - **Automatická záloha databázy** pri každej aktualizácii
@@ -552,7 +554,10 @@ The app's interface is available in Slovak and English.*
   sign in when you open the app, for 30 days since you last used it. Signing
   out or changing the password forgets the sign-in.
 - Slovak and English interface, light and dark mode. Display settings are
-  stored with the account.
+  stored with the account. The installer and the uninstaller speak the
+  language you pick when the installation starts (the Windows language is
+  offered), the window shown when the app fails to start the Windows
+  language.
 - A usage overview of calls to third-party services, plus switches for what
   may be downloaded from which service.
 - **Automatic database backup** on every update ([below](#backup-on-update)).
@@ -589,8 +594,8 @@ Uninstalling asks whether to delete the data of the Windows account it runs
 as after the UAC prompt; the question names that account and its folder (the
 default is no), and other users' data stays. If you enter a different
 administrator's password on a standard account, it runs as that
-administrator: it deletes nobody's data and tells you (in Slovak) that yours
-stayed in `%APPDATA%\MojeKocky`. You then delete that folder yourself.
+administrator: it deletes nobody's data and tells you that yours stayed in
+`%APPDATA%\MojeKocky`. You then delete that folder yourself.
 
 **Updating from an older 0.1.x version.** Those were installed for one user
 only, in `%LOCALAPPDATA%\Programs\MojeKocky`. The 1.0.0 installer removes
@@ -598,8 +603,8 @@ that install itself (program, shortcuts and the entry in the list of apps,
 without running the old uninstaller) and leaves your data in
 `%APPDATA%\MojeKocky` alone; the database is backed up before the new
 version first starts. If the old version is still running, the installer
-says so (in Slovak: close Moje kocky and run the installer again) and
-changes nothing. If another program (antivirus, an Explorer window) holds a
+says so (close Moje kocky and run the installer again) and changes
+nothing. If another program (antivirus, an Explorer window) holds a
 file in that folder open, the installer says it could not delete the folder
 completely; close that program and run the installer again to finish. A
 taskbar pin needs to be pinned again. Only the old

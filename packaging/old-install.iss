@@ -152,6 +152,7 @@ end;
 // cudzom priečinku a bežiacom programe nie je zmazané nič. Keď z priečinka
 // ostal zvyšok, kľúč a skratky ostanú tiež: opakovaná inštalácia podľa nich
 // starú inštaláciu nájde a mazanie dokončí. Údaje v UserAppData ostávajú vždy.
+// Texty hlášok sú v messages.iss (slovak.* a english.*).
 function RemoveOldInstall(const UninstallKey, OldDir, UserAppData, StartMenuDir, DesktopLink: String): String;
 var
   Removed: Integer;
@@ -162,21 +163,18 @@ begin
     if not IsOldProgramDir(OldDir, UserAppData) then
     begin
       Log('Stará inštalácia je v nečakanom priečinku, nemaže sa: ' + OldDir);
-      Result := 'Staršia verzia Moje kocky je v priečinku ' + OldDir + ', ktorý inštalátor sám nezmaže.' + #13#10 +
-        'Odinštaluj ju v Nastaveniach → Aplikácie (otázku, či zmazať aj údaje, zamietni; zbierka ostane) a spusti inštaláciu znova.';
+      Result := FmtMessage(CustomMessage('OldInstallUnknownFolder'), [OldDir]);
       Exit;
     end;
     Removed := RemoveOldProgramDir(OldDir, UserAppData);
     if Removed = OldDirLeftovers then
     begin
-      Result := 'Priečinok staršej verzie ' + OldDir + ' sa nepodarilo celý zmazať, niečo v ňom ešte používa iný program.' + #13#10 +
-        'Zavri programy, ktoré ho môžu používať (aj okno Prieskumníka alebo príkazového riadka v ňom), a spusti inštaláciu znova.';
+      Result := FmtMessage(CustomMessage('OldInstallLeftovers'), [OldDir]);
       Exit;
     end;
     if Removed <> OldDirGone then
     begin
-      Result := 'Zavri Moje kocky a spusti inštaláciu znova.' + #13#10 +
-        'Staršia verzia z priečinka ' + OldDir + ' je ešte otvorená.';
+      Result := FmtMessage(CustomMessage('OldInstallRunning'), [OldDir]);
       Exit;
     end;
     Log('Stará inštalácia odstránená: ' + OldDir);

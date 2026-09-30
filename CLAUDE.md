@@ -46,6 +46,13 @@ Značke verí, len keď revízia a odtlačok sedia na databázu (tá istá kontr
 ako `db_backup._earlier_backup`): po návrate zálohy a práci v starej verzii
 by rada vrátiť ju znova zobrala všetko zadané odvtedy.
 Testy v `tests/test_desktop_backup.py` majú vlastný `APPDATA` v `tmp_path`.
+Okná so správou (pád štartu, „už bežia“) sú skôr, než appka pozná jazyk
+účtu, preto hovoria jazykom Windows: `ui_language` (primárny jazyk
+`GetUserDefaultUILanguage` 0x1B = slovenčina, inak angličtina; mimo Windows
+a bez odpovede slovenčina), texty v `_TEXTS`. Text `BackupFailed` je
+slovenský zo zdieľaného kódu, anglická správa povie to isté sama a z výnimky
+vezme len `__cause__`. Testy záloh si jazyk pripnú na slovenčinu
+(`slovak_windows`), anglické ho dávajú výslovne (`lang="en"`).
 
 **Balenie:** `scripts/build.ps1` → `npm run build-desktop` → PyInstaller
 (`packaging/moje-kocky.spec`; migrácie a ich importy musia byť v spec, lebo
@@ -92,7 +99,14 @@ parametre: `tests/test_installer.py` ich skúša testovacím inštalátorom,
 ktorý skončí v `InitializeSetup`, na dočasných priečinkoch a vymyslenom
 kľúči. Skutočné cesty ani kľúč do testu nepatria. Komentáre v `[Code]` sú
 `//`, lebo komentár v zložených zátvorkách skončí pri prvej konštante ako
-`{app}`. Všetky tri skripty sú v UTF-8 s BOM.
+`{app}`. Všetky štyri skripty sú v UTF-8 s BOM.
+Texty pre používateľa (otázka na WebView2, položka licencií v ponuke Štart,
+otázky odinštalovania, hlášky o starej inštalácii) sú len v
+`packaging/messages.iss` ako `slovak.Meno` a `english.Meno`; skripty ich
+berú cez `CustomMessage('Meno')`, s argumentmi `FmtMessage(…, [..])`, v
+sekciách `{cm:Meno}`. `%n` zmení ISCC na nový riadok. Test stráži, že každá
+hláška je v oboch jazykoch a že v skriptoch mimo `Log(…)` nie je reťazec
+s diakritikou; testovací inštalátor beží s `/LANG=slovak` alebo `english`.
 
 Nižšie sú pravidlá appky prevzaté z webového repa; platia aj tu, okrem
 Dockeru, portu 8000 a zdieľania odkazom.

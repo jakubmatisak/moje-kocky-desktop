@@ -49,6 +49,10 @@ CloseApplications=yes
 Name: "slovak"; MessagesFile: "compiler:Languages\Slovak.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
+; Vlastné texty v oboch jazykoch (CustomMessages); inde v skripte nie je
+; žiadny text pre používateľa, len záznamy do denníka.
+#include "messages.iss"
+
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
@@ -61,7 +65,7 @@ Source: "..\build\THIRD-PARTY-NOTICES.txt"; DestDir: "{app}"; Flags: ignoreversi
 [Icons]
 Name: "{group}\Moje kocky"; Filename: "{app}\MojeKocky.exe"
 Name: "{group}\{cm:UninstallProgram,Moje kocky}"; Filename: "{uninstallexe}"
-Name: "{group}\Licencie softvéru tretích strán"; Filename: "{app}\THIRD-PARTY-NOTICES.txt"
+Name: "{group}\{cm:ThirdPartyNotices}"; Filename: "{app}\THIRD-PARTY-NOTICES.txt"
 Name: "{autodesktop}\Moje kocky"; Filename: "{app}\MojeKocky.exe"; Tasks: desktopicon
 
 [Run]
@@ -101,8 +105,7 @@ begin
   Result := True;
   if not WebView2Installed() then
   begin
-    if MsgBox('Moje kocky potrebujú súčasť Microsoft Edge WebView2, ktorá na tomto počítači chýba.' + #13#10 +
-              'Otvoriť stránku Microsoftu na jej stiahnutie?', mbConfirmation, MB_YESNO) = IDYES then
+    if MsgBox(CustomMessage('WebView2Missing'), mbConfirmation, MB_YESNO) = IDYES then
       ShellExecAsOriginalUser('open', 'https://developer.microsoft.com/microsoft-edge/webview2/', '', '', SW_SHOWNORMAL, ewNoWait, ErrorCode);
   end;
 end;

@@ -731,12 +731,24 @@ cookie na `refresh_token_days` (30), bez neho session cookie bez Max-Age
 a token na serveri platí `refresh_session_hours` (12 h): prehliadač
 s obnovou kariet vráti aj session cookie. Režim je v `refresh_tokens.remember`,
 obnova tokenu ho zdedí a platnosť posunie (kĺzavé). Tokeny spred stĺpca sú
-bez zapamätania, inak by kĺzavých 30 dní ostalo trvalých naveky. Vypršané
-tokeny všetkých účtov maže `_issue_refresh`, zásady sľubujú najviac 30 dní.
-Odhlásenie token zmaže (nielen zruší), zmazanie účtu tiež (`_OWNED`). Zmena
-hesla (`_end_logins`) zmaže všetky tokeny účtu, aj na iných počítačoch;
-tento prehliadač dostane nový token bez zapamätania (session cookie), takže
-sa nemusí hneď prihlasovať, no zapamätanie treba zaškrtnúť znova.
+bez zapamätania, inak by kĺzavých 30 dní ostalo trvalých naveky; migrácia
+`9332cb64e9a6` im skrátila platnosť na 12 h. Výmena pri obnove je atómová
+(`UPDATE … WHERE revoked_at IS NULL`, rowcount): z kariet s tým istým cookie
+vymení token len jedna, reťaz sa nerozdvojí. Vymenený token do
+`refresh_grace_seconds` (60 s) dá len prístupový token bez nového cookie
+(súbežné karty po reštarte prehliadača), po lehote je to ukradnuté cookie:
+zmažú sa všetky tokeny účtu a do logu ide varovanie. Vymenený token preto
+ostáva do vypršania, bez `user_agent`. Vypršané tokeny všetkých účtov maže
+`auth/tokens.py::prune` pri každom vydaní aj pri štarte, zásady sľubujú
+najviac 30 dní. Odhlásenie zmaže aktuálny token aj vymenené tokeny účtu,
+zmazanie účtu všetky (`_OWNED`). Zmena hesla (`_end_logins`) zmaže všetky
+tokeny účtu a nastaví `users.password_changed_at`: `current_user` odmietne
+prístupový token so starším `iat` (na celé sekundy), takže iné zariadenia
+stratia prístup hneď. Tento prehliadač dostane nový token v tom istom
+režime (zapamätanie ostane) a nový prístupový token si vezme hneď
+(`stores/auth.ts::updateProfile`); inak ho obnoví 401 v `api/client.ts`,
+ktorý si kópiu požiadavky s telom robí pred odoslaním, lebo odoslané telo
+sa zopakovať nedá. `restore()` ide cez tú istú `refreshSession`.
 Zmena trvania = text zásad (Ako dlho, tabuľka cookies) a `privacy_version`.
 V desktope cookie drží most a trvalé ukladá do `session.bin` (pozri hore).
 

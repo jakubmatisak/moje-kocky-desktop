@@ -150,6 +150,7 @@ docs/superpowers/specs/  tieto dokumenty
 | `JWT_SECRET` | – | podpis tokenov a šifrovanie kľúčov |
 | `ACCESS_TOKEN_MINUTES` / `REFRESH_TOKEN_DAYS` | 15 / 30 | platnosť tokenov (30 dní so zapamätaním prihlásenia) |
 | `REFRESH_SESSION_HOURS` | 12 | obnovovací token bez zapamätania |
+| `REFRESH_GRACE_SECONDS` | 60 | ochranná lehota po výmene obnovovacieho tokenu |
 | `COOKIE_SECURE`, `COOKIE_DOMAIN` | false / – | cookie obnovovacieho tokenu |
 | `ALLOW_REGISTRATION` | true | východisko, kým ho správca v appke nezmení |
 | `BRICKECONOMY_DAILY_LIMIT` | 90 | vlastný strop pod oficiálnych 100 |
@@ -180,19 +181,37 @@ docs/superpowers/specs/  tieto dokumenty
 
 - Prístupový JWT platí 15 minút a drží sa len v pamäti prehliadača.
 - Obnovovací token je v httpOnly cookie, v databáze je jeho sha256. Pri
-  každom použití sa vymení a starý sa odvolá; odhlásenie ho zmaže.
+  každom použití sa vymení a starý sa odvolá. Výmena je atómová
+  (podmienený `UPDATE`): keď prehliadač po reštarte obnoví viac kariet
+  naraz s tým istým cookie, token vymení len jedna a nové cookie dostane
+  len jej odpoveď. Ostatné, ktoré prídu do 60 s od výmeny (ochranná lehota),
+  dostanú len prístupový token; reťaz sa tak nerozdvojí a nikoho to
+  neodhlási.
+- Vymenený token prijatý po ochrannej lehote znamená skopírované cookie
+  (útočník obnovil prvý alebo obnovuje po obeti): zmažú sa všetky tokeny
+  účtu, do logu ide varovanie a odpoveď je 401. Vymenený token preto
+  v databáze ostáva do svojho vypršania (najviac 30 dní), už bez údaja
+  o prehliadači.
+- Odhlásenie zmaže aktuálny token aj vymenené tokeny účtu; z prihlásenia
+  v databáze nič neostane, platné prihlásenia iných zariadení ostávajú.
 - **Zapamätať si prihlásenie na tomto počítači** (políčko pri prihlásení
   aj registrácii, predvolene nie, `remember` v tele): trvalé cookie na
   30 dní. Bez neho session cookie bez Max-Age, ktoré zanikne so zatvorením
   prehliadača, a token na serveri platí 12 hodín, lebo prehliadač s obnovou
   kariet vráti aj session cookie. Režim je v `refresh_tokens.remember`,
   obnova ho zdedí a platnosť posunie (kĺzavé: aktívne používanie
-  neodhlási). Tokeny spred zavedenia sú bez zapamätania. Vypršané tokeny
-  všetkých účtov sa mažú pri vydaní nového.
+  neodhlási). Tokeny spred zavedenia sú bez zapamätania a migrácia
+  `9332cb64e9a6` im skrátila platnosť na teraz + 12 h (1.0.0 im dala
+  30 dní). Vypršané tokeny všetkých účtov sa mažú pri vydaní nového aj pri
+  štarte appky.
 - Zmena hesla zmaže všetky tokeny účtu, teda aj zapamätané prihlásenia
-  na iných počítačoch. Prehliadač, v ktorom sa heslo zmenilo, dostane nový
-  token bez zapamätania (session cookie) a ostane prihlásený do zatvorenia.
-  Zmazanie účtu zmaže tokeny s ostatnými údajmi.
+  na iných počítačoch, a zapíše `users.password_changed_at`. Prístupový
+  token so starším `iat` (porovnáva sa na celé sekundy) server odmietne,
+  takže iné zariadenia stratia prístup hneď, nie až po 15 minútach.
+  Prehliadač, v ktorom sa heslo zmenilo, dostane nový obnovovací token
+  v tom istom režime (zapamätané ostane zapamätané, nové heslo pozná)
+  a hneď si vezme nový prístupový token. Zmazanie účtu zmaže tokeny
+  s ostatnými údajmi.
 - Trvalé cookie vznikne len na výslovnú voľbu: zaškrtnutie políčka je
   súhlas s ním, lištu netreba. Zásady ho opisujú v tabuľke cookies
   a v Ako dlho.
@@ -201,6 +220,9 @@ docs/superpowers/specs/  tieto dokumenty
   a pri ďalšom spustení ho vráti do klienta; session cookie ostane len
   v pamäti. Podrobne v `2026-09-28-desktop-design.md`.
 - Klient pri 401 raz skúsi obnovenie a potom pošle na prihlásenie.
+  Obnova ide naraz len raz (`api/client.ts::refreshSession`, aj pre
+  `restore()` pri načítaní stránky) a požiadavku s telom zopakuje z kópie
+  urobenej pred odoslaním, lebo odoslané telo sa znova poslať nedá.
 - Súbory na stiahnutie (CSV, fotky) preto idú cez klienta ako blob, nie
   obyčajným odkazom: odkaz by odišiel bez tokenu.
 

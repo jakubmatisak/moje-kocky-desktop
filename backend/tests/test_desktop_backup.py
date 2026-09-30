@@ -243,7 +243,7 @@ def test_backup_failure_message_says_why(appdata):
     url = data.environment()["DATABASE_URL"]
     _old_database(data.database)
     # Namiesto priečinka záloh súbor: kópia sa nepodarí.
-    (data.root / "backups").write_text("nie som priečinok")
+    (data.root / "backups").write_text("nie som priečinok", encoding="utf-8")
     with pytest.raises(db_backup.BackupFailed) as failure:
         db_backup.upgrade_with_backup(url, _config(), _broken, version="1.0.0")
 

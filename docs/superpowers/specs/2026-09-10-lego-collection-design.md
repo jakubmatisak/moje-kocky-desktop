@@ -653,7 +653,10 @@ Podrobnosti:
   kompletná (`complete`, zelený pruh), len keď sa počty naozaj zhodujú a vo
   stiahnutých vlnách nič nechýba; orezaný počet je plný pruh, ale žltý.
 - Kým vlna nie je stiahnutá, počet pri roku je odhad, potom je presný
-  (odhad ostane, keď v nej chýba môj set).
+  (odhad ostane, keď v nej chýba môj set). Aj otvorený rok: stará vlna,
+  ktorú sa nepodarilo stiahnuť znova (vypnuté vlny, bez limitu), ráta môj
+  chýbajúci set medzi setmi roka a hlási `exact: false`, takže čip roka aj
+  súhrn vlny ostanú s ≈.
 
 **Vlastné kategórie** (`services/categories.py`):
 

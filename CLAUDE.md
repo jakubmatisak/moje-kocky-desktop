@@ -613,7 +613,10 @@ setov témy či roka; či je téma naozaj celá, povie `ThemeOut.complete`
 (úplná zhoda a vo vlnách nič nechýba) a len vtedy je `SeriesBar` zelený,
 aj filter Nekompletné ide podľa neho. Prop `complete` má predvolené
 `undefined`, chýbajúci boolean by Vue zmenilo na false. Kým vlna nie je
-stiahnutá, počet pri roku je odhad, potom presný. Existujúcim setom
+stiahnutá, počet pri roku je odhad, potom presný; odhad ostane, keď v nej
+chýba môj set (stará vlna, ktorú brána nepustila stiahnuť znova):
+`ThemeWaveOut.exact` je False, počty aj sety vlny ho rátajú ako `years()`
+a otvorený rok čip neprepne na presný. Existujúcim setom
 Brickset nič neprepisuje, len dopĺňa chýbajúce.
 
 **UPCitemdb je posledná možnosť.** Rebrickable kódy

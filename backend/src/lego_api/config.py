@@ -60,7 +60,7 @@ class Settings(BaseSettings):
     photos_per_item: int = 12
     #: Verzia zásad ochrany súkromia (frontend `/sukromie`). Po zmene textu
     #: zvýšiť; prihlásený používateľ uvidí jednorazové oznámenie.
-    privacy_version: str = "2026-09-30.4"
+    privacy_version: str = "2026-09-30.5"
 
     # Ostatné
     cors_origins: str = "http://localhost:3000,http://localhost:5173"

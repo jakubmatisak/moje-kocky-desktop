@@ -206,8 +206,11 @@
   })
 
   const storage = computed(() => [
-    // Desktop: prihlásenie drží appka v pamäti, v okne nie je žiadne cookie.
-    ...(isDesktop ? [] : [{ name: 'lego_refresh', kind: 'cookie', purpose: t('privacy.storage.refresh'), lasts: t('privacy.storage.refreshLasts') }]),
+    // Desktop: okno cookie nemá, prihlasovacie drží most (bridge.py) a zapamätané
+    // uloží zašifrované do session.bin v priečinku údajov.
+    ...(isDesktop
+      ? [{ name: 'session.bin', kind: t('privacy.storage.file'), purpose: t('privacy.storage.rememberedLogin'), lasts: t('privacy.storage.rememberedLoginLasts') }]
+      : [{ name: 'lego_refresh', kind: 'cookie', purpose: t('privacy.storage.refresh'), lasts: t('privacy.storage.refreshLasts') }]),
     { name: 'lego-theme', kind: 'localStorage', purpose: t('privacy.storage.theme'), lasts: t('privacy.storage.untilCleared') },
     { name: 'lego-hide-prices', kind: 'localStorage', purpose: t('privacy.storage.hidePrices'), lasts: t('privacy.storage.untilCleared') },
     { name: 'moje-kocky.camera', kind: 'localStorage', purpose: t('privacy.storage.camera'), lasts: t('privacy.storage.untilCleared') },

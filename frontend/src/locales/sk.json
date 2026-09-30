@@ -1250,11 +1250,14 @@
       "range": "Rozsah grafu na Prehľade",
       "note": "Poznámka o cookies je zavretá",
       "refreshLasts": "do zatvorenia prehliadača; 30 dní, keď zaškrtneš Zapamätať si prihlásenie",
-      "untilCleared": "kým ho nezmažeš"
+      "untilCleared": "kým ho nezmažeš",
+      "file": "súbor",
+      "rememberedLogin": "Zapamätané prihlásenie (len keď zaškrtneš Zapamätať si prihlásenie), zašifrované",
+      "rememberedLoginLasts": "30 dní od posledného použitia; zmaže ho odhlásenie"
     },
     "desktop": "Desktopová verzia: všetky údaje (zbierka, fotky, kľúče) sú len na tomto počítači v priečinku %APPDATA%\\MojeKocky. Nikam sa neposielajú, okrem otázok na služby, ktoré si sám pripojíš.",
-    "cookiesIntroDesktop": "Appka nepoužíva cookies, analytiku ani sledovanie. Okno si v priečinku %APPDATA%\\MojeKocky\\webview pamätá len nastavenia, ktoré si sám zvolíš:",
-    "cookiesTitleDesktop": "Úložisko okna"
+    "cookiesIntroDesktop": "Okno nepoužíva cookies na sledovanie, analytiku ani reklamu. V tabuľke je všetko, čo si okno a appka pamätajú: nastavenia, ktoré si sám zvolíš (okno ich má v priečinku %APPDATA%\\MojeKocky\\webview), a zapamätané prihlásenie, ak ho zvolíš. To je prihlasovacie cookie, zašifrované v súbore %APPDATA%\\MojeKocky\\session.bin; platí 30 dní od posledného použitia a odhlásenie ho zmaže.",
+    "cookiesTitleDesktop": "Úložisko okna a prihlásenia"
   },
   "account": {
     "title": "Moje údaje",

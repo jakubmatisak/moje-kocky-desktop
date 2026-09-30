@@ -163,9 +163,11 @@ dnešnú hodnotu tých istých kusov, aby sa rast dal porovnať.
 registrácia vyžaduje `accept_privacy` a ukladá `privacy_version`; po zmene
 textu zvýš `settings.privacy_version`, používateľ uvidí oznámenie. Desktop
 má v zásadách vlastné sekcie, preto jeho verzia môže byť vyššia než na webe
-(2026-09-30.3: odinštalovanie s heslom iného správcu; od 2026-09-30.4,
-zapamätané prihlásenie, sú zas rovnaké); pri prenose `config.py` z webu
-ju nezníž (stráži `tests/test_install_texts.py`).
+(2026-09-30.3: odinštalovanie s heslom iného správcu; 2026-09-30.4:
+zapamätané prihlásenie; 2026-09-30.5: tabuľka úložiska okna má namiesto
+cookie `lego_refresh` riadok `session.bin` a úvod netvrdí, že appka cookies
+nepoužíva, len že okno ich na sledovanie nepoužíva); pri prenose `config.py`
+z webu ju nezníž (stráži `tests/test_install_texts.py`).
 `services/account.py` maže účet výslovne po tabuľkách aj so súbormi fotiek
 (SQLite nemá zapnuté `foreign_keys`) a exportuje ZIP bez kľúčov. Nová
 tabuľka s `user_id` = pridať ju do `_OWNED` a do exportu. Obrázky zo

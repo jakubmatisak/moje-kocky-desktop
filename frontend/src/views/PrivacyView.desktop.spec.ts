@@ -19,12 +19,22 @@ vi.mock('@/api/client', async original => ({
   },
 }))
 
-async function text (): Promise<string> {
+async function mountView () {
   const wrapper = shallowMount(PrivacyView, {
     global: { plugins: [i18n], config: { warnHandler: () => {} } },
   })
   await flushPromises()
-  return wrapper.text()
+  return wrapper
+}
+
+async function text (): Promise<string> {
+  return (await mountView()).text()
+}
+
+/** Riadky tabuľky úložiska: názov, druh, na čo, ako dlho. */
+async function storageRows (): Promise<string[][]> {
+  const wrapper = await mountView()
+  return wrapper.findAll('tbody tr').map(row => row.findAll('td').map(cell => cell.text()))
 }
 
 describe('zásady desktopu: zálohy pred aktualizáciou', () => {
@@ -121,5 +131,59 @@ describe('zásady desktopu: zapamätané prihlásenie', () => {
     expect(body).toContain('signing out, changing the password or deleting the account')
     expect(body).toContain('while the window is open, at most 12 hours without use')
     expect(body).toContain('encrypted keys, a remembered sign-in (if you choose it) and the log')
+  })
+})
+
+describe('zásady desktopu: cookies a úložisko', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  afterEach(() => {
+    i18n.global.locale.value = 'sk'
+  })
+
+  it('slovenský text netvrdí, že appka cookies nepoužíva, a povie, kde je zapamätané prihlásenie', async () => {
+    i18n.global.locale.value = 'sk'
+    const body = await text()
+
+    // Prihlasovacie cookie drží most a zapamätané ukladá do session.bin.
+    expect(body).not.toContain('Appka nepoužíva cookies')
+    expect(body).toContain('Okno nepoužíva cookies na sledovanie')
+    expect(body).toContain(String.raw`zašifrované v súbore %APPDATA%\MojeKocky\session.bin; platí 30 dní od posledného použitia a odhlásenie ho zmaže`)
+  })
+
+  it('anglický text povie to isté', async () => {
+    i18n.global.locale.value = 'en'
+    const body = await text()
+
+    expect(body).not.toContain('The app uses no cookies')
+    expect(body).toContain('The window uses no cookies for tracking')
+    expect(body).toContain(String.raw`encrypted in the file %APPDATA%\MojeKocky\session.bin; it lasts 30 days since last use and signing out deletes it`)
+  })
+
+  it('tabuľka úložiska má riadok session.bin', async () => {
+    i18n.global.locale.value = 'sk'
+    const rows = await storageRows()
+
+    expect(rows.find(row => row[0] === 'session.bin')).toEqual([
+      'session.bin',
+      'súbor',
+      'Zapamätané prihlásenie (len keď zaškrtneš Zapamätať si prihlásenie), zašifrované',
+      '30 dní od posledného použitia; zmaže ho odhlásenie',
+    ])
+    expect(rows.map(row => row[0])).not.toContain('lego_refresh')
+  })
+
+  it('anglická tabuľka tiež', async () => {
+    i18n.global.locale.value = 'en'
+    const rows = await storageRows()
+
+    expect(rows.find(row => row[0] === 'session.bin')).toEqual([
+      'session.bin',
+      'file',
+      'Remembered sign-in (only if you tick Remember me), encrypted',
+      '30 days since last use; signing out deletes it',
+    ])
   })
 })

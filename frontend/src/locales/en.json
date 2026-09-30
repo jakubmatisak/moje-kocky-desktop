@@ -1250,11 +1250,14 @@
       "range": "Chart range on the dashboard",
       "note": "Cookie note dismissed",
       "refreshLasts": "until you close the browser; 30 days if you tick Remember me",
-      "untilCleared": "until you clear it"
+      "untilCleared": "until you clear it",
+      "file": "file",
+      "rememberedLogin": "Remembered sign-in (only if you tick Remember me), encrypted",
+      "rememberedLoginLasts": "30 days since last use; signing out deletes it"
     },
     "desktop": "Desktop version: all data (collection, photos, keys) stays on this computer in %APPDATA%\\MojeKocky. Nothing is sent anywhere except the questions to services you connect yourself.",
-    "cookiesIntroDesktop": "The app uses no cookies, analytics or tracking. The window only remembers settings you choose, in %APPDATA%\\MojeKocky\\webview:",
-    "cookiesTitleDesktop": "Window storage"
+    "cookiesIntroDesktop": "The window uses no cookies for tracking, analytics or advertising. The table lists everything the window and the app remember: settings you choose yourself (the window keeps them in %APPDATA%\\MojeKocky\\webview) and a remembered sign-in, if you choose it. That is the sign-in cookie, encrypted in the file %APPDATA%\\MojeKocky\\session.bin; it lasts 30 days since last use and signing out deletes it.",
+    "cookiesTitleDesktop": "Window storage and sign-in"
   },
   "account": {
     "title": "My data",

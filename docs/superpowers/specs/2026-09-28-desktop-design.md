@@ -89,7 +89,7 @@ Overené skúškou na zahodenie (pywebview 6.2, WebView2, Windows 11):
 | Odkazy na pozretie (`/z/:token`) | vypnuté: bez servera ich nemá kto otvoriť |
 | `/img` proxy | netreba, obrázky priamo z CDN (používa ich len vlastník počítača) |
 | Cookies, CORS, rate limit, `index.html` bez kešu | netreba |
-| Zásady ochrany súkromia | skrátené: údaje ostávajú na tomto počítači; služby ako na webe |
+| Zásady ochrany súkromia | skrátené: údaje ostávajú na tomto počítači; služby ako na webe. Tabuľka úložiska okna uvádza namiesto cookie `lego_refresh` súbor `session.bin` (30 dní od posledného použitia, zmaže ho odhlásenie); okno cookies na sledovanie nepoužíva |
 | Docker, `.env` | netreba; nastavenia v `%APPDATA%\MojeKocky\settings.json` |
 | Sťahovanie súborov | natívny dialóg cez most |
 | Obnova cien, import, skenovanie, Overiť cenu, galéria | rovnako |

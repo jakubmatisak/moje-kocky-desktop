@@ -93,3 +93,14 @@ def test_privacy_version_covers_uninstall_under_another_account():
     from lego_api.config import Settings
 
     assert Settings().privacy_version >= "2026-09-30.3"
+
+
+def test_privacy_version_covers_remembered_login_in_window_storage():
+    """Od 2026-09-30.5 zásady desktopu netvrdia, že appka cookies nepoužíva.
+
+    Prihlasovacie cookie drží most a zapamätané ukladá do session.bin; tabuľka
+    úložiska ho uvádza. Po zmene textu musia používatelia vidieť oznámenie.
+    """
+    from lego_api.config import Settings
+
+    assert Settings().privacy_version >= "2026-09-30.5"

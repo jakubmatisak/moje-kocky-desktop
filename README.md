@@ -4,7 +4,8 @@
 
 ### [Stiahnuť inštalátor pre Windows](https://github.com/jakubmatisak/moje-kocky-desktop/releases/latest)
 
-Verzia 1.0.0 · zadarmo, bez reklám a sledovania · Windows 10 a 11 (64-bit) · práva správcu netreba ·
+Verzia 1.0.0 · zadarmo, bez reklám a sledovania · Windows 10 a 11 (64-bit) ·
+pre všetkých používateľov počítača, inštalátor si vypýta práva správcu ·
 [stránka projektu](https://jakubmatisak.github.io/moje-kocky/) ·
 [webová verzia na vlastný server](https://github.com/jakubmatisak/moje-kocky-webapp)
 
@@ -109,13 +110,18 @@ zálohuje.
 1. Stiahni `MojeKocky-Setup-x.y.z.exe` (najnovšiu verziu)
    z [Releases](https://github.com/jakubmatisak/moje-kocky-desktop/releases/latest),
    v zozname súborov pod **Assets**.
-2. Spusti ho. Inštaluje sa len pre teba (do `%LOCALAPPDATA%\Programs\MojeKocky`),
-   práva správcu netreba. Inštalátor nie je podpísaný, Windows preto raz
-   ukáže „Windows chránil tento počítač“: klikni **Ďalšie informácie →
-   Spustiť aj tak**. Ak Windows napíše, že nemôže získať prístup k súboru,
-   antivírus inštalátor zablokoval: v **Zabezpečení Windows → História
-   ochrany** daj **Povoliť v zariadení** a spusti ho znova.
-3. Pri prvom spustení si vytvoríš účet s heslom. Pri ďalších sa pýta heslo.
+2. Spusti ho. Inštalátor nie je podpísaný, Windows preto raz ukáže
+   „Windows chránil tento počítač“: klikni **Ďalšie informácie → Spustiť
+   aj tak**. Ak Windows napíše, že nemôže získať prístup k súboru, antivírus
+   inštalátor zablokoval: v **Zabezpečení Windows → História ochrany** daj
+   **Povoliť v zariadení** a spusti ho znova.
+3. Inštalátor si vypýta práva správcu: Windows sa opýta, či mu povoliť
+   zmeny v zariadení (vydavateľ je neznámy, lebo inštalátor nie je
+   podpísaný), na bežnom účte aj heslo správcu. Program sa nainštaluje do
+   `C:\Program Files\MojeKocky` pre všetkých používateľov počítača, s ikonou
+   v ponuke Štart a na ploche pre každého. Údaje má každý používateľ
+   vlastné, v `%APPDATA%\MojeKocky`.
+4. Pri prvom spustení si vytvoríš účet s heslom. Pri ďalších sa pýta heslo.
 
 Potrebuje Windows 10 alebo 11 (64-bit) a Microsoft Edge WebView2, ktorý
 v nich býva. Ak chýba, inštalátor ponúkne stránku na jeho stiahnutie.
@@ -125,7 +131,21 @@ v nich býva. Ak chýba, inštalátor ponúkne stránku na jeho stiahnutie.
 `moje-kocky.log`) a `backups\` (zálohy databázy pri aktualizácii). Úplná
 záloha je kópia celého priečinka, najlepšie pri zatvorenej appke. Nová
 verzia sa nainštaluje cez starú a údaje ostanú. Odinštalovanie sa opýta,
-či ich zmazať (predvolene nie).
+či zmazať údaje toho, kto ho spustil (predvolene nie); údaje ostatných
+používateľov počítača ostanú.
+
+**Aktualizácia zo staršej verzie 0.1.x.** Tá bola len pre jedného
+používateľa, v `%LOCALAPPDATA%\Programs\MojeKocky`. Inštalátor 1.0.0 ju
+sám odstráni (program, skratky a položku v zozname aplikácií, bez starého
+odinštalátora) a údaje v `%APPDATA%\MojeKocky` nechá; pred prvým štartom
+novej verzie sa databáza zálohuje. Keď stará verzia ešte beží, inštalátor
+povie „Zavri Moje kocky a spusti inštaláciu znova.“ a nič nezmení. Ikonu
+pripnutú na paneli úloh treba pripnúť znova. Odstráni sa len stará
+inštalácia účtu, pod ktorým inštalátor beží. Keď mal 0.1.x aj ďalší
+používateľ počítača, alebo keď na bežnom účte zadáš heslo iného účtu
+správcu, stará verzia toho používateľa ostane: odinštaluje si ju sám
+v **Nastaveniach → Aplikácie** (položka Moje kocky s verziou 0.1.x)
+a otázku, či zmazať aj údaje, zamietne.
 
 <a id="zaloha"></a>
 
@@ -168,7 +188,9 @@ Akú verziu máš, ukazuje Nastavenia → Aplikácia (vidí ju správca, teda pr
 4. Keď aktualizácia zlyhala, nainštaluj z
    [Releases](https://github.com/jakubmatisak/moje-kocky-desktop/releases)
    predchádzajúcu verziu (tú z mena zálohy) a nechaj ju, kým nevyjde oprava.
-   Nová by databázu skúsila zmigrovať znova.
+   Nová by databázu skúsila zmigrovať znova. Pred návratom na 0.1.x najprv
+   odinštaluj novú verziu (otázku, či zmazať aj údaje, zamietni): 0.1.x sa
+   inštaluje len pre jedného používateľa a nová by inak ostala vedľa nej.
 
 ### Ako to funguje bez servera
 
@@ -242,6 +264,7 @@ powershell -ExecutionPolicy Bypass -File scripts\build.ps1
 
 Frontend → PyInstaller (`packaging/moje-kocky.spec`, výsledok
 `build/dist/MojeKocky/MojeKocky.exe`) → Inno Setup (`packaging/moje-kocky.iss`,
+odstránenie starej inštalácie 0.1.x v `packaging/old-install.iss`,
 výsledok `build/installer/MojeKocky-Setup-<verzia>.exe`). Bez nainštalovaného
 Inno Setup skript skončí pri programe. Bez `-Version` zostaví svoju predvolenú
 verziu, tú istú ako v `backend/pyproject.toml`. Inú verziu (`-Version X.Y.Z`)
@@ -374,7 +397,7 @@ a podmienky služieb (k septembru 2026). Zásady sú aj priamo v appke.
   účtoch na jednom počítači vidí každý len to, čo stiahol jeho vlastný kľúč.
 - **Tvoje práva a kontrola:** v Nastaveniach → Účet si stiahneš všetky svoje
   údaje (ZIP) alebo zmažeš účet. Odinštalovanie sa opýta, či zmazať aj
-  priečinok s údajmi.
+  tvoj priečinok s údajmi; údaje ostatných používateľov počítača ostanú.
 - **Zálohy pri aktualizácii** (posledných 5) sú v
   `%APPDATA%\MojeKocky\backups` a nesú celú databázu; údaje zmazaného účtu
   v nich ostanú, kým sa neprestriedajú.
@@ -398,7 +421,8 @@ a podmienky služieb (k septembru 2026). Zásady sú aj priamo v appke.
 
 ### [Download the Windows installer](https://github.com/jakubmatisak/moje-kocky-desktop/releases/latest)
 
-Version 1.0.0 · free, no ads, no tracking · Windows 10 and 11 (64-bit) · no admin rights needed ·
+Version 1.0.0 · free, no ads, no tracking · Windows 10 and 11 (64-bit) ·
+for every user of the PC, the installer asks for administrator rights ·
 [project website](https://jakubmatisak.github.io/moje-kocky/) ·
 [web version for your own server](https://github.com/jakubmatisak/moje-kocky-webapp)
 
@@ -517,14 +541,19 @@ The app's interface is available in Slovak and English.*
 1. Download `MojeKocky-Setup-x.y.z.exe` (the latest version)
    from [Releases](https://github.com/jakubmatisak/moje-kocky-desktop/releases/latest),
    in the file list under **Assets**.
-2. Run it. It installs for your user only (into
-   `%LOCALAPPDATA%\Programs\MojeKocky`), no admin rights needed. The installer
-   is not code-signed, so Windows will warn you once with "Windows protected
-   your PC": click **More info → Run anyway**. If Windows says it cannot
-   access the file, your antivirus blocked the installer: in **Windows
-   Security → Protection history** choose **Allow on device** and run it
-   again.
-3. On first launch you create an account with a password. After that it asks
+2. Run it. The installer is not code-signed, so Windows will warn you once
+   with "Windows protected your PC": click **More info → Run anyway**. If
+   Windows says it cannot access the file, your antivirus blocked the
+   installer: in **Windows Security → Protection history** choose **Allow on
+   device** and run it again.
+3. The installer asks for administrator rights: Windows asks whether to let
+   it make changes to your device (the publisher shows as unknown because the
+   installer is not signed), and on a standard account it also asks for an
+   administrator's password. The program is installed into
+   `C:\Program Files\MojeKocky` for every user of the PC, with a Start menu
+   and desktop icon for everyone. Each user has their own data in
+   `%APPDATA%\MojeKocky`.
+4. On first launch you create an account with a password. After that it asks
    for the password.
 
 It needs Windows 10 or 11 (64-bit) and Microsoft Edge WebView2, which usually
@@ -535,7 +564,22 @@ comes with them. If it is missing, the installer offers a page to download it.
 file `moje-kocky.log`) and `backups\` (database backups made on update). A
 full backup is simply a copy of the whole folder, ideally with the app
 closed. A new version installs over the old one and your data stays.
-Uninstalling asks whether to delete it (the default is no).
+Uninstalling asks whether to delete the data of the user who runs it (the
+default is no); other users' data stays.
+
+**Updating from an older 0.1.x version.** Those were installed for one user
+only, in `%LOCALAPPDATA%\Programs\MojeKocky`. The 1.0.0 installer removes
+that install itself (program, shortcuts and the entry in the list of apps,
+without running the old uninstaller) and leaves your data in
+`%APPDATA%\MojeKocky` alone; the database is backed up before the new
+version first starts. If the old version is still running, the installer
+says so (in Slovak: close Moje kocky and run the installer again) and
+changes nothing. A taskbar pin needs to be pinned again. Only the old
+install of the account the installer runs as is removed. If another user of
+the PC also had 0.1.x, or if you enter the password of a different
+administrator account on a standard account, that user's old version stays:
+they uninstall it in **Settings → Apps** (the Moje kocky entry with version
+0.1.x) and decline deleting the data.
 
 <a id="backup-on-update"></a>
 
@@ -582,7 +626,9 @@ apps.
 4. If the update failed, install the previous version (the one in the backup's
    name) from [Releases](https://github.com/jakubmatisak/moje-kocky-desktop/releases)
    and stay on it until a fix is out. The new version would try to migrate the
-   database again.
+   database again. Before going back to 0.1.x, uninstall the new version first
+   (decline deleting the data): 0.1.x installs for one user only and the new
+   version would otherwise stay next to it.
 
 ### How it works without a server
 
@@ -659,6 +705,7 @@ powershell -ExecutionPolicy Bypass -File scripts\build.ps1
 
 Frontend → PyInstaller (`packaging/moje-kocky.spec`, output
 `build/dist/MojeKocky/MojeKocky.exe`) → Inno Setup (`packaging/moje-kocky.iss`,
+removal of an old 0.1.x install in `packaging/old-install.iss`,
 output `build/installer/MojeKocky-Setup-<version>.exe`). Without Inno Setup
 installed the script stops after the program. Without `-Version` it builds
 its default version, the same as in `backend/pyproject.toml`. Any other
@@ -801,7 +848,7 @@ available inside the app.
   has downloaded.
 - **Your rights and control:** in Settings → Account you can download all
   your data (ZIP) or delete your account. Uninstalling asks whether to delete
-  the data folder as well.
+  your data folder as well; other users' data on the PC stays.
 - **Backups made on update** (the last 5) are in
   `%APPDATA%\MojeKocky\backups` and contain the whole database; data of a
   deleted account stays in them until they rotate out.

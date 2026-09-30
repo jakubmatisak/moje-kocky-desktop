@@ -373,6 +373,8 @@
     "registrationOpenHint": "Anyone with the app address can create an account. Close registration once everyone has theirs.",
     "registrationClosedHint": "New accounts cannot be created; the login page hides “New account”. Existing accounts keep working.",
     "registrationFirstHint": "Takes effect immediately, no restart. The .env value is only the default for a fresh install.",
+    "registrationOpenHintDesktop": "Anyone who opens the app on this computer can create another account. Close registration once everyone has theirs.",
+    "registrationFirstHintDesktop": "Takes effect immediately, no restart.",
     "shareKindCollection": "Collection",
     "shareKindCollectionHint": "What I own, read only",
     "shareKindWishlist": "Wishlist",

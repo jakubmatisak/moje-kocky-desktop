@@ -16,10 +16,15 @@ vi.mock('@/desktop/bridge', async original => ({
   isDesktop: true,
 }))
 
+/** Odpoveď `/admin/settings`; ostatné volania nevracajú nič. */
+const server = vi.hoisted(() => ({
+  appSettings: null as { allow_registration: boolean, env_default: boolean } | null,
+}))
+
 vi.mock('@/api/client', async original => ({
   ...(await original<typeof Client>()),
   api: {
-    GET: async () => ({ data: null }),
+    GET: async (path: string) => ({ data: path === '/admin/settings' ? server.appSettings : null }),
   },
 }))
 
@@ -42,6 +47,7 @@ async function mountAsAdmin () {
 describe('Nastavenia v desktope', () => {
   beforeEach(() => {
     i18n.global.locale.value = 'sk'
+    server.appSettings = null
   })
 
   it('karta Aplikácia ukáže verziu appky, prevádzkovateľa nie', async () => {
@@ -50,5 +56,17 @@ describe('Nastavenia v desktope', () => {
     expect(wrapper.findComponent(AppVersion).exists()).toBe(true)
     expect(wrapper.text()).not.toContain(i18n.global.t('settings.operatorTitle'))
     expect(wrapper.text()).not.toContain(i18n.global.t('settings.tabs.sharing'))
+  })
+
+  it('otvorená registrácia hovorí o tomto počítači, nie o adrese appky a .env', async () => {
+    server.appSettings = { allow_registration: true, env_default: false }
+
+    const wrapper = await mountAsAdmin()
+    const text = wrapper.text()
+
+    expect(text).toContain(i18n.global.t('settings.registrationOpenHintDesktop'))
+    expect(text).toContain(i18n.global.t('settings.registrationFirstHintDesktop'))
+    expect(text).not.toContain(i18n.global.t('settings.registrationOpenHint'))
+    expect(text).not.toContain('.env')
   })
 })

@@ -23,15 +23,23 @@ jobs:
 
       - uses: astral-sh/setup-uv@v6
 
-      - name: Závislosti
-        run: |
-          cd frontend && npm ci
-          cd ../backend && uv sync
+      # Každý príkaz má vlastný krok: pwsh berie do úvahy len exit kód posledného
+      # príkazu v skripte, takže pád pytest by inak prekryl úspešný npm test.
+      - name: Závislosti frontend
+        working-directory: frontend
+        run: npm ci
 
-      - name: Testy
-        run: |
-          cd backend && uv run pytest -q
-          cd ../frontend && npm test
+      - name: Závislosti backend
+        working-directory: backend
+        run: uv sync
+
+      - name: Testy backend
+        working-directory: backend
+        run: uv run pytest -q
+
+      - name: Testy frontend
+        working-directory: frontend
+        run: npm test
 
       - name: Inno Setup
         run: |

@@ -373,6 +373,8 @@
     "registrationOpenHint": "Ktokoľvek s adresou appky si môže založiť účet. Keď si ho založia všetci, čo majú, registráciu zavri.",
     "registrationClosedHint": "Nové účty sa zakladať nedajú, na prihlasovacej stránke nie je „Nový účet“. Existujúce účty fungujú ďalej.",
     "registrationFirstHint": "Platí hneď, bez reštartu. Hodnota v .env je len východisko pre novú inštaláciu.",
+    "registrationOpenHintDesktop": "Ďalší účet si na tomto počítači môže založiť každý, kto appku otvorí. Keď ho už majú všetci, registráciu zavri.",
+    "registrationFirstHintDesktop": "Platí hneď, bez reštartu.",
     "shareKindCollection": "Zbierka",
     "shareKindCollectionHint": "Čo mám, bez úprav",
     "shareKindWishlist": "Chcem",

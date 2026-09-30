@@ -423,11 +423,16 @@
             @update:model-value="value => setRegistration(Boolean(value))"
           />
 
+          <!-- Desktop nemá adresu ani .env: účet si zakladá ten, kto sedí pri počítači. -->
           <div class="text-body-2 text-medium-emphasis">
-            {{ appSettings?.allow_registration ? t('settings.registrationOpenHint') : t('settings.registrationClosedHint') }}
+            {{ appSettings?.allow_registration
+              ? t(isDesktop ? 'settings.registrationOpenHintDesktop' : 'settings.registrationOpenHint')
+              : t('settings.registrationClosedHint') }}
           </div>
 
-          <div class="text-caption text-medium-emphasis">{{ t('settings.registrationFirstHint') }}</div>
+          <div class="text-caption text-medium-emphasis">
+            {{ t(isDesktop ? 'settings.registrationFirstHintDesktop' : 'settings.registrationFirstHint') }}
+          </div>
 
           <template v-if="!isDesktop">
             <v-divider class="my-2" />

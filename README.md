@@ -13,7 +13,8 @@ V časti **Releases** vpravo je vždy najnovší `MojeKocky-Setup-x.y.z.exe`
 ukáže „Windows chránil tento počítač“: **Ďalšie informácie → Spustiť aj tak**.
 
 Evidencia zbierky LEGO® setov ako **bežná inštalácia pre Windows**. Je to tá
-istá appka ako webová [Moje kocky](https://github.com/jakubmatisak/moje-kocky-webapp),
+istá appka ako webová [Moje kocky](https://github.com/jakubmatisak/moje-kocky-webapp)
+(okrem odkazu na pozretie, ten má len webová verzia),
 len beží v okne na tvojom počítači: bez servera, bez Dockeru a **bez
 otvoreného portu**. Všetky údaje (zbierka, fotky, kľúče) ostávajú u teba
 v `%APPDATA%\MojeKocky` a pri každej aktualizácii sa databáza najprv sama
@@ -89,7 +90,7 @@ zálohuje.
 - Filtre, ktoré sa skladajú (v skupine ALEBO, medzi skupinami A), hľadanie
   bez diakritiky, desať spôsobov zoradenia, uložené pohľady, karty alebo
   tabuľka, hromadná úprava vybraných kusov.
-- Prehľad sa dá zúžiť na sériu, kategóriu alebo uložený pohľad.
+- Prehľad sa dá zúžiť na sériu, kategóriu, zoznam alebo uložený pohľad.
 
 **Ostatné**
 
@@ -105,13 +106,15 @@ zálohuje.
 
 ## Inštalácia
 
-1. Stiahni `MojeKocky-Setup-x.y.z.exe` (teraz `MojeKocky-Setup-1.0.0.exe`)
+1. Stiahni `MojeKocky-Setup-x.y.z.exe` (najnovšiu verziu)
    z [Releases](https://github.com/jakubmatisak/moje-kocky-desktop/releases/latest),
    v zozname súborov pod **Assets**.
 2. Spusti ho. Inštaluje sa len pre teba (do `%LOCALAPPDATA%\Programs\MojeKocky`),
    práva správcu netreba. Inštalátor nie je podpísaný, Windows preto raz
    ukáže „Windows chránil tento počítač“: klikni **Ďalšie informácie →
-   Spustiť aj tak**.
+   Spustiť aj tak**. Ak Windows napíše, že nemôže získať prístup k súboru,
+   antivírus inštalátor zablokoval: v **Zabezpečení Windows → História
+   ochrany** daj **Povoliť v zariadení** a spusti ho znova.
 3. Pri prvom spustení si vytvoríš účet s heslom. Pri ďalších sa pýta heslo.
 
 Potrebuje Windows 10 alebo 11 (64-bit) a Microsoft Edge WebView2, ktorý
@@ -232,15 +235,15 @@ cd ..\frontend; npm run type-check; npm run lint; npm test
 ### Zostavenie inštalátora
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\build.ps1 -Version 1.0.0
+powershell -ExecutionPolicy Bypass -File scripts\build.ps1
 ```
 
 Frontend → PyInstaller (`packaging/moje-kocky.spec`, výsledok
 `build/dist/MojeKocky/MojeKocky.exe`) → Inno Setup (`packaging/moje-kocky.iss`,
-výsledok `build/installer/MojeKocky-Setup-1.0.0.exe`). Bez nainštalovaného
-Inno Setup skript skončí pri programe. Verzia musí byť tá z
-`backend/pyproject.toml`, inú skript nezostaví: appka podľa nej pri
-aktualizácii zálohuje databázu.
+výsledok `build/installer/MojeKocky-Setup-<verzia>.exe`). Bez nainštalovaného
+Inno Setup skript skončí pri programe. Bez `-Version` zostaví svoju predvolenú
+verziu, tú istú ako v `backend/pyproject.toml`. Inú verziu (`-Version X.Y.Z`)
+skript nezostaví: appka podľa nej pri aktualizácii zálohuje databázu.
 
 ```
 backend/src/lego_api/      appka (FastAPI, SQLAlchemy 2, SQLite, Alembic)
@@ -256,8 +259,10 @@ docs/release-notes/        text vydania na GitHube
 1. Zvýš `version` v `backend/pyproject.toml` a spusti `uv lock`.
 2. Tú istú verziu daj do `frontend/package.json` aj `package-lock.json`,
    ako predvolenú do `scripts/build.ps1` (`$Version`) a
-   `packaging/moje-kocky.iss` (`AppVersion`) a na začiatok tohto README.
-   Zhodu strážia `backend/tests/test_version.py` a `test_desktop_version.py`.
+   `packaging/moje-kocky.iss` (`AppVersion`). Zhodu týchto súborov strážia
+   `backend/tests/test_version.py` a `test_desktop_version.py`. README testy
+   nekontrolujú: verziu v ňom prepíš ručne v riadku „Verzia“ na začiatku
+   a v „Version“ na začiatku anglickej časti.
 3. Text vydania napíš do `docs/release-notes/vX.Y.Z.md`, po slovensky a pod
    tým po anglicky. Bez neho dostane Release všeobecný text
    z `docs/release-notes/default.md`.
@@ -323,7 +328,8 @@ Frontend: [Vue](https://vuejs.org), [Vuetify](https://vuetifyjs.com),
 [Chart.js](https://www.chartjs.org) s [vue-chartjs](https://vue-chartjs.org)
 a chartjs-plugin-zoom, [openapi-fetch](https://openapi-ts.dev) (MIT);
 čítanie kódov [ZXing-C++](https://github.com/zxing-cpp/zxing-cpp) cez
-[zxing-wasm](https://github.com/Sec-ant/zxing-wasm) (Apache-2.0, MIT, BSD-3-Clause);
+[zxing-wasm](https://github.com/Sec-ant/zxing-wasm) a [barcode-detector](https://github.com/Sec-ant/barcode-detector)
+(Apache-2.0, MIT, BSD-3-Clause);
 ikony [Material Design Icons](https://pictogrammers.com/library/mdi/) (Apache-2.0);
 písmo [Roboto](https://github.com/googlefonts/roboto-classic) (SIL Open Font License 1.1).
 
@@ -401,7 +407,8 @@ PC": click **More info → Run anyway**.
 
 *Moje kocky* ("my bricks" in Slovak) keeps track of a LEGO® set collection
 and comes as a **regular Windows install**. It is the same app as the web
-version of [Moje kocky](https://github.com/jakubmatisak/moje-kocky-webapp),
+version of [Moje kocky](https://github.com/jakubmatisak/moje-kocky-webapp)
+(except view-only links, which only the web version has),
 it just runs in a window on your own computer: no server, no Docker and **no
 open port**. All your data (collection, photos, keys) stays with you in
 `%APPDATA%\MojeKocky`, and the database backs itself up before every update.
@@ -437,7 +444,7 @@ The app's interface is available in Slovak and English.*
   and the insurance inventory count everything, sets and figures alike. When
   a search in the Collection matches a figure, the app points you to
   Minifigures.
-- **Themes and waves.** How many sets of a theme and year you own, based on
+- **Series and waves.** How many sets of a theme and year you own, based on
   Brickset's lists.
 - **Custom categories** with rules (e.g. everything with "F1" in the name,
   across themes) as well as manual assignment. A category belongs to the set;
@@ -472,7 +479,7 @@ The app's interface is available in Slovak and English.*
   collection, once it has been held for a year.
 - **In today's money**: purchase prices adjusted for inflation (Slovak HICP).
 - **Value forecast** for sealed copies, 2 and 5 years out.
-- **Movers**: market price change over 30, 90 and 365 days.
+- **Biggest movers**: market price change over 30, 90 and 365 days.
 - **No price means a dash, not zero.** A copy without a market price shows
   "–" or "price unknown" instead of 0 € and −100 %, and so does the total of
   a group in which no copy has a price. A ≈ in front of an amount means it is
@@ -481,7 +488,7 @@ The app's interface is available in Slovak and English.*
 - **Check price**: scan a box in the shop and you see right away what it is,
   whether you have it, the price new and used, and a price history chart.
   Checked sets are remembered in a table.
-- **Suggested price and listing text** for Aukro or Bazoš (Slovak
+- **Suggested price and listing text** for Aukro or Bazoš (Slovak and Czech
   marketplaces).
 - **Hide prices** with one click when showing your portfolio to someone.
 
@@ -490,7 +497,7 @@ The app's interface is available in Slovak and English.*
 - Filters that combine (OR within a group, AND between groups), search that
   ignores diacritics, ten sort orders, saved views, cards or a table, bulk
   editing of selected copies.
-- The Overview can be narrowed to a theme, a category or a saved view.
+- The Overview can be narrowed to a theme, a category, a list or a saved view.
 
 **Other**
 
@@ -505,13 +512,16 @@ The app's interface is available in Slovak and English.*
 
 ## Installation
 
-1. Download `MojeKocky-Setup-x.y.z.exe` (currently `MojeKocky-Setup-1.0.0.exe`)
+1. Download `MojeKocky-Setup-x.y.z.exe` (the latest version)
    from [Releases](https://github.com/jakubmatisak/moje-kocky-desktop/releases/latest),
    in the file list under **Assets**.
 2. Run it. It installs for your user only (into
    `%LOCALAPPDATA%\Programs\MojeKocky`), no admin rights needed. The installer
    is not code-signed, so Windows will warn you once with "Windows protected
-   your PC": click **More info → Run anyway**.
+   your PC": click **More info → Run anyway**. If Windows says it cannot
+   access the file, your antivirus blocked the installer: in **Windows
+   Security → Protection history** choose **Allow on device** and run it
+   again.
 3. On first launch you create an account with a password. After that it asks
    for the password.
 
@@ -615,8 +625,8 @@ quota is 100 calls, so:
    history, so sealed and built copies are refreshed together.
 5. Check price does not fetch a price younger than 24 hours.
 
-The price history comes in the same response, so the chart and Movers have
-something to show right after you add a set. Brickset and Rebrickable have
+The price history comes in the same response, so the chart and Biggest movers
+have something to show right after you add a set. Brickset and Rebrickable have
 their own switches and a reserve in Settings, so that background filling does
 not eat the limit you need for adding sets.
 
@@ -640,15 +650,16 @@ cd ..\frontend; npm run type-check; npm run lint; npm test
 ### Building the installer
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\build.ps1 -Version 1.0.0
+powershell -ExecutionPolicy Bypass -File scripts\build.ps1
 ```
 
 Frontend → PyInstaller (`packaging/moje-kocky.spec`, output
 `build/dist/MojeKocky/MojeKocky.exe`) → Inno Setup (`packaging/moje-kocky.iss`,
-output `build/installer/MojeKocky-Setup-1.0.0.exe`). Without Inno Setup
-installed the script stops after the program. The version must match the one
-in `backend/pyproject.toml`, otherwise the script refuses to build: the app
-relies on it to back up the database on update.
+output `build/installer/MojeKocky-Setup-<version>.exe`). Without Inno Setup
+installed the script stops after the program. Without `-Version` it builds
+its default version, the same as in `backend/pyproject.toml`. Any other
+version (`-Version X.Y.Z`) is refused: the app relies on it to back up the
+database on update.
 
 ```
 backend/src/lego_api/      the app (FastAPI, SQLAlchemy 2, SQLite, Alembic)
@@ -664,9 +675,11 @@ docs/release-notes/        release notes on GitHub
 1. Bump `version` in `backend/pyproject.toml` and run `uv lock`.
 2. Put the same version into `frontend/package.json` and `package-lock.json`,
    as the default in `scripts/build.ps1` (`$Version`) and
-   `packaging/moje-kocky.iss` (`AppVersion`), and at the top of this README.
+   `packaging/moje-kocky.iss` (`AppVersion`).
    `backend/tests/test_version.py` and `test_desktop_version.py` check that
-   they match.
+   these files match. The tests do not check this README: update the version
+   by hand in the "Verzia" line at the top and the "Version" line at the top
+   of the English part.
 3. Write the release notes into `docs/release-notes/vX.Y.Z.md`, in Slovak
    with English below. Without that file the Release gets the general text
    from `docs/release-notes/default.md`.
@@ -734,7 +747,8 @@ Frontend: [Vue](https://vuejs.org), [Vuetify](https://vuetifyjs.com),
 [Chart.js](https://www.chartjs.org) with [vue-chartjs](https://vue-chartjs.org)
 and chartjs-plugin-zoom, [openapi-fetch](https://openapi-ts.dev) (MIT);
 barcode reading by [ZXing-C++](https://github.com/zxing-cpp/zxing-cpp) via
-[zxing-wasm](https://github.com/Sec-ant/zxing-wasm) (Apache-2.0, MIT, BSD-3-Clause);
+[zxing-wasm](https://github.com/Sec-ant/zxing-wasm) and [barcode-detector](https://github.com/Sec-ant/barcode-detector)
+(Apache-2.0, MIT, BSD-3-Clause);
 [Material Design Icons](https://pictogrammers.com/library/mdi/) (Apache-2.0);
 the [Roboto](https://github.com/googlefonts/roboto-classic) font (SIL Open Font License 1.1).
 

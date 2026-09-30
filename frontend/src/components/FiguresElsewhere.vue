@@ -8,16 +8,27 @@
    * Kedy sa ukáže, rozhoduje Zbierka (len pri hľadaní alebo prázdnom
    * výsledku). Je to nenápadný riadok ako súčty nad ním, nie `v-alert`:
    * ten má v rozložení Zbierky `flex: 1 1` a roztiahol by sa do výšky.
+   * Písmo je `text-body-medium` (14 px): Vuetify 4 má typografiu MD3 a stará
+   * `text-body-2` v ňom nie je, riadok by bol väčší než text okolo.
+   *
+   * `pending`: hľadanie sa práve spresňuje a počty ešte patria predošlému.
+   * Riadok si podrží miesto, aby výsledky pod ním pri písaní neposkakovali,
+   * ale starý počet neukáže ani neprečíta.
    */
   import { useI18n } from 'vue-i18n'
 
-  defineProps<{ count: number }>()
+  withDefaults(defineProps<{ count: number, pending?: boolean }>(), { pending: false })
 
   const { t } = useI18n()
 </script>
 
 <template>
-  <div v-if="count > 0" class="figures-elsewhere text-body-2 text-medium-emphasis">
+  <div
+    v-if="count > 0"
+    :aria-hidden="pending || undefined"
+    class="figures-elsewhere text-body-medium text-medium-emphasis"
+    :class="{ 'figures-elsewhere--pending': pending }"
+  >
     <v-icon icon="mdi-account-group-outline" size="small" />
     <span>{{ t('collection.figuresElsewherePlural', count, { named: { count } }) }}</span>
 
@@ -34,6 +45,11 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 4px 8px;
+}
+
+/* Miesto ostane, obsah (aj odkaz) nie je vidieť ani sa naň nedá prejsť. */
+.figures-elsewhere--pending {
+  visibility: hidden;
 }
 
 .figures-elsewhere__link {

@@ -1,9 +1,9 @@
 import type * as Client from '@/api/client'
 import type * as Router from 'vue-router'
 import type * as Vuetify from 'vuetify'
-import { flushPromises, RouterLinkStub, shallowMount } from '@vue/test-utils'
-import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { enableAutoUnmount, flushPromises, RouterLinkStub, shallowMount } from '@vue/test-utils'
+import { createPinia, type Pinia, setActivePinia } from 'pinia'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import FiguresElsewhere from '@/components/FiguresElsewhere.vue'
 import i18n from '@/plugins/i18n'
 import { useFilterStore } from '@/stores/filters'
@@ -48,6 +48,16 @@ vi.mock('@/api/client', async original => ({
   },
 }))
 
+// Stránka z predošlého testu by inak ďalej načítavala (oneskorené hľadanie).
+enableAutoUnmount(afterEach)
+
+/**
+ * Úložisko tohto testu. Akcia pinie nastaví „aktívnu“ piniu na svoju, takže
+ * oneskorené načítanie stránky z predošlého testu by `useFilterStore()` bez
+ * parametra podstrčilo cudzie úložisko a test by písal inam (občas padal).
+ */
+let pinia: Pinia
+
 const TITANIC = { catalog: { catalog_num: '10294-1', name: 'Titanic' }, items: [] }
 
 function facetsWith (hidden: number, total: number): Record<string, unknown> {
@@ -58,7 +68,7 @@ async function mountCollection () {
   // Riadok o figúrkach sa vykreslí naozaj, ostatné časti stránky ostanú stubmi.
   const wrapper = shallowMount(CollectionView, {
     global: {
-      plugins: [i18n],
+      plugins: [i18n, pinia],
       stubs: { FiguresElsewhere: false, RouterLink: RouterLinkStub },
       config: { warnHandler: () => {} },
     },
@@ -69,7 +79,8 @@ async function mountCollection () {
 
 describe('Zbierka: riadok o figúrkach zo sérií len vtedy, keď na tom záleží', () => {
   beforeEach(() => {
-    setActivePinia(createPinia())
+    pinia = createPinia()
+    setActivePinia(pinia)
     i18n.global.locale.value = 'sk'
   })
 
@@ -145,13 +156,60 @@ describe('Zbierka: riadok o figúrkach zo sérií len vtedy, keď na tom zálež
 
       // Písanie do hľadania: počty prídu až po chvíli, dovtedy je 77 z filtra stavu.
       facets = facetsWith(2, 1)
-      useFilterStore().filters.q = 'shrek'
+      useFilterStore(pinia).filters.q = 'shrek'
       await flushPromises()
       expect(wrapper.findComponent(FiguresElsewhere).exists()).toBe(false)
 
       await vi.advanceTimersByTimeAsync(300)
       await flushPromises()
       expect(wrapper.findComponent(FiguresElsewhere).text()).toContain('2 figúrky zo sérií sú vo Figúrkach')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('spresňovanie hľadania: riadok drží miesto, kým neprídu nové počty, výsledky neposkočia', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    try {
+      query = { q: 'shrek' }
+      grouped = [TITANIC]
+      facets = facetsWith(3, 1)
+      const wrapper = await mountCollection()
+      const store = useFilterStore(pinia)
+      expect(wrapper.findComponent(FiguresElsewhere).exists()).toBe(true)
+
+      // Dopísaný znak: počty sú ešte zo „shrek“. Riadok ostane na mieste, bez starého počtu.
+      facets = facetsWith(2, 1)
+      store.filters.q = 'shrek 2'
+      await flushPromises()
+      const held = wrapper.findComponent(FiguresElsewhere)
+      expect(held.exists()).toBe(true)
+      expect(held.props('pending')).toBe(true)
+
+      await vi.advanceTimersByTimeAsync(300)
+      await flushPromises()
+      const line = wrapper.findComponent(FiguresElsewhere)
+      expect(line.props('pending')).toBe(false)
+      expect(line.text()).toContain('2 figúrky zo sérií sú vo Figúrkach')
+
+      // Hľadanie, ktoré figúrky netrafí: riadok zmizne až s novými počtami.
+      facets = facetsWith(0, 1)
+      store.filters.q = 'titanic'
+      await flushPromises()
+      expect(wrapper.findComponent(FiguresElsewhere).props('pending')).toBe(true)
+      await vi.advanceTimersByTimeAsync(300)
+      await flushPromises()
+      expect(wrapper.findComponent(FiguresElsewhere).exists()).toBe(false)
+
+      // Zmazané hľadanie: riadok nemá čo držať, zmizne hneď.
+      facets = facetsWith(5, 1)
+      store.filters.q = 'shrek'
+      await vi.advanceTimersByTimeAsync(300)
+      await flushPromises()
+      expect(wrapper.findComponent(FiguresElsewhere).exists()).toBe(true)
+      store.filters.q = ''
+      await flushPromises()
+      expect(wrapper.findComponent(FiguresElsewhere).exists()).toBe(false)
     } finally {
       vi.useRealTimers()
     }

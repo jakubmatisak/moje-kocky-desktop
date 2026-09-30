@@ -360,7 +360,12 @@ pod súčtami, nie `v-alert`, a len keď na tom záleží: hľadanie (`q`) ich
 trafilo, alebo Zbierka nenašla nič (vtedy je riadok v prázdnom stave).
 Bežný filter s výsledkom nehlási nič. Počty musia patriť tomu istému
 hľadaniu (`filterStore.facetsSearch`), inak by po napísaní chvíľu svietil
-počet zo starého filtra. Ponuka a hlavička
+počet zo starého filtra. Pri spresňovaní hľadania, ktoré tiež trafilo
+figúrky, riadok drží miesto (`pending`, `visibility: hidden`), kým neprídu
+nové počty, inak by výsledky pri každej pauze v písaní poskočili. Písmo je
+`text-body-medium`: Vuetify 4 má typografiu MD3 a staré triedy
+(`text-body-2`, `text-caption`, `text-subtitle-1`…) v jeho CSS nie sú.
+Ponuka a hlavička
 Zbierky berú `collection_*_count` zo súhrnu, `set_count` a spol. počítajú
 všetko. Dlaždica Zbierka na Prehľade nemá vlastné počty, berie tie isté
 z `dashboardSummary` (s rozsahom): hlavné číslo `collection_set_count`,
@@ -728,7 +733,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 650 testov, frontend 235. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 650 testov, frontend 238. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá
@@ -742,3 +747,9 @@ Frontend testuje aj komponenty so skutočným Vuetify
 (`components/PieceDialog.spec.ts`): komponenty Vuetify sa registrujú
 v teste, jsdom potrebuje náhradu `ResizeObserver` a `visualViewport`
 a `vitest.config.ts` spracúva Vuetify cez Vite (`server.deps.inline`).
+
+Stránka so storom v teste (`views/CollectionView.spec.ts`) dostane piniu
+výslovne (`plugins: [pinia]`, `useFilterStore(pinia)`) a `enableAutoUnmount`.
+Akcia pinie prepne aktívnu piniu na svoju, takže oneskorené načítanie
+stránky z predošlého testu by `useFilterStore()` bez parametra podstrčilo
+cudzie úložisko a test by občas padal.

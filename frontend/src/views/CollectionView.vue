@@ -229,10 +229,18 @@
    * umiestnenie…), ktorý niečo ukazuje, nehlási nič; prázdny výsledok to
    * povie v prázdnom stave. Počty musia patriť tomuto hľadaniu, nie filtru
    * spred písania, inak by chvíľu svietil cudzí počet.
+   *
+   * `pending`: hľadanie sa spresňuje („shrek“ → „shrek 2“) a predošlé tiež
+   * trafilo figúrky. Riadok drží miesto bez starého počtu, kým neprídu nové
+   * počty; inak by pri každej pauze v písaní zmizol a vrátil sa a výsledky
+   * pod ním by poskočili. Bez hľadania nie je čo držať.
    */
-  const figuresLine = computed(() => {
+  const figuresLine = computed<'shown' | 'pending' | null>(() => {
     const search = filterStore.facetsSearch
-    return !isEmpty.value && hiddenFigures.value > 0 && search !== '' && search === filterStore.filters.q.trim()
+    if (isEmpty.value || hiddenFigures.value <= 0 || search === '') return null
+    const typed = filterStore.filters.q.trim()
+    if (search === typed) return 'shown'
+    return typed === '' ? null : 'pending'
   })
 
   /** Hodnota kusu. Bez známej ceny pomlčka, nie nula. */
@@ -451,7 +459,7 @@
       <SelectionTotals :totals="filterStore.facets?.totals" />
 
       <!-- Hľadanie trafilo aj figúrky zo sérií, tie sú vo Figúrkach. -->
-      <FiguresElsewhere v-if="figuresLine" :count="hiddenFigures" />
+      <FiguresElsewhere v-if="figuresLine" :count="hiddenFigures" :pending="figuresLine === 'pending'" />
 
       <!-- Hromadná úprava: len vlastnené kusy. -->
       <div v-if="collection.statusFilter !== 'sold'" class="d-flex">

@@ -752,7 +752,9 @@ Podrobnosti:
   s odkazom Otvoriť Figúrky (`FacetsOut.hidden_figures`); keď Zbierka
   nenašla nič a filter by trafil figúrky, ten istý riadok je v prázdnom
   stave. Bežný filter (stav, umiestnenie…), ktorý niečo ukazuje, figúrky
-  nehlási. Starý odkaz s filtrom série vedie do
+  nehlási. Kým sa hľadanie spresňuje a nové počty ešte neprišli, riadok
+  drží miesto bez starého počtu, aby výsledky neposkakovali. Písmo 14 px
+  (`text-body-medium`). Starý odkaz s filtrom série vedie do
   Figúrok, uložený pohľad s filtrom figúrok je označený a po kliknutí to
   oznámi.
 - **Karta setu:** fotka, názov, číslo, téma, dieliky, čipy stavu

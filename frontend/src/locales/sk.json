@@ -79,7 +79,8 @@
       "ytd": "Tento rok",
       "all": "Všetko",
       "showAll": "Celá história"
-    }
+    },
+    "donutSetsPlural": "set | sety | setov"
   },
   "collection": {
     "title": "Zbierka",
@@ -133,7 +134,8 @@
     "sortAsc": "Vzostupne (klikni na otočenie)",
     "sortDesc": "Zostupne (klikni na otočenie)",
     "viewCards": "Karty",
-    "viewTable": "Tabuľka"
+    "viewTable": "Tabuľka",
+    "partsPlural": "{count} dielik | {count} dieliky | {count} dielikov"
   },
   "add": {
     "categories": "Kategórie",

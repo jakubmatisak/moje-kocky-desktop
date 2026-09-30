@@ -79,7 +79,8 @@
       "ytd": "YTD",
       "all": "All",
       "showAll": "Whole history"
-    }
+    },
+    "donutSetsPlural": "set | sets"
   },
   "collection": {
     "title": "Collection",
@@ -133,7 +134,8 @@
     "sortAsc": "Ascending (click to flip)",
     "sortDesc": "Descending (click to flip)",
     "viewCards": "Cards",
-    "viewTable": "Table"
+    "viewTable": "Table",
+    "partsPlural": "{count} part | {count} parts"
   },
   "add": {
     "categories": "Categories",

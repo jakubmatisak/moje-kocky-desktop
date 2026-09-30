@@ -25,7 +25,10 @@
   const meta = computed(() => {
     const parts: string[] = [props.row.catalog.catalog_num]
     if (props.row.catalog.theme) parts.push(props.row.catalog.theme)
-    if (props.row.catalog.num_parts) parts.push(`${count(props.row.catalog.num_parts)} dielikov`)
+    if (props.row.catalog.num_parts) {
+      const n = props.row.catalog.num_parts
+      parts.push(t('collection.partsPlural', n, { named: { count: count(n) } }))
+    }
     return parts.join(' · ')
   })
 

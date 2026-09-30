@@ -6,14 +6,40 @@ musia povedať a nesmú sľubovať inštaláciu bez práv správcu. Text vydania
 nesie aj férové upozornenie: bez záruk, zálohovať, ceny sú odhady.
 """
 
+import re
+
 from tests.test_desktop_version import ROOT
 
+README = ROOT / "README.md"
 RELEASE_NOTES = sorted((ROOT / "docs" / "release-notes").glob("*.md"))
-USER_TEXTS = [ROOT / "README.md", *RELEASE_NOTES]
+USER_TEXTS = [README, *RELEASE_NOTES]
 
 
 def _text(path) -> str:
     return " ".join(path.read_text(encoding="utf-8").split())
+
+
+def test_appdata_paths_keep_their_backslashes():
+    """Cesty v README a textoch vydania majú spätné lomky, inak ich nikto nenájde.
+
+    Pri úprave sa ľahko stratia: z ``%APPDATA%\\MojeKocky\\session.bin``
+    ostalo ``%APPDATA%MojeKockysession.bin``.
+    """
+    broken = re.compile(
+        r"%(?:LOCAL)?APPDATA%[A-Za-z]|MojeKocky(?:session|backups|webview|photos|logs|secret)"
+    )
+    for path in USER_TEXTS:
+        text = path.read_text(encoding="utf-8")
+
+        assert not broken.findall(text), path
+
+
+def test_readme_names_the_remembered_login_file_in_both_languages():
+    parts = README.read_text(encoding="utf-8").split("# Moje kocky Desktop (English)", 1)
+    assert len(parts) == 2
+
+    for part in parts:
+        assert r"`%APPDATA%\MojeKocky\session.bin`" in part
 
 
 def test_texts_say_the_installer_asks_for_administrator():

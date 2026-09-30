@@ -417,9 +417,9 @@ a podmienky služieb (k septembru 2026). Zásady sú aj priamo v appke.
   v nich ostanú, kým sa neprestriedajú.
 - **Fotky** sa ukladajú zmenšené a bez polohy GPS.
 - **Sledovanie** appka nepoužíva. Okno si pamätá nastavenia zobrazenia
-  (tmavý režim, skryté ceny a pod.) a zapamätané prihlásenie, ak si ho
-  zaškrtol: zašifrované v `%APPDATA%MojeKockysession.bin`, odhlásenie
-  ho zmaže.
+  (tmavý režim, skryté ceny a pod.) a appka zapamätané prihlásenie, ak si
+  ho zaškrtol: zašifrované v `%APPDATA%\MojeKocky\session.bin` na 30 dní
+  od posledného použitia, odhlásenie ho zmaže.
 - **Služby:** Rebrickable dovoľuje akékoľvek použitie; BrickEconomy a
   Brickset dávajú osobné licencie ku kľúču, preto ich údaje vidí len účet
   s vlastným kľúčom. Ak svoj kľúč BrickEconomy vložíš do viacerých účtov,
@@ -885,9 +885,9 @@ available inside the app.
   deleted account stays in them until they rotate out.
 - **Photos** are stored downsized and without GPS location.
 - The app uses **no tracking**. The window remembers display settings
-  (dark mode, hidden prices and the like) and, if you ticked it, your
-  sign-in: encrypted in `%APPDATA%MojeKockysession.bin`, deleted when you
-  sign out.
+  (dark mode, hidden prices and the like) and the app, if you ticked it,
+  your sign-in: encrypted in `%APPDATA%\MojeKocky\session.bin` for 30 days
+  since last use, deleted when you sign out.
 - **Services:** Rebrickable allows any use; BrickEconomy and Brickset grant
   personal licences tied to the key, which is why their data is visible only
   to an account with its own key. If you put your BrickEconomy key into

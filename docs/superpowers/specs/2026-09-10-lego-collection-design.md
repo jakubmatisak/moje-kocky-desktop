@@ -728,6 +728,7 @@ Podrobnosti:
 - Filter je v adrese pod rovnakými menami, aké berie API. Posledný stav
   si pamätá účet: príchod z ponuky ho vráti, odkaz s filtrom má prednosť.
 - Na širokej obrazovke sa posúvajú len karty a panel, nie celá stránka.
+  Do výšky rastú len výsledky, riadky nad nimi majú vlastnú výšku.
 - **Karty alebo tabuľka** (pamätá sa pri účte). Tabuľka
   (`CollectionTable.vue`, `v-data-table-virtual`) má stĺpce číslo, názov,
   téma, rok, kusy, stav, umiestnenie, kúpené, hodnota, zisk, %, ročne;
@@ -739,9 +740,12 @@ Podrobnosti:
   zoznamom kusov alebo číslami setov; najprv `dry_run` na potvrdenie
   „Kde uložené → Povala: 143 kusov“. Menia sa len vlastnené kusy účtu.
   Figúrky zo sérií sa hromadne upravujú v detaile série (rozsah `series`).
-- **Figúrky inde:** keď filter či hľadanie trafí figúrky zo sérií, nad
-  výsledkom je „N figúrok zo sérií je v sekcii Figúrky“ s odkazom
-  (`FacetsOut.hidden_figures`). Starý odkaz s filtrom série vedie do
+- **Figúrky inde:** keď hľadanie trafí figúrky zo sérií, pod riadkom
+  súčtov je nenápadný riadok „N figúrok zo sérií je vo Figúrkach“
+  s odkazom Otvoriť Figúrky (`FacetsOut.hidden_figures`); keď Zbierka
+  nenašla nič a filter by trafil figúrky, ten istý riadok je v prázdnom
+  stave. Bežný filter (stav, umiestnenie…), ktorý niečo ukazuje, figúrky
+  nehlási. Starý odkaz s filtrom série vedie do
   Figúrok, uložený pohľad s filtrom figúrok je označený a po kliknutí to
   oznámi.
 - **Karta setu:** fotka, názov, číslo, téma, dieliky, čipy stavu

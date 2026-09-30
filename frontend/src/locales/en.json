@@ -120,7 +120,7 @@
     "pieces": "{count} pcs",
     "empty": "Nothing found",
     "emptyHint": "Try changing the filters or add a new set.",
-    "figuresElsewherePlural": "{count} series figure is in the Minifigures section; the collection shows sets only. | {count} series figures are in the Minifigures section; the collection shows sets only.",
+    "figuresElsewherePlural": "{count} series minifigure is in Minifigures | {count} series minifigures are in Minifigures",
     "openMinifigs": "Open Minifigures",
     "addSet": "Add set",
     "exportCsv": "Export CSV",

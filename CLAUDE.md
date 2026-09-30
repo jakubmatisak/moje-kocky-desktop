@@ -355,7 +355,12 @@ Figúrok (`utils/series.ts::figuresRoute`, jedna séria na jej stránku) a
 uložený pohľad s nimi je označený a po kliknutí to oznámi
 (`hasFigureFilters`). Aby hľadanie figúrky neskončilo tichým „Nič sa
 nenašlo“, `FacetsOut.hidden_figures` povie, koľko figúrok zo sérií by filter
-našiel, a `FiguresElsewhere.vue` odkáže do Figúrok. Ponuka a hlavička
+našiel, a `FiguresElsewhere.vue` odkáže do Figúrok. Je to nenápadný riadok
+pod súčtami, nie `v-alert`, a len keď na tom záleží: hľadanie (`q`) ich
+trafilo, alebo Zbierka nenašla nič (vtedy je riadok v prázdnom stave).
+Bežný filter s výsledkom nehlási nič. Počty musia patriť tomu istému
+hľadaniu (`filterStore.facetsSearch`), inak by po napísaní chvíľu svietil
+počet zo starého filtra. Ponuka a hlavička
 Zbierky berú `collection_*_count` zo súhrnu, `set_count` a spol. počítajú
 všetko. Dlaždica Zbierka na Prehľade nemá vlastné počty, berie tie isté
 z `dashboardSummary` (s rozsahom): hlavné číslo `collection_set_count`,
@@ -656,6 +661,11 @@ Zoradenie je v adrese ako `sort`, len keď nie je predvolené.
 **Zbierka na širokej obrazovke nesmie byť vyššia než okno.** Trasa má
 `meta.fitScreen`, rozloženie potom vynechá dolnú rezervu a posúva sa len
 panel filtrov a výsledky, nie stránka. Na telefóne sa posúva normálne.
+Do výšky rastie len `.collection-results`, ostatné riadky `.collection-main`
+majú `flex: 0 0 auto`: `v-alert` a `v-banner` majú vo Vuetify `flex: 1 1`
+a v stĺpci na výšku okna by si s výsledkami rozdelili miesto napoly
+(upozornenie o figúrkach tak raz zabralo pol obrazovky). Overiť cenu to má
+rovnako (`.check-page--fit > *`).
 
 **V dnešných peniazoch je prepočet na serveri, nie vo frontende.**
 `services/inflation.py` ťahá mesačný HICP Slovenska z Eurostatu
@@ -709,7 +719,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 646 testov, frontend 226. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 646 testov, frontend 235. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

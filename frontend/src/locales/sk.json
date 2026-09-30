@@ -120,7 +120,7 @@
     "pieces": "{count} ks",
     "empty": "Nič sa nenašlo",
     "emptyHint": "Skús zmeniť filtre alebo pridaj nový set.",
-    "figuresElsewherePlural": "{count} figúrka zo sérií je v sekcii Figúrky, Zbierka ukazuje len sety. | {count} figúrky zo sérií sú v sekcii Figúrky, Zbierka ukazuje len sety. | {count} figúrok zo sérií je v sekcii Figúrky, Zbierka ukazuje len sety.",
+    "figuresElsewherePlural": "{count} figúrka zo série je vo Figúrkach | {count} figúrky zo sérií sú vo Figúrkach | {count} figúrok zo sérií je vo Figúrkach",
     "openMinifigs": "Otvoriť Figúrky",
     "addSet": "Pridať set",
     "exportCsv": "Export CSV",

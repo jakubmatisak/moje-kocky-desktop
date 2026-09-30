@@ -45,6 +45,30 @@ zvlášť), inak by hlásil 0.0.0.0. Verzia inštalátora je verzia appky:
 predvolené čísla v `build.ps1` a `moje-kocky.iss` stráži
 `tests/test_desktop_version.py`. Každé vydanie zvýši verziu.
 
+**Inštalátor je pre všetkých, údaje sú každého používateľa.**
+`PrivilegesRequired=admin` bez `PrivilegesRequiredOverridesAllowed`,
+`{autopf}\MojeKocky`, skratky `{group}` a `{autodesktop}`, to isté AppId.
+Sekcie mimo `[Code]` nesmú siahať na `{user…}` ani HKCU (údaje si zakladá
+appka); appka po inštalácii beží `runasoriginaluser`, inak by si údaje
+založila u správcu. Manifest je aj tak `asInvoker`, práva si Inno Setup
+vypýta sám po spustení. Staršiu inštaláciu 0.1.x (`%LOCALAPPDATA%\Programs\MojeKocky`,
+kľúč `…\Uninstall\{AppId}_is1` v HKCU) odstráni `PrepareToInstall` cez
+`packaging/old-install.iss`, bez starého odinštalátora (pýta sa na údaje).
+Poistka `IsOldProgramDir`: len úplná cesta končiaca `\Programs\MojeKocky`
+mimo `{userappdata}`; iný priečinok nemaže a povie, ako odinštalovať.
+Najprv ide `MojeKocky.exe`: bežiaci program Windows zmazať nedovolí
+(premenovať priečinok áno, to nestačí) a inštalácia skončí s „Zavri Moje
+kocky a spusti inštaláciu znova.“ bez zmeny. HKCU a profil sú účtu, pod
+ktorým inštalátor po UAC beží; stará inštalácia iného účtu ostane (zdokumentované
+v README). Odinštalovanie zmaže len `{userappdata}\MojeKocky` toho, kto ho
+spustil, a len po otázke s predvolenou odpoveďou Nie (`SuppressibleMsgBox`).
+Funkcie v `old-install.iss` berú cesty a kľúč ako parametre:
+`tests/test_installer.py` ich skúša testovacím inštalátorom, ktorý skončí
+v `InitializeSetup`, na dočasných priečinkoch a vymyslenom kľúči. Skutočné
+cesty ani kľúč do testu nepatria. Komentáre v `[Code]` sú `//`, lebo
+komentár v zložených zátvorkách skončí pri prvej konštante ako `{app}`.
+Oba skripty sú v UTF-8 s BOM.
+
 Nižšie sú pravidlá appky prevzaté z webového repa; platia aj tu, okrem
 Dockeru, portu 8000 a zdieľania odkazom.
 
@@ -635,7 +659,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 588 testov, frontend 207. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 605 testov, frontend 207. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

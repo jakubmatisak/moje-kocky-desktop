@@ -1,7 +1,11 @@
 ﻿; Inno Setup: inštalátor Moje kocky Desktop.
 ; Zostavenie: scripts\build.ps1 (PyInstaller do build\dist\MojeKocky, potom ISCC).
-; Inštaluje sa pre aktuálneho používateľa, bez práv správcu. Údaje appky sú
-; v %APPDATA%\MojeKocky a odinštalovanie ich zmaže, len keď to používateľ chce.
+; Inštalátor si vypýta práva správcu (Windows ukáže otázku UAC) a program ide
+; do Program Files pre všetkých používateľov počítača. Údaje má každý používateľ
+; vlastné v %APPDATA%\MojeKocky; založí si ich appka sama, inštalátor na ne
+; nesiaha a odinštalovanie ich zmaže, len keď to používateľ chce.
+; Staršiu inštaláciu len pre jedného používateľa (0.1.x v %LOCALAPPDATA%)
+; odstráni PrepareToInstall, pozri old-install.iss.
 
 ; Verzia je verzia appky (backend/pyproject.toml); build.ps1 inú nepustí.
 #ifndef AppVersion
@@ -22,10 +26,12 @@ VersionInfoTextVersion={#AppVersion}
 VersionInfoProductTextVersion={#AppVersion}
 AppPublisher=jakubmatisak
 AppPublisherURL=https://github.com/jakubmatisak
-DefaultDirName={localappdata}\Programs\MojeKocky
+; {autopf} je v 64-bitovom režime (ArchitecturesInstallIn64BitMode) C:\Program Files.
+DefaultDirName={autopf}\MojeKocky
 DefaultGroupName=Moje kocky
 DisableProgramGroupPage=yes
-PrivilegesRequired=lowest
+; Bez PrivilegesRequiredOverridesAllowed: inštalácia len pre seba sa vybrať nedá.
+PrivilegesRequired=admin
 OutputDir=..\build\installer
 OutputBaseFilename=MojeKocky-Setup-{#AppVersion}
 SetupIconFile=icon.ico
@@ -55,12 +61,16 @@ Source: "..\build\THIRD-PARTY-NOTICES.txt"; DestDir: "{app}"; Flags: ignoreversi
 Name: "{group}\Moje kocky"; Filename: "{app}\MojeKocky.exe"
 Name: "{group}\{cm:UninstallProgram,Moje kocky}"; Filename: "{uninstallexe}"
 Name: "{group}\Licencie softvéru tretích strán"; Filename: "{app}\THIRD-PARTY-NOTICES.txt"
-Name: "{userdesktop}\Moje kocky"; Filename: "{app}\MojeKocky.exe"; Tasks: desktopicon
+Name: "{autodesktop}\Moje kocky"; Filename: "{app}\MojeKocky.exe"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\MojeKocky.exe"; Description: "{cm:LaunchProgram,Moje kocky}"; Flags: nowait postinstall skipifsilent
+; Pod účtom, ktorý inštalátor spustil, nie ako správca: appka si údaje založí
+; v jeho %APPDATA%.
+Filename: "{app}\MojeKocky.exe"; Description: "{cm:LaunchProgram,Moje kocky}"; Flags: nowait postinstall skipifsilent runasoriginaluser
 
 [Code]
+#include "old-install.iss"
+
 const
   WebView2Key = 'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}';
   WebView2UserKey = 'Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}';
@@ -86,6 +96,23 @@ begin
   end;
 end;
 
+// Starú inštaláciu len pre tohto používateľa (0.1.x) odstráni pred kopírovaním
+// súborov; keď to nejde, inštalácia skončí s hláškou a nič nezmení.
+// {localappdata}, {userappdata} a HKCU sú účtu, pod ktorým inštalátor po otázke
+// UAC beží (obmedzenie popisuje old-install.iss).
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  OldDir: String;
+begin
+  Result := '';
+  if FindOldInstall(OldUninstallKey, ExpandConstant('{localappdata}\Programs\MojeKocky'), ExpandConstant('{app}'), OldDir) then
+    Result := RemoveOldInstall(OldUninstallKey, OldDir, ExpandConstant('{userappdata}'), ExpandConstant('{userprograms}\Moje kocky'), ExpandConstant('{userdesktop}\Moje kocky.lnk'));
+end;
+
+// Program je pre všetkých, údaje má každý používateľ vlastné. {userappdata} je
+// profil účtu, pod ktorým odinštalovanie beží (po otázke UAC), údaje ostatných
+// používateľov ostanú. Predvolená odpoveď je Nie, aj v tichom režime
+// s /SUPPRESSMSGBOXES.
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   DataDir: String;
@@ -94,8 +121,8 @@ begin
   begin
     DataDir := ExpandConstant('{userappdata}\MojeKocky');
     if DirExists(DataDir) then
-      if MsgBox('Zmazať aj tvoje údaje (zbierku, fotky, kľúče) v ' + DataDir + '?' + #13#10 +
-                'Ak ich necháš, nová inštalácia ich znova použije.', mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES then
+      if SuppressibleMsgBox('Zmazať aj tvoje údaje (zbierku, fotky, kľúče) v ' + DataDir + '?' + #13#10 +
+                'Ak ich necháš, nová inštalácia ich znova použije.', mbConfirmation, MB_YESNO or MB_DEFBUTTON2, IDNO) = IDYES then
         DelTree(DataDir, True, True, True);
   end;
 end;

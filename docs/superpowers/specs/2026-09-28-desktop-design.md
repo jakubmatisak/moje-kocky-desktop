@@ -52,8 +52,8 @@ Overené skúškou na zahodenie (pywebview 6.2, WebView2, Windows 11):
   s `base: './'`.
 - **Údaje**: `%APPDATA%\MojeKocky\` → `lego.db`, `photos\`, `secret.key`
   (tajomstvo na šifrovanie kľúčov, vygeneruje sa pri prvom spustení,
-  prístupné len používateľovi), `logs\`. Odinštalovanie údaje nemaže (voľba
-  v inštalátore).
+  prístupné len používateľovi), `logs\`. Odinštalovanie údaje nemaže, len
+  keď to používateľ v otázke potvrdí (a len svoje).
 - **Jedna inštancia**: zámok v `%APPDATA%`; druhé spustenie len vytiahne
   okno do popredia.
 
@@ -83,9 +83,37 @@ Overené skúškou na zahodenie (pywebview 6.2, WebView2, Windows 11):
 
 - **PyInstaller** (onedir): Python, backend, závislosti a hotový frontend
   (`web/`) do `MojeKocky\`. Migrácie Alembic pribalené a spustené pri štarte.
-- **Inno Setup**: inštalácia pre používateľa bez práv správcu
-  (`%LOCALAPPDATA%\Programs\MojeKocky`), odkaz v ponuke Štart a na ploche,
-  odinštalovanie, ikona, verzia.
+- **Inno Setup**: od 1.0.0 inštalácia pre všetkých používateľov počítača
+  (`PrivilegesRequired=admin`, bez voľby „len pre mňa“): inštalátor si
+  vypýta práva správcu (Windows ukáže otázku UAC), program ide do
+  `{autopf}\MojeKocky` (64-bitové Program Files), odkaz v ponuke Štart a na
+  ploche pre všetkých (`{group}`, `{autodesktop}`), odinštalovanie, ikona,
+  verzia, to isté AppId. Údaje má každý používateľ vlastné
+  v `%APPDATA%\MojeKocky`; zakladá si ich appka, inštalátor na ne nesiaha.
+  Appka po inštalácii beží pod účtom, ktorý inštalátor spustil
+  (`runasoriginaluser`), inak by si údaje založila u správcu.
+  Rozhodnutie používateľa (2026-09-30): „inštalátor si vypýta správcu sám“.
+- **Prechod zo 0.1.x** (inštalácia len pre jedného používateľa
+  v `%LOCALAPPDATA%\Programs\MojeKocky`, kľúč odinštalovania v HKCU):
+  `PrepareToInstall` a `packaging/old-install.iss`. Starý odinštalátor sa
+  nespúšťa, lebo sa pýta, či zmazať údaje. Priečinok z `InstallLocation`
+  (bez kľúča predvolený, ak to nie je priečinok novej inštalácie) sa zmaže
+  priamo, potom kľúč v HKCU a staré skratky (`{userprograms}\Moje kocky\*.lnk`,
+  `{userdesktop}\Moje kocky.lnk`). Poistka: mazať sa smie len úplná cesta
+  končiaca `\Programs\MojeKocky`, ktorá nie je v `{userappdata}` ani ho
+  neobsahuje; iný priečinok inštalátor nemaže a povie, ako starú verziu
+  odinštalovať. Najprv sa maže `MojeKocky.exe`: bežiaci program Windows
+  zmazať nedovolí (premenovať priečinok áno, to preto nestačí) a vtedy
+  inštalácia skončí s „Zavri Moje kocky a spusti inštaláciu znova.“ bez
+  zmeny. Obmedzenie: HKCU a profil sú účtu, pod ktorým inštalátor po UAC
+  beží. Pri zadaní hesla iného účtu správcu na bežnom účte, alebo keď mal
+  0.1.x ďalší používateľ, jeho stará inštalácia ostane a odinštaluje si ju
+  sám (údaje nechá). Návrat na 0.1.x: najprv odinštalovať 1.0.0.
+- **Odinštalovanie** sa opýta, či zmazať aj údaje, predvolene Nie
+  (`SuppressibleMsgBox`, aj v tichom režime s `/SUPPRESSMSGBOXES`), a zmaže
+  len `{userappdata}\MojeKocky` účtu, pod ktorým beží; údaje ostatných
+  používateľov ostanú. Manifest inštalátora je aj s `admin` `asInvoker`,
+  Inno Setup si práva vypýta sám hneď po spustení.
 - **WebView2**: vo Windows 10/11 býva; inštalátor ho overí a pri chýbajúcom
   spustí Evergreen bootstrapper od Microsoftu.
 - **Veľkosť**: odhad 60–90 MB.
@@ -137,6 +165,13 @@ Overené skúškou na zahodenie (pywebview 6.2, WebView2, Windows 11):
 - Záloha pri aktualizácii a správa pri páde štartu (`test_desktop_backup.py`,
   vlastný `APPDATA` v dočasnom priečinku); zhoda verzie inštalátora, skriptu
   zostavenia a .exe s `pyproject.toml` (`test_desktop_version.py`).
-- Ručne na čistom Windows (Fáza 3): inštalácia bez práv správcu, prvé
-  spustenie, skenovanie čítačkou aj kamerou, obnova cien, export, aktualizácia,
-  odinštalovanie.
+- Inštalátor (`test_installer.py`): práva správcu, Program Files, skratky
+  pre všetkých, kompilácia celého skriptu cez ISCC. Logiku prechodu zo 0.1.x
+  skúša testovací inštalátor, ktorý v `InitializeSetup` zavolá funkcie
+  z `old-install.iss` s cestami v dočasnom priečinku a vymysleným kľúčom
+  v HKCU a skončí (nič neinštaluje): poistka proti `%APPDATA%`, zmazanie
+  programu a skratiek s údajmi netknutými, bežiaci program (kópia PING.EXE)
+  nechá všetko tak.
+- Ručne na čistom Windows (Fáza 3): inštalácia s otázkou UAC, aj na bežnom
+  účte s heslom správcu, aktualizácia zo 0.1.x, prvé spustenie, skenovanie
+  čítačkou aj kamerou, obnova cien, export, aktualizácia, odinštalovanie.

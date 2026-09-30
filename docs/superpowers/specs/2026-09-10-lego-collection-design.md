@@ -751,6 +751,10 @@ Podrobnosti:
 - Graf ceny s kúpnou cenou.
 - Tabuľka kusov: úprava, fotky, predaj, vrátenie predaja, zmazanie,
   identifikácia sáčku, návrh inzerátu (cena a text pre Aukro a Bazoš).
+- Kusy aj súčty (vlastnené, predané) sú jedna mriežka: Kúpené, Hodnota
+  a Zisk stoja v každom riadku aj v súčte pod sebou, nech má kus
+  koľkokoľvek štítkov. Na užšej karte sú štítky nad sumami, na telefóne
+  sumy v troch rovnakých stĺpcoch a akcie pod nimi.
 - Kusy sa načítavajú so `status=all`, aby predaný kus nezmizol aj
   s históriou.
 - „Ďalší kus“ pridá kus bez hľadania; na stránke série (podľa

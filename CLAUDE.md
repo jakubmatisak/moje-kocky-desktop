@@ -396,6 +396,15 @@ obrazovky protirečia.
 **Detail setu si kusy načítava sám so `status=all`.** Zoznam v Zbierke je
 filtrovaný a po predaji by predaný kus z detailu zmizol aj s históriou.
 
+**Moje kusy v detaile setu sú jedna mriežka.** Stĺpce (štítky, Kúpené,
+Hodnota, Zisk, akcie) určuje len `.pieces-grid` v `SetDetailView.vue`;
+riadok kusu aj oba súčty sú `subgrid` s tými istými piatimi bunkami
+`piece-cell--…` v tom istom poradí (stráži `SetDetailView.spec.ts`).
+Vlastné šírky riadku ani flex s medzerami podľa obsahu nie: pri inom
+počte štítkov by sumy odskočili a súčet by nestál pod nimi. Rozloženie
+mení šírka karty (`@container`), nie okna: nad 840 px jeden riadok, do
+840 štítky nad sumami, do 640 tri rovnaké stĺpce súm a akcie pod nimi.
+
 **Každé volanie cudzej služby má schopnosť a prejde bránou.** Register je
 `capabilities.py` (`Cap`, `CAPABILITIES`, `PROVIDERS`). Zdroj pred požiadavkou
 zavolá `fetch_policy.ensure_allowed(policy, cap)`: vypnutá schopnosť alebo
@@ -626,7 +635,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 588 testov, frontend 201. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 588 testov, frontend 207. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

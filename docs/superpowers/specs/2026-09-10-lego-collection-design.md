@@ -868,7 +868,10 @@ z rozbaleného sáčku): porovnáva sa
 katalógové číslo, vyraďuje vlastnený aj rezervovaný kus, predaný nie
 (dodatočne zapísaný predaj neznamená, že set už nechcem). `POST /wishlist`
 berie `created_at`, aby Späť vrátil položku na jej pôvodné miesto;
-rovnako ju s pôvodným dátumom obnoví vrátenie importu.
+rovnako ju s pôvodným dátumom obnoví vrátenie importu. Import položky
+Chcem z importov (aj zo staršieho) nevyraďuje; náhľad pri vlastnenom
+riadku sľubuje vyradenie len pri ručne pridanej položke, pri položke
+z importu povie, že ostane.
 
 **Nastavenia** (`/nastavenia`):
 

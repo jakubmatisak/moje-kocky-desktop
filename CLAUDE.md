@@ -356,8 +356,9 @@ uložení zo skenu jedno oznámenie a jedno Späť pre kusy aj Chcem. To vracia
 Chcem až po zmazaní kusov a s `?unless_owned=true`: set, ktorý účet ešte
 má (pri skenoch X, Y, X druhý kus X), server nevráti a odpovie 204
 (`still_bought`, to isté pravidlo ako `drop_bought`). Import Chcem
-z importov nechá (`keep_imported`) a vyradené si pamätá na vrátenie, aj
-s dátumom pridania (`added_at`).
+z importov nechá (`keep_imported`, aj zo staršieho importu; náhľad sľubuje
+vyradenie len pri ostatných a pri týchto povie, že ostanú) a vyradené si
+pamätá na vrátenie, aj s dátumom pridania (`added_at`).
 
 **Katalógové vzťahy sa načítavajú výslovným dotazom.** `CatalogItem` zámerne
 nemá ORM vzťah na členov série. Lenivé načítanie v asynchrónnej session padne

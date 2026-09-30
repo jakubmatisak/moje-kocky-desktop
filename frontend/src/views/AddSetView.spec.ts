@@ -73,7 +73,7 @@ describe('Pridať set: kúpený set vypadne z Chcem a dá sa vrátiť', () => {
       if (path === '/items') {
         return { data: [{ id: 5, catalog_num: '10294-1', removed_from_wishlist: REMOVED }] }
       }
-      return { data: {} }
+      return { data: {}, response: { status: 201 } }
     })
     del.mockResolvedValue({})
   })
@@ -121,6 +121,59 @@ describe('Pridať set: kúpený set vypadne z Chcem a dá sa vrátiť', () => {
       body: expect.objectContaining({ catalog_num: '10294-1', created_at: '2026-01-02T10:00:00' }),
     }))
     notice('Vrátené, kusy sú zo zbierky preč a Chcem je ako predtým')
+  })
+
+  it('Späť po automatickom uložení nevráti do Chcem set, ktorý medzitým uložil ďalší sken', async () => {
+    // Server so stavom: pridanie kusu vyradí set z Chcem, Späť s unless_owned
+    // nevráti set, ktorý ešte mám (204), tak ako routers/misc.py::add_wishlist.
+    const pieces = new Map<number, string>()
+    const wished = new Set(['10294-1'])
+    let nextId = 1
+    post.mockImplementation(async (path: string, init: {
+      body: { catalog_num: string }
+      params?: { query?: { unless_owned?: boolean } }
+    }) => {
+      const num = init.body.catalog_num
+      if (path === '/items') {
+        const id = nextId++
+        pieces.set(id, num)
+        return { data: [{ id, catalog_num: num, removed_from_wishlist: wished.delete(num) ? REMOVED : null }] }
+      }
+      if (path === '/wishlist') {
+        if (wished.has(num)) {
+          return { error: { detail: 'Set už v zozname je' }, response: { status: 409 } }
+        }
+        if (init.params?.query?.unless_owned && [...pieces.values()].includes(num)) {
+          return { response: { status: 204 } }
+        }
+        wished.add(num)
+        return { data: { catalog_num: num }, response: { status: 201 } }
+      }
+      return { data: {} }
+    })
+    del.mockImplementation(async (_path: string, init: { params: { path: { item_id: number } } }) => {
+      pieces.delete(init.params.path.item_id)
+      return {}
+    })
+
+    // X (v Chcem), Y, X: druhý sken uloží X, tretí uloží Y a načíta X znova.
+    const scanner = useScannerStore()
+    for (const code of ['10294-1', '21318-1', '10294-1']) {
+      scanner.deliver(code)
+    }
+    const wrapper = await mountAdd()
+    // Druhý kus X uloží tlačidlo; z Chcem už nič nevyradí.
+    await wrapper.find('v-btn[prepend-icon="mdi-plus"]').trigger('click')
+    await flushPromises()
+    expect([...pieces.values()]).toEqual(['10294-1', '21318-1', '10294-1'])
+
+    await useNotifyStore().run(notice('Uložené: 10294-1 Titanic ×1, odstránené z Chcem')['data-notice'])
+    await flushPromises()
+
+    // Prvý kus X je preč, druhý ostal: kúpený set v Chcem nie je.
+    expect([...pieces.values()]).toEqual(['21318-1', '10294-1'])
+    expect(wished.has('10294-1')).toBe(false)
+    notice('Vrátené, kusy sú zo zbierky preč. Do Chcem sa nevracia, čo v zbierke ešte máš: Titanic')
   })
 
   it('set, ktorý v Chcem nebol, sa ukladá ako doteraz', async () => {

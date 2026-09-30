@@ -1477,7 +1477,15 @@ export interface paths {
          */
         get: operations["list_wishlist_api_v1_wishlist_get"];
         put?: never;
-        /** Add Wishlist */
+        /**
+         * Add Wishlist
+         * @description Pridá set do Chcem; Späť po kúpe ho vracia aj s pôvodnými údajmi.
+         *
+         *     ``unless_owned``: Späť po automatickom uložení zo skenu. Set, ktorý účet
+         *     ešte má (vlastnený alebo rezervovaný kus, ako pri vyraďovaní), sa nepridá
+         *     a odpoveď je 204: kúpený set v Chcem nie je. Späť pri „Odstránené z Chcem“
+         *     ho neposiela, tam kúpa platí a Chcem sa vráti aj tak.
+         */
         post: operations["add_wishlist_api_v1_wishlist_post"];
         delete?: never;
         options?: never;
@@ -3376,15 +3384,10 @@ export interface components {
              */
             collection_sold_count: number;
             /**
-             * Standalone Set Count
+             * Sealed Bag Count
              * @default 0
              */
-            standalone_set_count: number;
-            /**
-             * Figure Count
-             * @default 0
-             */
-            figure_count: number;
+            sealed_bag_count: number;
             /** Themes */
             themes: components["schemas"]["ThemeSliceOut"][];
             /** Top Profit */
@@ -6751,7 +6754,9 @@ export interface operations {
     };
     add_wishlist_api_v1_wishlist_post: {
         parameters: {
-            query?: never;
+            query?: {
+                unless_owned?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -6770,6 +6775,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["WishlistOut"];
                 };
+            };
+            /** @description S unless_owned: set účet ešte má, do Chcem sa nevrátil. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

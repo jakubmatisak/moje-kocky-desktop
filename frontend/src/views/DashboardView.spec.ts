@@ -28,8 +28,9 @@ function makeSummary (extra: Partial<Summary>): Summary {
     sold_proceeds: '0.00',
     sold_count: 0,
     set_count: 1,
-    standalone_set_count: 1,
-    figure_count: 0,
+    collection_set_count: 1,
+    series_figures: 0,
+    sealed_bag_count: 0,
     item_count: 1,
     parts: 0,
     minifigs: 0,
@@ -153,10 +154,12 @@ describe('dlaždica Zbierka: sety a figúrky zo sérií zvlášť', () => {
     return { value: tile.props('value'), hint: tile.props('hint') }
   }
 
+  // Dlaždica berie čísla, ktoré súhrn už má: sety sekcie Zbierka a figúrky
+  // zo sérií ako ponuka, obe s rozsahom Prehľadu. ``set_count`` ráta všetko.
   const split = (sets: number, figures: number, extra: Partial<Summary> = {}) => makeSummary({
-    set_count: sets + figures,
-    standalone_set_count: sets,
-    figure_count: figures,
+    set_count: sets + figures + 7,
+    collection_set_count: sets,
+    series_figures: figures,
     item_count: 189,
     parts: 39_188,
     ...extra,
@@ -178,6 +181,14 @@ describe('dlaždica Zbierka: sety a figúrky zo sérií zvlášť', () => {
     expect((await collectionTile()).hint).toMatch(/^3 figúrky · /)
   })
 
+  it('nerozbalené sáčky sú zvlášť, figúrkou sú až po rozbalení', async () => {
+    summary = split(130, 41, { sealed_bag_count: 3 })
+    expect((await collectionTile()).hint).toBe(`41 figúrok · 3 sáčky · 189 kusov · ${count(39_188)} dielikov`)
+
+    summary = split(130, 0, { sealed_bag_count: 5 })
+    expect((await collectionTile()).hint).toBe(`5 sáčkov · 189 kusov · ${count(39_188)} dielikov`)
+  })
+
   it('bez figúrok ich podnadpis vynechá', async () => {
     summary = split(3, 0, { item_count: 4 })
     expect(await collectionTile()).toEqual({
@@ -195,7 +206,7 @@ describe('dlaždica Zbierka: sety a figúrky zo sérií zvlášť', () => {
       hint: `41 minifigures · 189 pieces · ${count(39_188)} parts`,
     })
 
-    summary = split(1, 1, { item_count: 2 })
-    expect((await collectionTile()).hint).toMatch(/^1 minifigure · 2 pieces/)
+    summary = split(1, 1, { item_count: 3, sealed_bag_count: 1 })
+    expect((await collectionTile()).hint).toMatch(/^1 minifigure · 1 sealed bag · 3 pieces/)
   })
 })

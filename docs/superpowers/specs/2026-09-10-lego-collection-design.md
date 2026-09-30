@@ -665,11 +665,12 @@ Podrobnosti:
   - trhová hodnota, s počtom kusov bez ceny;
   - nerealizovaný zisk, s percentom a CAGR;
   - realizovaný zisk;
-  - zbierka: hlavné číslo sú samostatné sety, podnadpis „41 figúrok ·
-    189 kusov · 39 188 dielikov“ (figúrky zo sérií podľa `kind_of`, aj
-    blind-box a sáčok; bez figúrok ich vynechá). Počty `standalone_set_count`
-    a `figure_count` v `/stats/summary` idú s rozsahom, spolu dajú
-    `set_count`; ponuka a hlavička Zbierky majú svoje `collection_*_count`.
+  - zbierka: hlavné číslo sú sety sekcie Zbierka, podnadpis „41 figúrok ·
+    3 sáčky · 189 kusov · 39 188 dielikov“ (nulové počty vynechá). Čísla sú
+    tie isté ako pre ponuku, len s rozsahom Prehľadu: `collection_set_count`,
+    `series_figures` (rôzne figúrky zo sérií, aj blind-box) a
+    `sealed_bag_count` (každý nerozbalený sáčok, ako vo Figúrkach; figúrkou
+    je až po rozbalení). Bez rozsahu dlaždica sedí s ponukou aj s Figúrkami.
 - **Graf portfólia:**
   - tri krivky;
   - rýchle voľby (mesiac až všetko), vlastné od–do, ťahanie a zoom;
@@ -745,8 +746,11 @@ Podrobnosti:
   kuse setu. Po uložení tlačidlom je vedľa „Pridané do zbierky“ oznámenie
   „Odstránené z Chcem“ so Späť, ktoré ju vráti s cieľovou cenou, poznámkou
   aj dátumom pridania; kusy ostanú. Automatické uloženie po skene má jedno
-  oznámenie a jedno Späť: zmaže kusy a vráti Chcem, stav pred skenom
-  (druhé Späť by pri rýchlom skenovaní zapratalo obrazovku).
+  oznámenie a jedno Späť: zmaže kusy a vráti Chcem (druhé Späť by pri
+  rýchlom skenovaní zapratalo obrazovku). Chcem vracia až po zmazaní kusov
+  a s `?unless_owned=true`: set, ktorý ešte mám, lebo pri skenoch X, Y, X
+  druhý kus X uložil ďalší sken, server do Chcem nevráti (204) a oznámenie
+  to povie. Kúpený set v Chcem nie je.
 - Pri sérii mriežka figúrok so stepperom, „všetky“ a „nerozbalený sáčok“.
 - Formulár: počet, stav, príznaky, cena, dátum, kde kúpené, kde uložené,
   zoznam a kategórie.
@@ -814,7 +818,8 @@ Z Chcem ju vyradí server, rovnako ako každé iné pridanie kusu (Pridať set
 číslom aj skenom, Mám ju, Mám všetky, Ďalší kus, import): porovnáva sa
 katalógové číslo, vyraďuje vlastnený aj rezervovaný kus, predaný nie
 (dodatočne zapísaný predaj neznamená, že set už nechcem). `POST /wishlist`
-berie `created_at`, aby Späť vrátil položku na jej pôvodné miesto.
+berie `created_at`, aby Späť vrátil položku na jej pôvodné miesto;
+rovnako ju s pôvodným dátumom obnoví vrátenie importu.
 
 **Nastavenia** (`/nastavenia`):
 
@@ -888,7 +893,7 @@ prihlásenie. Úplná schéma je v OpenAPI (`openapi_export`).
 | štatistiky | `GET stats/summary`, `breakdown`, `sales`, `timeline` (všetky s `real`), `movers?window=30/90/365`, `series` |
 | figúrky | `GET minifigs/series`, `minifigs/series/{num}`; `GET/POST minifigs/sync` |
 | témy | `GET themes`, `themes/years?theme=`, `themes/wave?theme=&year=&force=` |
-| Chcem | `GET/POST wishlist`; `DELETE wishlist/{id}` |
+| Chcem | `GET/POST wishlist` (`?unless_owned=true` pri Späť po skene); `PATCH/DELETE wishlist/{id}` |
 | zdieľanie | `GET/POST share`; `PATCH/DELETE share/{id}`; `GET public/{token}` |
 | import | `GET imports/template.xlsx`, `imports/template.csv`; `GET/POST imports`; `GET/DELETE imports/{id}`; `POST imports/{id}/commit`, `imports/{id}/undo` |
 | iné | `GET export/items.csv`; `GET usage`; `GET providers/status`; `GET health` (stav a verzia appky) |

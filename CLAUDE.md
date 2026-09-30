@@ -317,8 +317,12 @@ rezervovaný kus áno, predaný nie. Pôvodnú položku nesie
 ju vráti cez `POST /wishlist` aj s `created_at`
 (`composables/useWishlistReturn.ts`). Pridať set ukáže po tlačidle
 samostatné „Odstránené z Chcem“ so Späť len pre Chcem, po automatickom
-uložení zo skenu jedno oznámenie a jedno Späť pre kusy aj Chcem. Import
-Chcem z importov nechá (`keep_imported`) a vyradené si pamätá na vrátenie.
+uložení zo skenu jedno oznámenie a jedno Späť pre kusy aj Chcem. To vracia
+Chcem až po zmazaní kusov a s `?unless_owned=true`: set, ktorý účet ešte
+má (pri skenoch X, Y, X druhý kus X), server nevráti a odpovie 204
+(`still_bought`, to isté pravidlo ako `drop_bought`). Import Chcem
+z importov nechá (`keep_imported`) a vyradené si pamätá na vrátenie, aj
+s dátumom pridania (`added_at`).
 
 **Katalógové vzťahy sa načítavajú výslovným dotazom.** `CatalogItem` zámerne
 nemá ORM vzťah na členov série. Lenivé načítanie v asynchrónnej session padne
@@ -353,11 +357,14 @@ uložený pohľad s nimi je označený a po kliknutí to oznámi
 nenašlo“, `FacetsOut.hidden_figures` povie, koľko figúrok zo sérií by filter
 našiel, a `FiguresElsewhere.vue` odkáže do Figúrok. Ponuka a hlavička
 Zbierky berú `collection_*_count` zo súhrnu, `set_count` a spol. počítajú
-všetko. Dlaždica Zbierka na Prehľade delí `set_count` rozsahu na
-`standalone_set_count` (hlavné číslo) a `figure_count` (v podnadpise,
-podľa `kind_of`, aj blind-box a sáčok); `series_figures` pre ponuku sáčky
-nepočíta. Odkazy z Figúrok na detail nesú `?from=minifigs`, ponuka potom
-svieti na Figúrkach (`utils/navigation.ts::sectionRoute`). Kus pod holým
+všetko. Dlaždica Zbierka na Prehľade nemá vlastné počty, berie tie isté
+z `dashboardSummary` (s rozsahom): hlavné číslo `collection_set_count`,
+v podnadpise `series_figures` (rôzne figúrky, aj blind-box) a
+`sealed_bag_count` (každý nerozbalený sáčok, ako `sealed_bags` vo
+Figúrkach). Sáčok nie je figúrka, kým sa nerozbalí, takže bez rozsahu
+dlaždica sedí s ponukou aj s Figúrkami. Odkazy z Figúrok na detail nesú
+`?from=minifigs`, ponuka potom svieti na Figúrkach
+(`utils/navigation.ts::sectionRoute`). Kus pod holým
 číslom série je vždy nerozbalený sáčok (`POST /items` ho tak uloží, ako
 import), detail série sa pozná podľa `series_size`, nielen podľa kusov
 (`utils/series.ts::isSeriesPage`).
@@ -690,7 +697,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 636 testov, frontend 220. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 639 testov, frontend 222. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

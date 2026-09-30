@@ -72,17 +72,19 @@
   })
 
   /**
-   * Podnadpis dlaždice Zbierka. Hlavné číslo sú samostatné sety, figúrky zo
-   * sérií stoja tu; kusy a dieliky sú za všetko. Bez figúrok ich vynechá.
+   * Podnadpis dlaždice Zbierka. Hlavné číslo sú sety sekcie Zbierka, figúrky
+   * zo sérií a nerozbalené sáčky stoja tu, rovnako ako v ponuke a vo
+   * Figúrkach; kusy a dieliky sú za všetko. Nulové počty vynechá.
    */
   const collectionHint = computed(() => {
     const s = summary.value
     if (!s) return ''
     const pieces = t('collection.piecesPlural', s.item_count, { named: { count: s.item_count } })
-    const parts = count(s.parts)
-    if (!s.figure_count) return t('dashboard.piecesAndParts', { pieces, parts })
-    const figures = t('dashboard.figuresPlural', s.figure_count, { named: { count: s.figure_count } })
-    return t('dashboard.figuresPiecesAndParts', { figures, pieces, parts })
+    return [
+      s.series_figures ? t('dashboard.figuresPlural', s.series_figures, { named: { count: s.series_figures } }) : '',
+      s.sealed_bag_count ? t('dashboard.bagsPlural', s.sealed_bag_count, { named: { count: s.sealed_bag_count } }) : '',
+      t('dashboard.piecesAndParts', { pieces, parts: count(s.parts) }),
+    ].filter(Boolean).join(' · ')
   })
 
   const valueHint = computed(() =>
@@ -190,7 +192,7 @@
         <StatTile
           :hint="collectionHint"
           :label="t('dashboard.collection')"
-          :value="t('collection.setsPlural', summary.standalone_set_count, { named: { count: summary.standalone_set_count } })"
+          :value="t('collection.setsPlural', summary.collection_set_count, { named: { count: summary.collection_set_count } })"
         />
       </v-col>
     </v-row>

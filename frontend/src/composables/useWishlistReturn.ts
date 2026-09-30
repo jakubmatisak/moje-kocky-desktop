@@ -13,6 +13,12 @@ import { api } from '@/api/client'
 import { useCollectionStore } from '@/stores/collection'
 import { useNotifyStore } from '@/stores/notify'
 
+/** Výsledok vrátenia: koľko zlyhalo a čo ostalo mimo Chcem, lebo set ešte mám. */
+export interface Restored {
+  failed: number
+  kept: RemovedWish[]
+}
+
 export function useWishlistReturn () {
   const { t } = useI18n()
   const notify = useNotifyStore()
@@ -26,11 +32,17 @@ export function useWishlistReturn () {
       : t('wishlist.itemsPlural', wishes.length, { named: { count: wishes.length } })
   }
 
-  /** Vráti položky do Chcem s pôvodnými údajmi; povie, koľko sa nepodarilo. */
-  async function restore (wishes: RemovedWish[]): Promise<number> {
-    let failed = 0
+  /**
+   * Vráti položky do Chcem s pôvodnými údajmi; povie, koľko sa nepodarilo.
+   * `unlessOwned`: set, ktorý účet ešte má, server nevráti (204) a položka
+   * je v `kept`. Tak Späť po automatickom uložení, keď ďalší sken uložil
+   * ten istý set znova; kúpený set v Chcem nie je.
+   */
+  async function restore (wishes: RemovedWish[], options: { unlessOwned?: boolean } = {}): Promise<Restored> {
+    const result: Restored = { failed: 0, kept: [] }
     for (const wish of wishes) {
       const { error, response } = await api.POST('/wishlist', {
+        ...(options.unlessOwned ? { params: { query: { unless_owned: true } } } : {}),
         body: {
           catalog_num: wish.catalog_num,
           target_price_eur: wish.target_price_eur,
@@ -38,12 +50,14 @@ export function useWishlistReturn () {
           created_at: wish.created_at,
         },
       })
-      // 409: v Chcem už je (vrátil sa inak), Späť je splnené.
-      if (error && response.status !== 409) {
-        failed += 1
+      if (response.status === 204) {
+        result.kept.push(wish)
+      } else if (error && response.status !== 409) {
+        // 409: v Chcem už je (vrátil sa inak), Späť je splnené.
+        result.failed += 1
       }
     }
-    return failed
+    return result
   }
 
   /**
@@ -58,7 +72,7 @@ export function useWishlistReturn () {
     notify.success(t('notice.wishDropped', { what: label }), {
       label: t('notice.undo'),
       run: async () => {
-        const failed = await restore(wishes)
+        const { failed } = await restore(wishes)
         if (failed > 0) {
           notify.error(t('notice.undoFailed'))
         } else {
@@ -70,5 +84,5 @@ export function useWishlistReturn () {
     })
   }
 
-  return { announce, restore }
+  return { announce, restore, what }
 }

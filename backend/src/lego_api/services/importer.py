@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 
@@ -41,7 +41,7 @@ from lego_api.providers.brickset import BricksetProvider
 from lego_api.services.catalog import CatalogService
 from lego_api.services.import_file import OWNED, SOLD, WISH, ParsedFile
 from lego_api.services.keys import UserKeys
-from lego_api.services.wishlist import drop_bought
+from lego_api.services.wishlist import added_at, drop_bought
 
 log = logging.getLogger(__name__)
 
@@ -425,14 +425,15 @@ async def undo(
             continue
         if await session.get(CatalogItem, wish["catalog_num"]) is None:
             continue
-        session.add(
-            WishlistItem(
-                user_id=user_id,
-                catalog_num=wish["catalog_num"],
-                target_price_eur=_money(wish.get("target_price_eur")),
-                note=wish.get("note"),
-            )
+        restored = WishlistItem(
+            user_id=user_id,
+            catalog_num=wish["catalog_num"],
+            target_price_eur=_money(wish.get("target_price_eur")),
+            note=wish.get("note"),
         )
+        if wish.get("created_at"):
+            restored.created_at = added_at(datetime.fromisoformat(wish["created_at"]))
+        session.add(restored)
     batch.state = ImportState.UNDONE
     batch.undone_at = utcnow()
     await session.commit()

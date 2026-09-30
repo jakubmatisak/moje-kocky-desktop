@@ -7,7 +7,7 @@ bez cieľa) je na konci v oboch smeroch. Kúpený set z Chcem vyradí
 
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any, Literal
 
@@ -86,6 +86,15 @@ class DroppedWish:
         }
 
 
+def added_at(value: datetime) -> datetime:
+    """Pôvodný dátum pridania vrátenej položky Chcem (Späť po kúpe, vrátenie importu).
+
+    Vrátená položka tak v Chcem ostane na svojom mieste, nie navrchu. Dátum
+    bez pásma je UTC, tak ho appka ukladá aj vracia.
+    """
+    return value.astimezone(UTC) if value.tzinfo else value.replace(tzinfo=UTC)
+
+
 async def drop_bought(
     session: AsyncSession,
     user_id: int,
@@ -125,6 +134,24 @@ async def drop_bought(
         )
         await session.delete(wish)
     return dropped
+
+
+async def still_bought(session: AsyncSession, user_id: int, catalog_num: str) -> bool:
+    """Má účet kus, pre ktorý by set z Chcem vyradil `drop_bought`?
+
+    Vlastnený aj rezervovaný kus áno, predaný nie. Späť po automatickom
+    uložení podľa toho nevráti do Chcem set, ktorý medzitým uložil ďalší sken.
+    """
+    found = await session.scalar(
+        select(CollectionItem.id)
+        .where(
+            CollectionItem.user_id == user_id,
+            CollectionItem.catalog_num == catalog_num,
+            CollectionItem.status != ItemStatus.SOLD,
+        )
+        .limit(1)
+    )
+    return found is not None
 
 
 WishSort = Literal["distance", "market", "target", "name", "theme", "added"]

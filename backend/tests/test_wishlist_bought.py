@@ -218,3 +218,66 @@ async def test_selling_later_does_not_touch_the_wishlist(auth_client: AsyncClien
     )
     assert response.status_code == 200, response.text
     assert await _wished(auth_client) == {"10294-1"}
+
+
+async def test_undo_after_a_scan_leaves_out_a_set_still_owned(
+    auth_client: AsyncClient, session
+) -> None:
+    """Späť po automatickom uložení nevráti do Chcem set, ktorý ešte mám.
+
+    Rýchle skenovanie X, Y, X: druhý kus X uložil ďalší sken, Späť prvého
+    uloženia zmaže len prvý kus. S ``?unless_owned=true`` server položku nepridá
+    a odpovie 204. Vlastnený aj rezervovaný kus sa ráta, predaný nie, tak
+    ako pri vyraďovaní (``drop_bought``).
+    """
+    await _seed(session)
+    wish = await _wish(auth_client, "10294-1", target_price_eur="450")
+    [first] = await _add(auth_client, "10294-1")
+    [second] = await _add(auth_client, "10294-1")
+    removed = first["removed_from_wishlist"]
+    back = {
+        "catalog_num": removed["catalog_num"],
+        "target_price_eur": removed["target_price_eur"],
+        "created_at": removed["created_at"],
+    }
+    unless_owned = {"unless_owned": "true"}
+    deleted = await auth_client.delete(f"/items/{first['id']}")
+    assert deleted.status_code == 204, deleted.text
+
+    kept = await auth_client.post("/wishlist", json=back, params=unless_owned)
+    assert kept.status_code == 204, kept.text
+    assert await _wished(auth_client) == set()
+
+    # Rezervovaný kus je ešte môj.
+    me = (await auth_client.get("/auth/me")).json()
+    session.add(CollectionItem(user_id=me["id"], catalog_num="10294-1", status=ItemStatus.RESERVED))
+    await session.commit()
+    await auth_client.delete(f"/items/{second['id']}")
+    again = await auth_client.post("/wishlist", json=back, params=unless_owned)
+    assert again.status_code == 204, again.text
+
+    # Ostal len predaný kus: set sa vráti, aj s pôvodným dátumom.
+    [reserved] = (await auth_client.get("/items", params={"status": "all"})).json()
+    sold = await auth_client.post(
+        f"/items/{reserved['id']}/sell", json={"sold_price_eur": "700", "sold_date": "2026-09-01"}
+    )
+    assert sold.status_code == 200, sold.text
+    restored = await auth_client.post("/wishlist", json=back, params=unless_owned)
+    assert restored.status_code == 201, restored.text
+    [row] = (await auth_client.get("/wishlist")).json()
+    assert (row["target_price_eur"], row["created_at"]) == ("450.00", wish["created_at"])
+
+
+async def test_undo_without_the_flag_returns_the_wish_even_when_owned(
+    auth_client: AsyncClient, session
+) -> None:
+    """Späť pri „Odstránené z Chcem“ po tlačidle: kúpa platí, Chcem sa vráti aj tak."""
+    await _seed(session)
+    await _wish(auth_client, "10294-1")
+    [item] = await _add(auth_client, "10294-1")
+
+    response = await auth_client.post(
+        "/wishlist", json={"catalog_num": item["removed_from_wishlist"]["catalog_num"]}
+    )
+    assert response.status_code == 201, response.text
+    assert await _wished(auth_client) == {"10294-1"}

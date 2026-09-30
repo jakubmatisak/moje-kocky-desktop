@@ -2,11 +2,10 @@
 
 import csv
 import io
-from datetime import UTC
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from sqlalchemy import select
 
 from lego_api.auth.deps import AdminUser, CurrentKeys, CurrentUser, SessionDep
@@ -33,7 +32,14 @@ from lego_api.services.app_settings import (
 from lego_api.services.catalog import CatalogService
 from lego_api.services.filters import known_value
 from lego_api.services.portfolio import load_items, load_snapshots, value_items
-from lego_api.services.wishlist import WishFilter, WishSort, arrange, wishlist_prices
+from lego_api.services.wishlist import (
+    WishFilter,
+    WishSort,
+    added_at,
+    arrange,
+    still_bought,
+    wishlist_prices,
+)
 
 router = APIRouter(tags=["misc"])
 SettingsDep = Annotated[Settings, Depends(get_settings)]
@@ -68,14 +74,31 @@ async def list_wishlist(
     return arrange(rows, f, sort, direction)
 
 
-@router.post("/wishlist", response_model=WishlistOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/wishlist",
+    response_model=WishlistOut,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_204_NO_CONTENT: {
+            "description": "S unless_owned: set účet ešte má, do Chcem sa nevrátil."
+        }
+    },
+)
 async def add_wishlist(
     payload: WishlistCreateRequest,
     user: CurrentUser,
     session: SessionDep,
     settings: SettingsDep,
     keys: CurrentKeys,
-) -> WishlistItem:
+    unless_owned: bool = False,
+) -> WishlistItem | Response:
+    """Pridá set do Chcem; Späť po kúpe ho vracia aj s pôvodnými údajmi.
+
+    ``unless_owned``: Späť po automatickom uložení zo skenu. Set, ktorý účet
+    ešte má (vlastnený alebo rezervovaný kus, ako pri vyraďovaní), sa nepridá
+    a odpoveď je 204: kúpený set v Chcem nie je. Späť pri „Odstránené z Chcem“
+    ho neposiela, tam kúpa platí a Chcem sa vráti aj tak.
+    """
     catalog = await CatalogService(session, settings, keys).resolve(payload.catalog_num)
     if catalog is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Set sa nenašiel")
@@ -86,6 +109,8 @@ async def add_wishlist(
     )
     if existing is not None:
         raise HTTPException(status.HTTP_409_CONFLICT, "Set už v zozname je")
+    if unless_owned and await still_bought(session, user.id, catalog.catalog_num):
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
     item = WishlistItem(
         user_id=user.id,
         catalog_num=catalog.catalog_num,
@@ -93,10 +118,8 @@ async def add_wishlist(
         note=payload.note,
     )
     if payload.created_at is not None:
-        # Späť po kúpe vracia položku na jej pôvodné miesto v zozname. Dátum
-        # bez pásma je UTC, tak ho appka ukladá aj vracia.
-        added = payload.created_at
-        item.created_at = added.astimezone(UTC) if added.tzinfo else added.replace(tzinfo=UTC)
+        # Späť po kúpe vracia položku na jej pôvodné miesto v zozname.
+        item.created_at = added_at(payload.created_at)
     session.add(item)
     await session.commit()
     await session.refresh(item, ["catalog"])

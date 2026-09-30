@@ -517,18 +517,19 @@ class SummaryOut(BaseModel):
     wishlist_hits: int = 0
     #: Pre čísla v ponuke: položky v Chcem, figúrky zo sérií, témy.
     wishlist_count: int = 0
+    #: Rôzne vlastnené figúrky zo sérií (aj blind-box ako Mighty Machines),
+    #: sáčok nie. Bez rozsahu ponuka Figúrky, s rozsahom dlaždica Zbierka.
     series_figures: int = 0
     theme_count: int = 0
     #: Sekcia Zbierka (ponuka a jej hlavička): rôzne sety, vlastnené a predané
     #: kusy bez figúrok zo sérií. ``set_count`` a spol. počítajú všetko.
+    #: S rozsahom Prehľadu hlavné číslo dlaždice Zbierka.
     collection_set_count: int = 0
     collection_item_count: int = 0
     collection_sold_count: int = 0
-    #: Dlaždica Zbierka na Prehľade: ``set_count`` v rozsahu rozdelený na
-    #: samostatné sety a figúrky zo sérií (``filters.kind_of``, aj blind-box
-    #: a sáčok). Na rozdiel od ``series_figures`` pre ponuku ráta aj sáčok.
-    standalone_set_count: int = 0
-    figure_count: int = 0
+    #: Vlastnené nerozbalené sáčky sérií, každý kus (dlaždica Zbierka, ako
+    #: ``sealed_bags`` vo Figúrkach). Figúrka v nich ešte nie je známa.
+    sealed_bag_count: int = 0
     themes: list[ThemeSliceOut]
     top_profit: list[TopProfitOut]
     #: Pri ``real=true`` posledný mesiac indexu inflácie, ku ktorému sú sumy

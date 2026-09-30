@@ -431,14 +431,18 @@
 
   /**
    * Späť po automatickom uložení: zmaže práve tie kusy, nič iné, a do Chcem
-   * vráti, čo z neho uloženie vyradilo.
+   * vráti, čo z neho uloženie vyradilo. Až po zmazaní a len set, ktorý už
+   * nemám: pri skenoch X, Y, X uložil ďalší sken druhý kus X a kúpený set
+   * v Chcem nie je.
    */
   async function undoSave (saved: Saved): Promise<void> {
     const failed = await undoCreated(saved.ids, async id => {
       const { error: err } = await api.DELETE('/items/{item_id}', { params: { path: { item_id: id } } })
       return !err
-    }) + await wishlist.restore(saved.wishes)
-    if (failed > 0) notify.error(t('notice.undoFailed'))
+    })
+    const back = await wishlist.restore(saved.wishes, { unlessOwned: true })
+    if (failed + back.failed > 0) notify.error(t('notice.undoFailed'))
+    else if (back.kept.length > 0) notify.success(t('notice.undoneStillOwned', { what: wishlist.what(back.kept) }))
     else notify.success(t(saved.wishes.length > 0 ? 'notice.undoneWish' : 'notice.undone'))
     collection.refreshAll()
   }

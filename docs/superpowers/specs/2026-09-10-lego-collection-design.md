@@ -616,16 +616,23 @@ Podrobnosti:
   v Rebrickable pod témou Shrek). Set sa ráta v jedinej téme (`assign`):
   stiahnutá vlna, ktorú účet vidí; potom téma a rok z údajov Brickset
   o sete (`bs_theme`, `bs_year`, len s prístupom kľúča); až keď Brickset
-  set nepozná, téma a rok z katalógu. Set, ktorý Brickset do stiahnutej
-  vlny jeho témy a roka nedal, je nie-set a neráta sa nikde.
+  set nepozná, téma a rok z katalógu. Nie-set je, čo Brickset vedie
+  v inej kategórii než Normal či Extended (`brickset_facts.category`).
+  Staršie údaje kategóriu nemajú: set vtedy vyradí len vlna jeho témy
+  a roka stiahnutá neskôr, než o ňom Brickset odpovedal. Vlna staršia než
+  údaj setu je stará (Brickset set pridal potom): set sa ráta, rok je
+  odhad a otvorenie roka vlnu stiahne znova. Set bez údajov Brickset sa
+  podľa roka z Rebrickable nezahadzuje.
 - Rátajú sa len sety (`counts_as_set`): figúrky zo sérií (minifigúrky aj
   blind-box), zatvorený sáčok pod číslom série ani holá figúrka nie.
   Platí to pre témy, roky, vlnu aj počet pri Sériách v ponuke
-  (`theme_names`).
+  (`theme_names`). Ten ráta len témy zo zoznamu Brickset, rovnako ako
+  zoznam Sérií; kým zoznam nie je v pamäti, len témy od Brickset.
 - „V zbierke“ nikdy neprekročí počet setov témy ani roka. Téma je
   kompletná (`complete`, zelený pruh), len keď sa počty naozaj zhodujú a vo
   stiahnutých vlnách nič nechýba; orezaný počet je plný pruh, ale žltý.
-- Kým vlna nie je stiahnutá, počet pri roku je odhad, potom je presný.
+- Kým vlna nie je stiahnutá, počet pri roku je odhad, potom je presný
+  (odhad ostane, keď v nej chýba môj set).
 
 **Vlastné kategórie** (`services/categories.py`):
 

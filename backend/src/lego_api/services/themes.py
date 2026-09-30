@@ -10,9 +10,10 @@ nie vždy zhodujú: staršie Botanicals vedie Brickset pod Icons, figúrky
 série Shrek Rebrickable pod témou Shrek. Set sa preto ráta v jedinej téme,
 kam ho dáva Brickset (``assign``): stiahnutá vlna (presné), potom údaj
 setu z Brickset, ktorý účet vidí, a až keď Brickset set nepozná, meno
-témy z Rebrickable. Rátajú sa len sety (``counts_as_set``). Kým sa vlna
-nestiahne, počet vlastnených v roku je odhad; po stiahnutí je presný.
-„V zbierke“ nikdy neprekročí počet setov témy ani roka.
+témy z Rebrickable. Rátajú sa len sety (``counts_as_set``, kategória
+Brickset). Kým sa vlna nestiahne, počet vlastnených v roku je odhad; po
+stiahnutí je presný, kým v nej nechýba môj set, ktorý Brickset pridal
+neskôr. „V zbierke“ nikdy neprekročí počet setov témy ani roka.
 """
 
 from collections import Counter
@@ -20,14 +21,14 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import delete, select
+from sqlalchemy import and_, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from lego_api import visibility
 from lego_api.models import CatalogItem, CatalogKind, CollectionItem, ItemStatus, WishlistItem
 from lego_api.models.base import utcnow
 from lego_api.models.theme import ThemeWave, ThemeWaveSet
-from lego_api.providers.brickset import BricksetProvider
+from lego_api.providers.brickset import WAVE_CATEGORIES, BricksetProvider
 from lego_api.services import access
 from lego_api.services.catalog import store_brickset
 from lego_api.services.fetch_policy import CallBlocked
@@ -102,41 +103,66 @@ def wave_subject(theme: str, year: int) -> str:
     return f"wave:{theme}:{year}"
 
 
-async def _wave_sets(session: AsyncSession) -> dict[tuple[str, int], set[str]]:
-    stmt = select(ThemeWaveSet.theme, ThemeWaveSet.year, ThemeWaveSet.catalog_num)
-    out: dict[tuple[str, int], set[str]] = {}
+@dataclass
+class Waves:
+    """Stiahnuté vlny, ktoré účet vidí."""
+
+    #: (téma, rok) → sety vlny.
+    sets: dict[tuple[str, int], set[str]]
+    #: (téma malými písmenami, rok) → kedy sa vlna naposledy stiahla.
+    fetched: dict[tuple[str, int], datetime]
+
+
+async def _waves(session: AsyncSession) -> Waves:
+    stmt = select(
+        ThemeWaveSet.theme, ThemeWaveSet.year, ThemeWaveSet.catalog_num, ThemeWave.fetched_at
+    ).outerjoin(
+        ThemeWave, and_(ThemeWave.theme == ThemeWaveSet.theme, ThemeWave.year == ThemeWaveSet.year)
+    )
+    out = Waves(sets={}, fetched={})
     vis = visibility.current()
-    for t, y, num in (await session.execute(stmt)).all():
+    for t, y, num, at in (await session.execute(stmt)).all():
         # Vlna je zoznam z Brickset: len tie, ktoré si stiahol kľúč účtu.
         if vis.sees(BRICKSET, wave_subject(t, y)):
-            out.setdefault((t, y), set()).add(num)
+            out.sets.setdefault((t, y), set()).add(num)
+            if at is not None:
+                out.fetched[(t.lower(), y)] = _aware(at)
     return out
+
+
+#: Odkiaľ je téma a rok setu v Sériách (``Placement.source``).
+FROM_WAVE = "wave"
+FROM_BRICKSET = "brickset"
+FROM_REBRICKABLE = "rebrickable"
 
 
 @dataclass(frozen=True)
 class Placement:
-    """Téma a rok, pod ktorými sa set v Sériách ráta."""
+    """Téma a rok, pod ktorými sa set v Sériách ráta, a odkiaľ to vieme."""
 
     theme: str
     year: int | None
+    source: str = FROM_WAVE
 
 
-def assign(
-    catalogs: Iterable[CatalogItem], waves: dict[tuple[str, int], set[str]]
-) -> dict[str, Placement]:
+def assign(catalogs: Iterable[CatalogItem], waves: Waves) -> dict[str, Placement]:
     """Každý set do jednej témy podľa Brickset.
 
     Prednosť: stiahnutá vlna, ktorú účet vidí (presné); potom téma a rok
     z údajov Brickset o sete (``bs_theme``, len s prístupom kľúča); až keď
-    Brickset set nepozná, téma a rok z katalógu (Rebrickable). Set, ktorý
-    patrí do stiahnutej vlny svojej témy a roka a Brickset ho do nej nedal
-    (kolekcia, kniha…), setom nie je a nepriradí sa nikam.
+    Brickset set nepozná, téma a rok z katalógu (Rebrickable).
+
+    Setom nie je, čo Brickset vedie v inej kategórii než Normal či Extended
+    (kolekcia, kniha…). Staršie údaje kategóriu nemajú: vtedy rozhodne vlna
+    jeho témy a roka, ak sa stiahla neskôr, než Brickset o sete odpovedal,
+    a set v nej nie je. Vlna staršia než údaj setu je stará (Brickset set
+    pridal potom), set sa ráta a rok je len odhad. Bez údajov Brickset sa
+    set podľa roka z Rebrickable nezahadzuje: s Brickset sa nemusí zhodovať.
     """
     homes: dict[str, list[tuple[str, int]]] = {}
-    for key in sorted(waves):
-        for num in waves[key]:
+    for key in sorted(waves.sets):
+        for num in waves.sets[key]:
             homes.setdefault(num, []).append(key)
-    downloaded = {(theme.lower(), year) for theme, year in waves}
 
     out: dict[str, Placement] = {}
     for catalog in catalogs:
@@ -149,13 +175,18 @@ def assign(
             )
             out[catalog.catalog_num] = Placement(theme, year)
             continue
-        if bs_theme:
-            name, when = bs_theme, catalog.bs_year or catalog.year
-        else:
-            name, when = catalog.theme, catalog.year
-        if not name or (when is not None and (name.lower(), when) in downloaded):
+        category = catalog.bs_category
+        if category is not None and category not in WAVE_CATEGORIES:
             continue
-        out[catalog.catalog_num] = Placement(name, when)
+        if bs_theme:
+            when = catalog.bs_year or catalog.year
+            wave_at = waves.fetched.get((bs_theme.lower(), when)) if when is not None else None
+            seen_at = catalog.bs_fetched_at
+            if wave_at is not None and seen_at is not None and wave_at >= _aware(seen_at):
+                continue
+            out[catalog.catalog_num] = Placement(bs_theme, when, FROM_BRICKSET)
+        elif catalog.theme:
+            out[catalog.catalog_num] = Placement(catalog.theme, catalog.year, FROM_REBRICKABLE)
     return out
 
 
@@ -165,20 +196,53 @@ class _Mine:
 
     sets: set[str]
     placed: dict[str, Placement]
-    waves: dict[tuple[str, int], set[str]]
+    waves: Waves
+
+    def extra(self, theme: str, year: int) -> set[str]:
+        """Moje sety, ktoré patria do stiahnutej vlny, ale v nej nie sú (``assign``)."""
+        if (theme, year) not in self.waves.sets:
+            return set()
+        key = theme.lower()
+        return {
+            num
+            for num, p in self.placed.items()
+            if p.source != FROM_WAVE and p.theme.lower() == key and p.year == year
+        }
 
 
 async def _mine(session: AsyncSession, user_id: int) -> _Mine:
     catalogs = {i.catalog_num: i.catalog for i in await _owned_sets(session, user_id)}
-    waves = await _wave_sets(session)
+    waves = await _waves(session)
     return _Mine(set(catalogs), assign(catalogs.values(), waves), waves)
 
 
+def known_themes() -> set[str] | None:
+    """Mená tém z Brickset (malými písmenami), ak je ich zoznam v pamäti procesu.
+
+    Na meno témy sa dá spoľahnúť aj po dni, na počty nie, preto sa vek
+    zoznamu tu nepozerá.
+    """
+    if _themes_cache is None:
+        return None
+    return {(t.get("theme") or "").lower() for t in _themes_cache[1]}
+
+
 async def theme_names(session: AsyncSession, items: Iterable[CollectionItem]) -> set[str]:
-    """Témy (malými písmenami), v ktorých mám set; počet pri Sériách v ponuke."""
+    """Témy (malými písmenami), ktoré Série ukážu medzi mojimi; počet pri Sériách v ponuke.
+
+    Ako ``overview``: téma musí byť v zozname Brickset. Meno z Rebrickable
+    (set bez údajov Brickset) môže byť podtéma, ktorú Brickset nemá
+    („Modular Buildings“). Kým zoznam tém v pamäti nie je, rátajú sa preto
+    len témy od Brickset (vlna, údaj setu).
+    """
     catalogs = {i.catalog_num: i.catalog for i in items if counts_as_set(i)}
-    placed = assign(catalogs.values(), await _wave_sets(session))
-    return {p.theme.lower() for p in placed.values()} - SKIP_THEMES
+    placed = assign(catalogs.values(), await _waves(session)).values()
+    known = known_themes()
+    if known is None:
+        names = {p.theme.lower() for p in placed if p.source != FROM_REBRICKABLE}
+    else:
+        names = {p.theme.lower() for p in placed} & known
+    return names - SKIP_THEMES
 
 
 def _complete(raw: int, total: int, in_waves: set[str], owned: set[str]) -> bool:
@@ -225,7 +289,7 @@ async def overview(
         if t is not None:
             placed.setdefault(t["theme"], set()).add(num)
     in_waves: dict[str, set[str]] = {}
-    for (theme, _year), nums in mine.waves.items():
+    for (theme, _year), nums in mine.waves.sets.items():
         in_waves.setdefault(theme.lower(), set()).update(nums)
 
     def row(t: dict) -> ThemeRow:
@@ -257,7 +321,7 @@ class YearRow:
     set_count: int
     #: Najviac ``set_count``.
     owned: int
-    #: Presný počet (vlna je stiahnutá), alebo odhad podľa údajov setov (``assign``).
+    #: Presný počet (vlna je stiahnutá a nechýba v nej môj set), alebo odhad (``assign``).
     exact: bool
 
 
@@ -282,15 +346,20 @@ async def years(
             year = int(r.get("year"))
         except (TypeError, ValueError):
             continue
-        nums = mine.waves.get((theme, year))
+        nums = mine.waves.sets.get((theme, year))
+        extra = mine.extra(theme, year)
         if nums is not None:
             # Po stiahnutí vlny jej skutočný počet: Brickset ráta aj kolekcie,
-            # ktoré do úplnosti nepatria.
-            set_count, owned = len(nums), len(nums & mine.sets)
+            # ktoré do úplnosti nepatria. Môj set, ktorý vo vlne chýba (pribudol
+            # po stiahnutí, alebo ho Brickset ešte nepozná), sa pripočíta a počet
+            # je len odhad.
+            set_count = len(nums) + len(extra)
+            owned = len(nums & mine.sets) + len(extra)
         else:
             set_count = r.get("setCount") or 0
             owned = min(guess.get(year, 0), set_count)
-        result.append(YearRow(year=year, set_count=set_count, owned=owned, exact=nums is not None))
+        exact = nums is not None and not extra
+        result.append(YearRow(year=year, set_count=set_count, owned=owned, exact=exact))
     result.sort(key=lambda r: -r.year)
     return result
 
@@ -323,6 +392,15 @@ def _needs_fetch(row: ThemeWave | None, year: int, now: datetime, force: bool) -
     return fresh_year and now - _aware(row.fetched_at) >= WAVE_REFRESH
 
 
+async def _outdated(session: AsyncSession, user_id: int, theme: str, year: int) -> bool:
+    """Vlna je dokázateľne stará: Brickset po jej stiahnutí dal môj set do tejto témy a roka.
+
+    Po novom stiahnutí je vlna novšia než údaj setu, takže sa to neopakuje.
+    """
+    mine = await _mine(session, user_id)
+    return any(mine.placed[num].source == FROM_BRICKSET for num in mine.extra(theme, year))
+
+
 async def wave(
     session: AsyncSession,
     provider: BricksetProvider,
@@ -335,7 +413,12 @@ async def wave(
     now = utcnow()
     seen = visibility.current().sees(BRICKSET, wave_subject(theme, year))
     # Vlnu, ktorú stiahol iný kľúč, si tento kľúč stiahne sám (inak ju nevidí).
-    if provider.enabled and (not seen or _needs_fetch(row, year, now, force)):
+    # Starú vlnu aj pred uplynutím WAVE_REFRESH, keď v nej chýba môj nový set.
+    if provider.enabled and (
+        not seen
+        or _needs_fetch(row, year, now, force)
+        or await _outdated(session, user_id, theme, year)
+    ):
         try:
             metas = await provider.get_wave(theme, year)
         except CallBlocked:

@@ -555,10 +555,19 @@ Témy pomenúva Brickset, katalóg má tému z Rebrickable a nezhodujú sa
 pod Shrek). Set sa preto ráta v jedinej téme podľa `themes.py::assign`:
 stiahnutá vlna, ktorú účet vidí, potom `bs_theme`/`bs_year` (brickset_facts,
 len s prístupom kľúča), až keď Brickset set nepozná, téma a rok z katalógu.
-Set, ktorý Brickset do stiahnutej vlny jeho témy a roka nedal, je nie-set.
+Nie-set je, čo má v `brickset_facts.category` inú kategóriu než
+Normal/Extended; staršie údaje ju nemajú a vtedy set vyradí len vlna jeho
+témy a roka stiahnutá neskôr, než Brickset o sete odpovedal (`fetched_at`).
+Vlna staršia než údaj setu je stará: set sa ráta, rok je odhad (≈)
+a otvorenie roka ju stiahne znova hneď (`_outdated`, jedno getSets, potom
+je vlna novšia a znova nie). Set bez údajov Brickset sa podľa roka
+z Rebrickable nezahadzuje, v stiahnutej vlne je len odhad.
 Rátajú sa len sety (`counts_as_set`: nie figúrky zo sérií podľa
 `filters.series_num`, sáčok pod číslom série ani holá figúrka), aj vo vlne
-a v počte Sérií v ponuke (`theme_names`). „V zbierke“ je najviac počet
+a v počte Sérií v ponuke (`theme_names`). Ten ráta len témy zo zoznamu
+Brickset ako `overview` (`known_themes`, zoznam v pamäti procesu); kým
+zoznam nie je načítaný, len témy od Brickset, nie mená z Rebrickable
+(podtéma Modular Buildings v Brickset nie je). „V zbierke“ je najviac počet
 setov témy či roka; či je téma naozaj celá, povie `ThemeOut.complete`
 (úplná zhoda a vo vlnách nič nechýba) a len vtedy je `SeriesBar` zelený,
 aj filter Nekompletné ide podľa neho. Prop `complete` má predvolené
@@ -719,7 +728,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 646 testov, frontend 235. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 650 testov, frontend 235. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

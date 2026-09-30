@@ -188,6 +188,10 @@ class CatalogItem(Base):
     #: Téma a rok tak, ako ich vedie Brickset (Série), nie zmes zdrojov ako ``theme``.
     bs_theme = _facts_field(visibility.BRICKSET, "bs_theme", "theme")
     bs_year = _facts_field(visibility.BRICKSET, "bs_year", "year")
+    #: Kategória Brickset: Normal a Extended sú sety, kolekcie a iné nie.
+    bs_category = _facts_field(visibility.BRICKSET, "bs_category", "category")
+    #: Kedy o sete Brickset naposledy odpovedal (getSets); vlna staršia než to je stará.
+    bs_fetched_at = _facts_field(visibility.BRICKSET, "bs_fetched_at", "fetched_at")
 
     subtheme = _facts_field(visibility.BRICKECONOMY, "subtheme")
     retired_date = _facts_field(visibility.BRICKECONOMY, "retired_date")

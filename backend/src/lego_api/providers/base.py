@@ -40,6 +40,8 @@ class CatalogMetadata:
     image_count: int | None = None
     #: Plná odpoveď Brickset (``extendedData``: popis, štítky). Vlna ju nemá.
     extended: bool = False
+    #: Kategória Brickset (Normal, Extended, Collection, Gear…): je to set?
+    category: str | None = None
     source: str = "manual"
     extras: dict[str, str] = field(default_factory=dict)
 

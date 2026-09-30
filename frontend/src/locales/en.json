@@ -306,7 +306,8 @@
     "edited": "Saved: {name}",
     "setTarget": "Set",
     "targetHint": "You get a notice when the market price drops to this amount or below. Empty = no target.",
-    "note": "Note"
+    "note": "Note",
+    "itemsPlural": "{count} item | {count} items"
   },
   "settings": {
     "title": "Settings",
@@ -1045,6 +1046,10 @@
     "undo": "Undo",
     "undone": "Undone, pieces removed from the collection",
     "undoFailed": "Undo failed",
+    "autoSavedWish": "Saved: {num} {name} ×{count}, removed from wishlist",
+    "undoneWish": "Undone, pieces removed from the collection and the wishlist is as it was",
+    "wishDropped": "Removed from wishlist: {what}",
+    "wishRestored": "Back in the wishlist: {what}",
     "seriesNotSaved": "Series {name} was not saved, no minifigure selected",
     "catalogSaved": "Set {num} saved to the catalog",
     "saved": "Saved",

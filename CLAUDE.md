@@ -305,9 +305,20 @@ názvu, nielen podľa nula dielikov: kompletná sada má niekedy dieliky všetk�
 kusov. Ukladajú sa do `blind_series` s kategóriou; členovia sú `kind=set`,
 cenia sa ako sety. Minifigúrky ostávajú v `cmf_series`, oddelene.
 
-**„Kúpil som“ je jeden dialóg pre všetko.** `components/PurchaseDialog.vue`
-pridá do zbierky vec, ktorú katalóg už pozná, z Chcem aj z chýbajúcej
-figúrky. Po uložení ju vždy vyhodí z Chcem, nech sa kupovalo odkiaľkoľvek.
+**„Kúpil som“ je jeden dialóg pre všetko, z Chcem vyraďuje server.**
+`components/PurchaseDialog.vue` pridá do zbierky vec, ktorú katalóg už
+pozná, z Chcem aj z chýbajúcej figúrky; Chcem sám nemaže. Kúpené vyradí
+server pri každom pridaní: `services/wishlist.py::drop_bought` v tej istej
+transakcii volajú `POST /items`, `/items/bulk` aj import (Pridať set
+číslom aj skenom, Mám ju, Mám všetky, ďalší kus). Porovnáva katalógové
+číslo: figúrka vyradí seba, sáčok pod holým číslom sériu; vlastnený aj
+rezervovaný kus áno, predaný nie. Pôvodnú položku nesie
+`removed_from_wishlist` na prvom kuse setu (viac kusov vyradí raz) a Späť
+ju vráti cez `POST /wishlist` aj s `created_at`
+(`composables/useWishlistReturn.ts`). Pridať set ukáže po tlačidle
+samostatné „Odstránené z Chcem“ so Späť len pre Chcem, po automatickom
+uložení zo skenu jedno oznámenie a jedno Späť pre kusy aj Chcem. Import
+Chcem z importov nechá (`keep_imported`) a vyradené si pamätá na vrátenie.
 
 **Katalógové vzťahy sa načítavajú výslovným dotazom.** `CatalogItem` zámerne
 nemá ORM vzťah na členov série. Lenivé načítanie v asynchrónnej session padne
@@ -676,7 +687,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 625 testov, frontend 209. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 634 testov, frontend 216. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

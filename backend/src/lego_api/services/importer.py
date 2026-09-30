@@ -41,6 +41,7 @@ from lego_api.providers.brickset import BricksetProvider
 from lego_api.services.catalog import CatalogService
 from lego_api.services.import_file import OWNED, SOLD, WISH, ParsedFile
 from lego_api.services.keys import UserKeys
+from lego_api.services.wishlist import drop_bought
 
 log = logging.getLogger(__name__)
 
@@ -319,9 +320,8 @@ async def commit(
         )
     await classify(session, user_id, batch)
 
-    pieces = 0
+    pieces: list[CollectionItem] = []
     wishes_created = 0
-    bought: set[str] = set()
     for row in batch.rows:
         wanted = row["state"] == OK or (
             row["state"] == DUPLICATE
@@ -344,7 +344,7 @@ async def commit(
             continue
         sold = row["ownership"] == SOLD
         for _ in range(row["quantity"]):
-            session.add(
+            pieces.append(
                 CollectionItem(
                     user_id=user_id,
                     catalog_num=row["catalog_num"],
@@ -367,37 +367,13 @@ async def commit(
                     import_batch_id=batch.id,
                 )
             )
-            pieces += 1
-        if not sold:
-            bought.add(row["catalog_num"])
+    session.add_all(pieces)
 
-    # Kúpené sa vyradí z Chcem, ako pri ručnom „Kúpil som“. Vrátenie ho obnoví.
-    removed: list[dict] = []
-    if bought:
-        stale = (
-            await session.execute(
-                select(WishlistItem).where(
-                    WishlistItem.user_id == user_id,
-                    WishlistItem.catalog_num.in_(bought),
-                    WishlistItem.import_batch_id.is_(None),
-                )
-            )
-        ).scalars()
-        for wish in stale:
-            removed.append(
-                {
-                    "catalog_num": wish.catalog_num,
-                    "target_price_eur": str(wish.target_price_eur)
-                    if wish.target_price_eur is not None
-                    else None,
-                    "note": wish.note,
-                    "created_at": wish.created_at.isoformat(),
-                }
-            )
-            await session.delete(wish)
+    # Kúpené sa vyradí z Chcem, ako pri každom pridaní kusu. Vrátenie ho obnoví.
+    dropped = await drop_bought(session, user_id, pieces, keep_imported=True)
 
-    batch.removed_wishes = removed
-    batch.pieces_created = pieces
+    batch.removed_wishes = [wish.as_json() for wish in dropped.values()]
+    batch.pieces_created = len(pieces)
     batch.wishes_created = wishes_created
     batch.state = ImportState.COMMITTED
     batch.committed_at = utcnow()

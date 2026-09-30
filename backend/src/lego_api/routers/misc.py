@@ -2,6 +2,7 @@
 
 import csv
 import io
+from datetime import UTC
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -91,6 +92,11 @@ async def add_wishlist(
         target_price_eur=payload.target_price_eur,
         note=payload.note,
     )
+    if payload.created_at is not None:
+        # Späť po kúpe vracia položku na jej pôvodné miesto v zozname. Dátum
+        # bez pásma je UTC, tak ho appka ukladá aj vracia.
+        added = payload.created_at
+        item.created_at = added.astimezone(UTC) if added.tzinfo else added.replace(tzinfo=UTC)
     session.add(item)
     await session.commit()
     await session.refresh(item, ["catalog"])

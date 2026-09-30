@@ -306,7 +306,8 @@
     "edited": "Uložené: {name}",
     "setTarget": "Zadať",
     "targetHint": "Upozorním, keď trhová cena klesne na túto sumu alebo pod ňu. Prázdne = bez cieľa.",
-    "note": "Poznámka"
+    "note": "Poznámka",
+    "itemsPlural": "{count} položka | {count} položky | {count} položiek"
   },
   "settings": {
     "title": "Nastavenia",
@@ -1045,6 +1046,10 @@
     "undo": "Späť",
     "undone": "Vrátené, kusy sú zo zbierky preč",
     "undoFailed": "Vrátenie sa nepodarilo",
+    "autoSavedWish": "Uložené: {num} {name} ×{count}, odstránené z Chcem",
+    "undoneWish": "Vrátené, kusy sú zo zbierky preč a Chcem je ako predtým",
+    "wishDropped": "Odstránené z Chcem: {what}",
+    "wishRestored": "Vrátené do Chcem: {what}",
     "seriesNotSaved": "Séria {name} sa neuložila, nevybral si žiadnu figúrku",
     "catalogSaved": "Set {num} je uložený v katalógu",
     "saved": "Uložené",

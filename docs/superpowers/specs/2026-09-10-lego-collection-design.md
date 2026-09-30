@@ -310,7 +310,8 @@ Dva kusy toho istého setu sa môžu líšiť stavom, cenou aj umiestnením.
   `price_kind` (SET / MINIFIG), `condition` (N / U), `avg_price`,
   `min_price`, `max_price`, `qty`, `currency`, `captured_at`.
 - **`wishlist_items`**: Chcem, jeden set najviac raz na účet, s
-  `target_price_eur` a `note`.
+  `target_price_eur`, `note` a `created_at`. Kúpený set z neho vyradí
+  server pri každom pridaní kusu (`services/wishlist.py::drop_bought`).
 - **`categories`**: vlastné kategórie (`name`, `color`, `rules` JSON,
   `sort_order`).
 - **`category_items`**: ručné zaradenie alebo vylúčenie setu (`mode`
@@ -735,6 +736,13 @@ Podrobnosti:
 - Jedno pole na číslo alebo EAN a jedno tlačidlo hľadania; čítačka
   čiarového kódu kamerou alebo z fotky.
 - Výrazný pás „už ho máš“ s počtom kusov a umiestnením.
+- **Z Chcem** set pri uložení vyradí server; odpoveď `POST /items`
+  (`/items/bulk`) nesie pôvodnú položku v `removed_from_wishlist` na prvom
+  kuse setu. Po uložení tlačidlom je vedľa „Pridané do zbierky“ oznámenie
+  „Odstránené z Chcem“ so Späť, ktoré ju vráti s cieľovou cenou, poznámkou
+  aj dátumom pridania; kusy ostanú. Automatické uloženie po skene má jedno
+  oznámenie a jedno Späť: zmaže kusy a vráti Chcem, stav pred skenom
+  (druhé Späť by pri rýchlom skenovaní zapratalo obrazovku).
 - Pri sérii mriežka figúrok so stepperom, „všetky“ a „nerozbalený sáčok“.
 - Formulár: počet, stav, príznaky, cena, dátum, kde kúpené, kde uložené,
   zoznam a kategórie.
@@ -798,6 +806,11 @@ cieľová a trhová cena a vzdialenosť od cieľa
 (`distance_pct`). Radí a filtruje server (`GET /wishlist?sort=distance|
 market|target|name|theme|added&dir=&q=&reached=&retired=&no_price=`),
 predvolene najbližšie k cieľu navrch, prázdne hodnoty na konci. „Kúpil som“ presunie položku do zbierky, bez hľadania.
+Z Chcem ju vyradí server, rovnako ako každé iné pridanie kusu (Pridať set
+číslom aj skenom, Mám ju, Mám všetky, Ďalší kus, import): porovnáva sa
+katalógové číslo, vyraďuje vlastnený aj rezervovaný kus, predaný nie
+(dodatočne zapísaný predaj neznamená, že set už nechcem). `POST /wishlist`
+berie `created_at`, aby Späť vrátil položku na jej pôvodné miesto.
 
 **Nastavenia** (`/nastavenia`):
 

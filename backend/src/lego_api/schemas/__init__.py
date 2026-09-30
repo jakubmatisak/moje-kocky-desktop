@@ -323,6 +323,22 @@ class ItemOut(ORMModel):
     catalog: CatalogOut
 
 
+class RemovedWishOut(ORMModel):
+    """Položka Chcem, ktorú kúpa vyradila, s tým, čo treba na Späť."""
+
+    catalog_num: str
+    name: str
+    target_price_eur: Money | None
+    note: str | None
+    created_at: datetime
+
+
+class ItemCreatedOut(ItemOut):
+    #: Set tohto kusu bol v Chcem a pridanie ho odtiaľ vyradilo. Pri viacerých
+    #: kusoch toho istého setu to nesie len prvý, vyradilo sa raz.
+    removed_from_wishlist: RemovedWishOut | None = None
+
+
 class ValuedItemOut(ItemOut):
     market_value: Money
     price_source: str
@@ -579,6 +595,8 @@ class WishlistCreateRequest(BaseModel):
     catalog_num: str
     target_price_eur: Money | None = None
     note: str | None = Field(default=None, max_length=500)
+    #: Pôvodný dátum pridania pri vrátení (Späť po kúpe); inak teraz.
+    created_at: datetime | None = None
 
 
 class WishlistUpdateRequest(BaseModel):

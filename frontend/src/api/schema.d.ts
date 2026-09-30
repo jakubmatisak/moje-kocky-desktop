@@ -440,7 +440,10 @@ export interface paths {
         /** List Items */
         get: operations["list_items_api_v1_items_get"];
         put?: never;
-        /** Create Items */
+        /**
+         * Create Items
+         * @description Pridá kusy; set, ktorý bol v Chcem, odtiaľ v tej istej transakcii vyradí.
+         */
         post: operations["create_items_api_v1_items_post"];
         delete?: never;
         options?: never;
@@ -534,6 +537,8 @@ export interface paths {
         /**
          * Create Series Items
          * @description Naraz pridá vybraných členov zberateľskej série, aj s cenou za celú sériu.
+         *
+         *     Figúrky, ktoré boli v Chcem, odtiaľ vyradí, rovnako ako `POST /items`.
          */
         post: operations["create_series_items_api_v1_items_bulk_post"];
         delete?: never;
@@ -2499,6 +2504,57 @@ export interface components {
             /** Note */
             note?: string | null;
         };
+        /** ItemCreatedOut */
+        ItemCreatedOut: {
+            /** Id */
+            id: number;
+            /** Catalog Num */
+            catalog_num: string;
+            status: components["schemas"]["ItemStatus"];
+            condition: components["schemas"]["ItemCondition"];
+            price_variant: components["schemas"]["PriceVariant"] | null;
+            /** Unidentified */
+            unidentified: boolean;
+            /** Flags */
+            flags: string[];
+            /** Purchase Price Eur */
+            purchase_price_eur: string | null;
+            /**
+             * Purchase Price Auto
+             * @default false
+             */
+            purchase_price_auto: boolean;
+            /** Purchase Date */
+            purchase_date: string | null;
+            /** Purchase Place */
+            purchase_place: string | null;
+            /** Sold Price Eur */
+            sold_price_eur: string | null;
+            /** Sold Date */
+            sold_date: string | null;
+            /** Sold Via */
+            sold_via: string | null;
+            /** Sold Fees Eur */
+            sold_fees_eur?: string | null;
+            /** Sold Shipping Eur */
+            sold_shipping_eur?: string | null;
+            /** Location */
+            location: string | null;
+            /** Box */
+            box?: string | null;
+            purpose?: components["schemas"]["ItemPurpose"] | null;
+            /** Manual Market Price Eur */
+            manual_market_price_eur: string | null;
+            /** Note */
+            note: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            catalog: components["schemas"]["CatalogOut"];
+            removed_from_wishlist?: components["schemas"]["RemovedWishOut"] | null;
+        };
         /** ItemOut */
         ItemOut: {
             /** Id */
@@ -2932,6 +2988,25 @@ export interface components {
              * @default false
              */
             accept_privacy: boolean;
+        };
+        /**
+         * RemovedWishOut
+         * @description Položka Chcem, ktorú kúpa vyradila, s tým, čo treba na Späť.
+         */
+        RemovedWishOut: {
+            /** Catalog Num */
+            catalog_num: string;
+            /** Name */
+            name: string;
+            /** Target Price Eur */
+            target_price_eur: string | null;
+            /** Note */
+            note: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /** SalesChannelOut */
         SalesChannelOut: {
@@ -3547,6 +3622,8 @@ export interface components {
             target_price_eur?: number | string | null;
             /** Note */
             note?: string | null;
+            /** Created At */
+            created_at?: string | null;
         };
         /** WishlistOut */
         WishlistOut: {
@@ -4409,7 +4486,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ItemOut"][];
+                    "application/json": components["schemas"]["ItemCreatedOut"][];
                 };
             };
             /** @description Validation Error */
@@ -4622,7 +4699,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ItemOut"][];
+                    "application/json": components["schemas"]["ItemCreatedOut"][];
                 };
             };
             /** @description Validation Error */

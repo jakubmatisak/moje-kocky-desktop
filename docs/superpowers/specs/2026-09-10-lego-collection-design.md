@@ -572,7 +572,8 @@ Set, ktorý nie je v žiadnom katalógu, sa dá zadať ručne (`POST /catalog`).
   sú `kind=set` a cenia sa ako sety.
 
 **Nerozbalený sáčok** je kus ukazujúci na sériu s `unidentified=true`.
-Po rozbalení ho `PATCH /items/{id}/identify` prepne na konkrétnu figúrku.
+Po rozbalení ho `PATCH /items/{id}/identify` prepne na konkrétnu figúrku
+a tú v tej istej transakcii vyradí z Chcem (`drop_bought`, predaný kus nie).
 
 **Čiarový kód** (`services/barcode.py`) sa hľadá v poradí:
 
@@ -861,7 +862,8 @@ cieľová a trhová cena a vzdialenosť od cieľa
 market|target|name|theme|added&dir=&q=&reached=&retired=&no_price=`),
 predvolene najbližšie k cieľu navrch, prázdne hodnoty na konci. „Kúpil som“ presunie položku do zbierky, bez hľadania.
 Z Chcem ju vyradí server, rovnako ako každé iné pridanie kusu (Pridať set
-číslom aj skenom, Mám ju, Mám všetky, Ďalší kus, import): porovnáva sa
+číslom aj skenom, Mám ju, Mám všetky, Ďalší kus, import, určenie figúrky
+z rozbaleného sáčku): porovnáva sa
 katalógové číslo, vyraďuje vlastnený aj rezervovaný kus, predaný nie
 (dodatočne zapísaný predaj neznamená, že set už nechcem). `POST /wishlist`
 berie `created_at`, aby Späť vrátil položku na jej pôvodné miesto;

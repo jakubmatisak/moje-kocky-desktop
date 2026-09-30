@@ -342,8 +342,9 @@ cenia sa ako sety. Minifigúrky ostávajú v `cmf_series`, oddelene.
 `components/PurchaseDialog.vue` pridá do zbierky vec, ktorú katalóg už
 pozná, z Chcem aj z chýbajúcej figúrky; Chcem sám nemaže. Kúpené vyradí
 server pri každom pridaní: `services/wishlist.py::drop_bought` v tej istej
-transakcii volajú `POST /items`, `/items/bulk` aj import (Pridať set
-číslom aj skenom, Mám ju, Mám všetky, ďalší kus). Porovnáva katalógové
+transakcii volajú `POST /items`, `/items/bulk`, import (Pridať set
+číslom aj skenom, Mám ju, Mám všetky, ďalší kus) aj určenie figúrky
+z rozbaleného sáčku (`PATCH /items/{id}/identify`). Porovnáva katalógové
 číslo: figúrka vyradí seba, sáčok pod holým číslom sériu; vlastnený aj
 rezervovaný kus áno, predaný nie. Pôvodnú položku nesie
 `removed_from_wishlist` na prvom kuse setu (viac kusov vyradí raz) a Späť

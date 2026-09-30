@@ -5,15 +5,22 @@ Sety jednej vlny (téma + rok) sú jedno volanie ``getSets``; uložia sa
 a čerstvé roky (tento, minulý a budúce) sa po ``WAVE_REFRESH`` stiahnu
 znova, lebo pribúdajú nové sety. Staršie vlny sa už nemenia.
 
-Témy pomenúva Brickset, sety v katalógu majú tému z Rebrickable. Kým sa
-vlna nestiahne, počet vlastnených v roku je odhad podľa zhodného názvu
-témy a roku; po stiahnutí je presný.
+Témy pomenúva Brickset, sety v katalógu majú tému z Rebrickable a tie sa
+nie vždy zhodujú: staršie Botanicals vedie Brickset pod Icons, figúrky
+série Shrek Rebrickable pod témou Shrek. Set sa preto ráta v jedinej téme,
+kam ho dáva Brickset (``assign``): stiahnutá vlna (presné), potom údaj
+setu z Brickset, ktorý účet vidí, a až keď Brickset set nepozná, meno
+témy z Rebrickable. Rátajú sa len sety (``counts_as_set``). Kým sa vlna
+nestiahne, počet vlastnených v roku je odhad; po stiahnutí je presný.
+„V zbierke“ nikdy neprekročí počet setov témy ani roka.
 """
 
+from collections import Counter
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from lego_api import visibility
@@ -24,6 +31,7 @@ from lego_api.providers.brickset import BricksetProvider
 from lego_api.services import access
 from lego_api.services.catalog import store_brickset
 from lego_api.services.fetch_policy import CallBlocked
+from lego_api.services.filters import series_num
 from lego_api.visibility import BRICKSET
 
 #: Zoznam tém sa mení raz za čas, v pamäti procesu stačí na deň.
@@ -62,23 +70,31 @@ async def all_themes(provider: BricksetProvider) -> list[dict] | None:
     return themes
 
 
-async def _owned_catalog(session: AsyncSession, user_id: int) -> list[CatalogItem]:
-    return list(
-        (
-            await session.execute(
-                select(CatalogItem)
-                .where(
-                    CatalogItem.catalog_num.in_(
-                        select(CollectionItem.catalog_num).where(
-                            CollectionItem.user_id == user_id,
-                            CollectionItem.status == ItemStatus.OWNED,
-                        )
-                    )
-                )
-                .distinct()
-            )
-        ).scalars()
+def counts_as_set(item: CollectionItem) -> bool:
+    """Do Sérií patria len sety.
+
+    Figúrka zo série (minifigúrka aj blind-box, ``filters.series_num``),
+    zatvorený sáčok pod číslom série ani holá figúrka setom nie sú, aj keď
+    ich Rebrickable vedie pod témou (figúrky série Shrek pod Shrek).
+    """
+    catalog = item.catalog
+    return (
+        series_num(catalog, item.unidentified) is None
+        and not catalog.is_series
+        and catalog.kind != CatalogKind.MINIFIG
     )
+
+
+async def _owned_sets(
+    session: AsyncSession, user_id: int, nums: Iterable[str] | None = None
+) -> list[CollectionItem]:
+    """Vlastnené kusy, ktoré sú setmi (``counts_as_set``)."""
+    stmt = select(CollectionItem).where(
+        CollectionItem.user_id == user_id, CollectionItem.status == ItemStatus.OWNED
+    )
+    if nums is not None:
+        stmt = stmt.where(CollectionItem.catalog_num.in_(list(nums)))
+    return [i for i in (await session.execute(stmt)).scalars().unique() if counts_as_set(i)]
 
 
 def wave_subject(theme: str, year: int) -> str:
@@ -86,12 +102,8 @@ def wave_subject(theme: str, year: int) -> str:
     return f"wave:{theme}:{year}"
 
 
-async def _wave_sets(
-    session: AsyncSession, theme: str | None = None
-) -> dict[tuple[str, int], set[str]]:
+async def _wave_sets(session: AsyncSession) -> dict[tuple[str, int], set[str]]:
     stmt = select(ThemeWaveSet.theme, ThemeWaveSet.year, ThemeWaveSet.catalog_num)
-    if theme is not None:
-        stmt = stmt.where(ThemeWaveSet.theme == theme)
     out: dict[tuple[str, int], set[str]] = {}
     vis = visibility.current()
     for t, y, num in (await session.execute(stmt)).all():
@@ -101,15 +113,97 @@ async def _wave_sets(
     return out
 
 
+@dataclass(frozen=True)
+class Placement:
+    """Téma a rok, pod ktorými sa set v Sériách ráta."""
+
+    theme: str
+    year: int | None
+
+
+def assign(
+    catalogs: Iterable[CatalogItem], waves: dict[tuple[str, int], set[str]]
+) -> dict[str, Placement]:
+    """Každý set do jednej témy podľa Brickset.
+
+    Prednosť: stiahnutá vlna, ktorú účet vidí (presné); potom téma a rok
+    z údajov Brickset o sete (``bs_theme``, len s prístupom kľúča); až keď
+    Brickset set nepozná, téma a rok z katalógu (Rebrickable). Set, ktorý
+    patrí do stiahnutej vlny svojej témy a roka a Brickset ho do nej nedal
+    (kolekcia, kniha…), setom nie je a nepriradí sa nikam.
+    """
+    homes: dict[str, list[tuple[str, int]]] = {}
+    for key in sorted(waves):
+        for num in waves[key]:
+            homes.setdefault(num, []).append(key)
+    downloaded = {(theme.lower(), year) for theme, year in waves}
+
+    out: dict[str, Placement] = {}
+    for catalog in catalogs:
+        bs_theme = catalog.bs_theme
+        found = homes.get(catalog.catalog_num)
+        if found:
+            # Vo viacerých vlnách (Brickset set medzitým presunul): tá s jeho témou.
+            theme, year = next(
+                (k for k in found if bs_theme and k[0].lower() == bs_theme.lower()), found[0]
+            )
+            out[catalog.catalog_num] = Placement(theme, year)
+            continue
+        if bs_theme:
+            name, when = bs_theme, catalog.bs_year or catalog.year
+        else:
+            name, when = catalog.theme, catalog.year
+        if not name or (when is not None and (name.lower(), when) in downloaded):
+            continue
+        out[catalog.catalog_num] = Placement(name, when)
+    return out
+
+
+@dataclass
+class _Mine:
+    """Moje sety pre Série a vlny, ktoré účet vidí."""
+
+    sets: set[str]
+    placed: dict[str, Placement]
+    waves: dict[tuple[str, int], set[str]]
+
+
+async def _mine(session: AsyncSession, user_id: int) -> _Mine:
+    catalogs = {i.catalog_num: i.catalog for i in await _owned_sets(session, user_id)}
+    waves = await _wave_sets(session)
+    return _Mine(set(catalogs), assign(catalogs.values(), waves), waves)
+
+
+async def theme_names(session: AsyncSession, items: Iterable[CollectionItem]) -> set[str]:
+    """Témy (malými písmenami), v ktorých mám set; počet pri Sériách v ponuke."""
+    catalogs = {i.catalog_num: i.catalog for i in items if counts_as_set(i)}
+    placed = assign(catalogs.values(), await _wave_sets(session))
+    return {p.theme.lower() for p in placed.values()} - SKIP_THEMES
+
+
+def _complete(raw: int, total: int, in_waves: set[str], owned: set[str]) -> bool:
+    """Kompletná téma: mám toľko setov, koľko ich má Brickset, a vo vlnách nič nechýba.
+
+    Viac setov, než Brickset ráta (pod menom témy z Rebrickable aj iné), je
+    kompletné, len keď to potvrdia stiahnuté vlny: majú všetky sety témy.
+    """
+    if total <= 0 or raw < total or in_waves - owned:
+        return False
+    return raw == total or len(in_waves) >= total
+
+
 @dataclass
 class ThemeRow:
     theme: str
     set_count: int
     year_from: int | None
     year_to: int | None
+    #: Rôzne sety z témy, najviac ``set_count``.
     owned: int
     #: Uložená medzi moje témy, aj keď z nej nemám nič.
     followed: bool = False
+    #: Mám naozaj všetky sety témy (``_complete``); len vtedy je pruh zelený.
+    complete: bool = False
 
 
 def followed_of(preferences: dict | None) -> list[str]:
@@ -122,30 +216,33 @@ async def overview(
     session: AsyncSession, user_id: int, themes: list[dict], followed: list[str] | None = None
 ) -> tuple[list[ThemeRow], list[ThemeRow]]:
     """(moje témy, všetky témy). Moja je téma, z ktorej mám set, alebo ktorú som si uložil."""
-    owned = await _owned_catalog(session, user_id)
-    owned_nums = {c.catalog_num for c in owned}
+    mine = await _mine(session, user_id)
     by_name = {(t.get("theme") or "").lower(): t for t in themes}
 
-    mine: dict[str, set[str]] = {}
-    for item in owned:
-        if item.theme and item.theme.lower() in by_name:
-            mine.setdefault(by_name[item.theme.lower()]["theme"], set()).add(item.catalog_num)
-    for (theme, _year), nums in (await _wave_sets(session)).items():
-        hit = nums & owned_nums
-        if hit:
-            mine.setdefault(theme, set()).update(hit)
+    placed: dict[str, set[str]] = {}
+    for num, where in mine.placed.items():
+        t = by_name.get(where.theme.lower())
+        if t is not None:
+            placed.setdefault(t["theme"], set()).add(num)
+    in_waves: dict[str, set[str]] = {}
+    for (theme, _year), nums in mine.waves.items():
+        in_waves.setdefault(theme.lower(), set()).update(nums)
 
-    def row(t: dict, count: int = 0) -> ThemeRow:
+    def row(t: dict) -> ThemeRow:
+        total = t.get("setCount") or 0
+        raw = len(placed.get(t["theme"], ()))
         return ThemeRow(
             theme=t["theme"],
-            set_count=t.get("setCount") or 0,
+            set_count=total,
             year_from=t.get("yearFrom"),
             year_to=t.get("yearTo"),
-            owned=count,
+            # Viac, než Brickset v téme ráta, neukazovať; pruh sa oreže.
+            owned=min(raw, total),
+            complete=_complete(raw, total, in_waves.get(t["theme"].lower(), set()), mine.sets),
         )
 
     follow = set(followed or [])
-    all_rows = [row(t, len(mine.get(t["theme"], ()))) for t in themes]
+    all_rows = [row(t) for t in themes]
     for r in all_rows:
         r.followed = r.theme in follow
     mine_rows = sorted(
@@ -158,8 +255,9 @@ async def overview(
 class YearRow:
     year: int
     set_count: int
+    #: Najviac ``set_count``.
     owned: int
-    #: Presný počet (vlna je stiahnutá), alebo odhad podľa názvu témy.
+    #: Presný počet (vlna je stiahnutá), alebo odhad podľa údajov setov (``assign``).
     exact: bool
 
 
@@ -172,13 +270,11 @@ async def years(
         return None
     if rows is None:
         return None
-    owned = await _owned_catalog(session, user_id)
-    owned_nums = {c.catalog_num for c in owned}
-    waves = await _wave_sets(session, theme)
-    guess: dict[int, int] = {}
-    for item in owned:
-        if item.theme and item.theme.lower() == theme.lower() and item.year:
-            guess[item.year] = guess.get(item.year, 0) + 1
+    mine = await _mine(session, user_id)
+    key = theme.lower()
+    guess = Counter(
+        p.year for p in mine.placed.values() if p.theme.lower() == key and p.year is not None
+    )
 
     result: list[YearRow] = []
     for r in rows:
@@ -186,17 +282,15 @@ async def years(
             year = int(r.get("year"))
         except (TypeError, ValueError):
             continue
-        nums = waves.get((theme, year))
-        result.append(
-            YearRow(
-                year=year,
-                # Po stiahnutí vlny jej skutočný počet: Brickset ráta aj kolekcie,
-                # ktoré do úplnosti nepatria.
-                set_count=len(nums) if nums is not None else r.get("setCount") or 0,
-                owned=len(nums & owned_nums) if nums is not None else guess.get(year, 0),
-                exact=nums is not None,
-            )
-        )
+        nums = mine.waves.get((theme, year))
+        if nums is not None:
+            # Po stiahnutí vlny jej skutočný počet: Brickset ráta aj kolekcie,
+            # ktoré do úplnosti nepatria.
+            set_count, owned = len(nums), len(nums & mine.sets)
+        else:
+            set_count = r.get("setCount") or 0
+            owned = min(guess.get(year, 0), set_count)
+        result.append(YearRow(year=year, set_count=set_count, owned=owned, exact=nums is not None))
     result.sort(key=lambda r: -r.year)
     return result
 
@@ -292,19 +386,8 @@ async def wave(
             await session.execute(select(CatalogItem).where(CatalogItem.catalog_num.in_(nums)))
         ).scalars()
     )
-    counts = dict(
-        (
-            await session.execute(
-                select(CollectionItem.catalog_num, func.count())
-                .where(
-                    CollectionItem.user_id == user_id,
-                    CollectionItem.status == ItemStatus.OWNED,
-                    CollectionItem.catalog_num.in_(nums),
-                )
-                .group_by(CollectionItem.catalog_num)
-            )
-        ).all()
-    )
+    # Len sety: figúrka zo série s rovnakým číslom ako krabica z Brickset sa neráta.
+    counts = Counter(i.catalog_num for i in await _owned_sets(session, user_id, nums))
     wanted = set(
         (
             await session.execute(

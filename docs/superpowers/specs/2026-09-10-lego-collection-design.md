@@ -611,8 +611,21 @@ Podrobnosti:
 - Zoznam tém a rokov je z Brickset zadarmo. Vlna (téma + rok) je jedno
   `getSets` a uloží sa; čerstvé roky sa po 30 dňoch stiahnu znova.
 - Do úplnosti patria len kategórie Normal a Extended, nie kolekcie.
-- Brickset tému pomenúva inak než Rebrickable. Kým vlna nie je stiahnutá,
-  počet pri roku je odhad podľa názvu, potom je presný.
+- Brickset tému pomenúva inak než Rebrickable a sety zaraďuje inak
+  (staršie Botanicals sú v Brickset pod Icons, figúrky série Shrek sú
+  v Rebrickable pod témou Shrek). Set sa ráta v jedinej téme (`assign`):
+  stiahnutá vlna, ktorú účet vidí; potom téma a rok z údajov Brickset
+  o sete (`bs_theme`, `bs_year`, len s prístupom kľúča); až keď Brickset
+  set nepozná, téma a rok z katalógu. Set, ktorý Brickset do stiahnutej
+  vlny jeho témy a roka nedal, je nie-set a neráta sa nikde.
+- Rátajú sa len sety (`counts_as_set`): figúrky zo sérií (minifigúrky aj
+  blind-box), zatvorený sáčok pod číslom série ani holá figúrka nie.
+  Platí to pre témy, roky, vlnu aj počet pri Sériách v ponuke
+  (`theme_names`).
+- „V zbierke“ nikdy neprekročí počet setov témy ani roka. Téma je
+  kompletná (`complete`, zelený pruh), len keď sa počty naozaj zhodujú a vo
+  stiahnutých vlnách nič nechýba; orezaný počet je plný pruh, ale žltý.
+- Kým vlna nie je stiahnutá, počet pri roku je odhad, potom je presný.
 
 **Vlastné kategórie** (`services/categories.py`):
 
@@ -805,7 +818,8 @@ Podrobnosti:
 **Série** (`/temy`, v rozhraní „Série“, v dátach téma): moje série a hľadanie vo všetkých. Tému bez setu sa dá
 uložiť hviezdičkou. Moje témy sa radia podľa počtu mojich setov, úplnosti
 alebo názvu a filtrujú na sledované, s mojimi setmi a nekompletné
-(`utils/themeList.ts`, v prehliadači). **Téma** (`/temy/:theme`) ukazuje roky „mám X z Y“
+(`utils/themeList.ts`, v prehliadači; nekompletná je téma bez `complete`,
+pri rovnakej úplnosti idú kompletné prvé). **Téma** (`/temy/:theme`) ukazuje roky „mám X z Y“
 a sety zvoleného roku.
 
 **Chcem** (`/chcem`): cieľová cena a poznámka sa dajú upraviť

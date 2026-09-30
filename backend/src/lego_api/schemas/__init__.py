@@ -1043,10 +1043,13 @@ class ThemeOut(BaseModel):
     set_count: int
     year_from: int | None
     year_to: int | None
-    #: Koľko rôznych setov z témy mám.
+    #: Koľko rôznych setov z témy mám, najviac ``set_count``. Figúrky zo sérií
+    #: a sáčky sa nerátajú, set sa ráta v téme, kam ho dáva Brickset.
     owned: int
     #: Uložená medzi moje témy, aj bez setu.
     followed: bool = False
+    #: Mám naozaj všetky sety témy. Orezaný ``owned`` rovný ``set_count`` ešte nie.
+    complete: bool = False
 
 
 class ThemesOut(BaseModel):
@@ -1059,8 +1062,9 @@ class ThemesOut(BaseModel):
 class ThemeYearOut(BaseModel):
     year: int
     set_count: int
+    #: Najviac ``set_count``; len sety, v roku, kam ich dáva Brickset.
     owned: int
-    #: Presné (vlna je stiahnutá), alebo odhad podľa názvu témy.
+    #: Presné (vlna je stiahnutá), alebo odhad podľa údajov setov.
     exact: bool
 
 

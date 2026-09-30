@@ -545,9 +545,21 @@ po doplnení z Brickset, inak by išli dve getSets naraz.
 nerátajú, vlna (téma + rok) je jedno `getSets` a ukladá sa do `theme_waves`
 a `theme_wave_sets`; čerstvé roky sa po 30 dňoch stiahnu znova. Kolekcie
 a iné nie-sety (`category` mimo Normal/Extended) do úplnosti nepatria.
-Témy pomenúva Brickset, katalóg má tému z Rebrickable: kým vlna nie je
-stiahnutá, počet pri roku je odhad podľa názvu, potom presný. Existujúcim
-setom Brickset nič neprepisuje, len dopĺňa chýbajúce.
+Témy pomenúva Brickset, katalóg má tému z Rebrickable a nezhodujú sa
+(staršie Botanicals má Brickset pod Icons, figúrky série Shrek Rebrickable
+pod Shrek). Set sa preto ráta v jedinej téme podľa `themes.py::assign`:
+stiahnutá vlna, ktorú účet vidí, potom `bs_theme`/`bs_year` (brickset_facts,
+len s prístupom kľúča), až keď Brickset set nepozná, téma a rok z katalógu.
+Set, ktorý Brickset do stiahnutej vlny jeho témy a roka nedal, je nie-set.
+Rátajú sa len sety (`counts_as_set`: nie figúrky zo sérií podľa
+`filters.series_num`, sáčok pod číslom série ani holá figúrka), aj vo vlne
+a v počte Sérií v ponuke (`theme_names`). „V zbierke“ je najviac počet
+setov témy či roka; či je téma naozaj celá, povie `ThemeOut.complete`
+(úplná zhoda a vo vlnách nič nechýba) a len vtedy je `SeriesBar` zelený,
+aj filter Nekompletné ide podľa neho. Prop `complete` má predvolené
+`undefined`, chýbajúci boolean by Vue zmenilo na false. Kým vlna nie je
+stiahnutá, počet pri roku je odhad, potom presný. Existujúcim setom
+Brickset nič neprepisuje, len dopĺňa chýbajúce.
 
 **UPCitemdb je posledná možnosť.** Rebrickable kódy
 nemá a BrickEconomy podľa kódu hľadať nevie (kód len posiela v odpovedi
@@ -697,7 +709,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 639 testov, frontend 222. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 646 testov, frontend 226. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

@@ -10,13 +10,15 @@ import httpx
 import respx
 from httpx import AsyncClient
 
+from lego_api import visibility
 from lego_api.config import Settings
 from lego_api.models import CatalogItem, CatalogKind, CollectionItem, ItemCondition, User
 from lego_api.models.base import utcnow
-from lego_api.models.theme import ThemeWave
+from lego_api.models.theme import ThemeWave, ThemeWaveSet
 from lego_api.providers.base import CatalogMetadata
 from lego_api.providers.brickset import BricksetProvider
 from lego_api.services import themes
+from lego_api.visibility import BRICKECONOMY, BRICKSET, Visibility
 
 #: getSets theme=Speed Champions year=2025, skrátené.
 SC_2025 = {
@@ -227,3 +229,261 @@ async def test_menu_counts(auth_client: AsyncClient, sessionmaker_) -> None:
         3,
         1,
     )
+
+
+# --- priradenie setov k téme podľa Brickset ---------------------------------
+
+
+class YearsBrickset(FakeBrickset):
+    """Roky témy s počtom setov tak, ako ich vráti getYears."""
+
+    def __init__(self, years: dict[int, int]) -> None:
+        super().__init__()
+        self.counts = years
+
+    async def get_years(self, theme: str) -> list[dict]:
+        return [{"theme": theme, "year": str(y), "setCount": c} for y, c in self.counts.items()]
+
+
+def _theme(name: str, count: int, year_from: int = 2020, year_to: int = 2027) -> dict:
+    return {"theme": name, "setCount": count, "yearFrom": year_from, "yearTo": year_to}
+
+
+def _item(
+    num: str,
+    theme: str | None,
+    year: int | None,
+    *,
+    parent: str | None = None,
+    series_size: int | None = None,
+    kind: CatalogKind = CatalogKind.SET,
+    bs_theme: str | None = None,
+) -> CatalogItem:
+    """Položka z Rebrickable; ``bs_theme`` = Brickset ju pozná pod touto témou."""
+    item = CatalogItem(
+        catalog_num=num,
+        name=num,
+        kind=kind,
+        theme=theme,
+        year=year,
+        parent_num=parent,
+        series_size=series_size,
+        source="rebrickable",
+    )
+    if bs_theme is not None:
+        facts = item.facts_for(BRICKSET)
+        facts.theme = bs_theme
+        facts.year = year
+    return item
+
+
+async def _own(session, *nums: str, unidentified: bool = False) -> None:
+    for num in nums:
+        session.add(
+            CollectionItem(
+                user_id=1,
+                catalog_num=num,
+                condition=ItemCondition.NEW_SEALED,
+                flags=[],
+                unidentified=unidentified,
+            )
+        )
+    await session.commit()
+
+
+def _wave(session, theme: str, year: int, *nums: str) -> None:
+    """Stiahnutá vlna: sety témy za rok podľa Brickset."""
+    session.add(ThemeWave(theme=theme, year=year, set_count=len(nums)))
+    for num in nums:
+        session.add(ThemeWaveSet(theme=theme, year=year, catalog_num=num))
+
+
+async def test_series_figures_and_bags_are_not_sets_of_a_theme(session) -> None:
+    """Shrek: 12 figúrok zberateľskej série vedie Rebrickable pod témou Shrek.
+
+    Brickset má v téme tri sety, ja z nich nemám ani jeden. Figúrky zo sérií
+    (minifigúrky aj blind-box), zatvorený sáčok pod číslom série ani holá
+    figúrka setmi nie sú.
+    """
+    session.add(User(id=1, email="a@x.sk", password_hash="x"))
+    session.add(_item("71053", "Shrek", 2026, series_size=12))
+    for i in range(1, 13):
+        session.add(_item(f"71053-{i}", "Shrek", 2026, parent="71053"))
+    # Mighty Machines: figúrka sa cení ako set, ale je zo série.
+    session.add(_item("42233", "Technic", 2026, series_size=8))
+    session.add(_item("42233-1", "Technic", 2026, parent="42233"))
+    session.add(_item("42210-1", "Technic", 2026))
+    session.add(_item("fig-014012", "Shrek", 2026, kind=CatalogKind.MINIFIG))
+    # Brickset má pod 42233-1 krabicu; moja figúrka s tým istým číslom setom nie je.
+    _wave(session, "Technic", 2026, "42233-1", "42210-1")
+    await session.flush()
+    await _own(session, *[f"71053-{i}" for i in range(1, 13)], "42233-1", "fig-014012")
+    await _own(session, "71053", unidentified=True)
+
+    rows = [_theme("Shrek", 3, 2026, 2027), _theme("Technic", 500, 1977, 2026)]
+    mine, everything = await themes.overview(session, 1, rows)
+    assert mine == []
+    assert [(r.theme, r.owned) for r in everything] == [("Shrek", 0), ("Technic", 0)]
+
+    # Sledovaná téma je moja aj bez setu.
+    mine, _ = await themes.overview(session, 1, rows, followed=["Shrek"])
+    assert [(r.theme, r.owned, r.followed) for r in mine] == [("Shrek", 0, True)]
+
+    years = await themes.years(session, 1, YearsBrickset({2026: 3}), "Shrek")
+    assert years is not None
+    assert [(y.year, y.owned) for y in years] == [(2026, 0)]
+
+    technic = await themes.years(session, 1, YearsBrickset({2026: 30}), "Technic")
+    assert technic is not None
+    assert [(y.year, y.set_count, y.owned, y.exact) for y in technic] == [(2026, 2, 0, True)]
+    provider = FakeBrickset()
+    provider.enabled = False
+    wave = await themes.wave(session, provider, 1, "Technic", 2026)
+    assert wave is not None
+    assert [(m.catalog.catalog_num, m.owned) for m in wave.members] == [
+        ("42210-1", 0),
+        ("42233-1", 0),
+    ]
+
+
+async def _botanicals(session) -> None:
+    """Staršie Botanicals vedie Brickset pod Icons, Rebrickable ich volá Botanicals."""
+    session.add(User(id=1, email="a@x.sk", password_hash="x"))
+    # Bonsai: Brickset ho pozná pod Icons, vlna roka stiahnutá nie je.
+    session.add(_item("10281-1", "Botanicals", 2021, bs_theme="Icons"))
+    # Orchidea: vo vlne Icons 2022.
+    session.add(_item("10311-1", "Botanicals", 2022))
+    session.add(_item("10312-1", "Icons", 2022))
+    # Vo vlne Botanicals 2025, hoci údaj setu hovorí Icons: vlna má prednosť.
+    session.add(_item("10343-1", "Botanicals", 2025, bs_theme="Icons"))
+    session.add(_item("10344-1", "Botanicals", 2025))
+    # O tomto Brickset nevie nič: platí meno témy z Rebrickable.
+    session.add(_item("10497-1", "botanicals", 2024))
+    _wave(session, "Icons", 2022, "10311-1", "10312-1")
+    _wave(session, "Botanicals", 2025, "10343-1", "10344-1")
+    await session.flush()
+    await _own(session, "10281-1", "10311-1", "10343-1", "10497-1")
+
+
+BOTANICALS_THEMES = [_theme("Icons", 400, 2000, 2027), _theme("Botanicals", 48, 2021, 2027)]
+
+
+async def test_set_counts_in_the_theme_where_brickset_has_it(session) -> None:
+    await _botanicals(session)
+    mine, _ = await themes.overview(session, 1, BOTANICALS_THEMES)
+    # Icons: Bonsai (údaj Brickset) a Orchidea (vlna). Botanicals: set z vlny
+    # a set, ktorý Brickset nepozná (meno z Rebrickable). Každý set raz.
+    assert [(r.theme, r.owned) for r in mine] == [("Botanicals", 2), ("Icons", 2)]
+
+    icons = await themes.years(session, 1, YearsBrickset({2022: 5, 2021: 20}), "Icons")
+    assert icons is not None
+    assert [(y.year, y.set_count, y.owned, y.exact) for y in icons] == [
+        (2022, 2, 1, True),
+        (2021, 20, 1, False),
+    ]
+    botanicals = await themes.years(
+        session, 1, YearsBrickset({2025: 4, 2024: 6, 2021: 1}), "Botanicals"
+    )
+    assert botanicals is not None
+    # Bonsai do Botanicals 2021 nepatrí, hoci ho tam dáva Rebrickable.
+    assert [(y.year, y.set_count, y.owned, y.exact) for y in botanicals] == [
+        (2025, 2, 1, True),
+        (2024, 6, 1, False),
+        (2021, 1, 0, False),
+    ]
+
+
+async def test_brickset_data_count_only_with_access_of_the_key(session) -> None:
+    await _botanicals(session)
+    vis = Visibility(
+        user_id=1,
+        fingerprints={BRICKSET: "fp-bs"},
+        access={BRICKSET: {}, BRICKECONOMY: {}},
+    )
+    visibility.use(vis)
+    try:
+        # Kľúč účtu si nestiahol ani údaje setov, ani vlny: platí Rebrickable.
+        mine, _ = await themes.overview(session, 1, BOTANICALS_THEMES)
+        assert [(r.theme, r.owned) for r in mine] == [("Botanicals", 4)]
+
+        vis.access[BRICKSET]["10281-1"] = utcnow()
+        vis.access[BRICKSET][themes.wave_subject("Icons", 2022)] = utcnow()
+        mine, _ = await themes.overview(session, 1, BOTANICALS_THEMES)
+        assert [(r.theme, r.owned) for r in mine] == [("Botanicals", 2), ("Icons", 2)]
+    finally:
+        visibility.use(visibility.INTERNAL)
+
+
+async def test_owned_never_exceeds_sets_of_the_theme_or_year(session) -> None:
+    """Rebrickable pod menom témy vedie viac mojich setov, než ich má Brickset."""
+    session.add(User(id=1, email="a@x.sk", password_hash="x"))
+    for num in ("40001-1", "40002-1", "40003-1"):
+        session.add(_item(num, "Seasonal", 2024))
+    await session.flush()
+    await _own(session, "40001-1", "40002-1", "40003-1")
+
+    mine, _ = await themes.overview(session, 1, [_theme("Seasonal", 2, 2024, 2024)])
+    # Pruh sa oreže, ale kompletná téma to nie je.
+    assert [(r.theme, r.set_count, r.owned, r.complete) for r in mine] == [
+        ("Seasonal", 2, 2, False)
+    ]
+    years = await themes.years(session, 1, YearsBrickset({2024: 1}), "Seasonal")
+    assert years is not None
+    assert [(y.year, y.set_count, y.owned, y.exact) for y in years] == [(2024, 1, 1, False)]
+
+    # Úplná zhoda je kompletná téma.
+    mine, _ = await themes.overview(session, 1, [_theme("Seasonal", 3, 2024, 2024)])
+    assert [(r.owned, r.complete) for r in mine] == [(3, True)]
+
+
+async def test_theme_with_a_missing_set_in_its_wave_is_not_complete(session) -> None:
+    session.add(User(id=1, email="a@x.sk", password_hash="x"))
+    session.add(_item("77242-1", "Speed Champions", 2025))
+    session.add(_item("30709-1", "Speed Champions", 2025))
+    # Set, ktorý Brickset nepozná, sa ráta podľa Rebrickable.
+    session.add(_item("99999-1", "Speed Champions", 2024))
+    _wave(session, "Speed Champions", 2025, "77242-1", "30709-1")
+    await session.flush()
+    await _own(session, "77242-1", "99999-1")
+
+    mine, _ = await themes.overview(session, 1, [_theme("Speed Champions", 2, 2015, 2027)])
+    # Počty sa zhodujú, ale vo vlne 2025 mi chýba 30709-1.
+    assert [(r.owned, r.complete) for r in mine] == [(2, False)]
+
+
+async def test_set_left_out_of_its_downloaded_wave_is_not_counted(session) -> None:
+    """Kolekciu Brickset do vlny nedal (kategória Collection): do úplnosti nepatrí."""
+    session.add(User(id=1, email="a@x.sk", password_hash="x"))
+    session.add(_item("77242-1", "Speed Champions", 2025))
+    session.add(_item("30709-1", "Speed Champions", 2025))
+    session.add(_item("66802-1", "Speed Champions", 2025, bs_theme="Speed Champions"))
+    _wave(session, "Speed Champions", 2025, "77242-1", "30709-1")
+    await session.flush()
+    await _own(session, "77242-1", "66802-1")
+
+    mine, _ = await themes.overview(session, 1, [_theme("Speed Champions", 120, 2015, 2027)])
+    assert [(r.theme, r.owned) for r in mine] == [("Speed Champions", 1)]
+    years = await themes.years(session, 1, YearsBrickset({2025: 3}), "Speed Champions")
+    assert years is not None
+    assert [(y.year, y.set_count, y.owned, y.exact) for y in years] == [(2025, 2, 1, True)]
+
+
+async def test_menu_theme_count_follows_brickset_and_skips_series(
+    auth_client: AsyncClient, sessionmaker_
+) -> None:
+    async with sessionmaker_() as session:
+        session.add(_item("71053", "Shrek", 2026, series_size=12))
+        session.add(_item("71053-1", "Shrek", 2026, parent="71053"))
+        session.add(_item("10281-1", "Botanicals", 2021, bs_theme="Icons"))
+        session.add(_item("10311-1", "Botanicals", 2022))
+        session.add(_item("10326-1", "Icons", 2023))
+        _wave(session, "Icons", 2022, "10311-1")
+        await session.commit()
+    for num in ("71053", "71053-1", "10281-1", "10311-1", "10326-1"):
+        response = await auth_client.post("/items", json={"catalog_num": num, "quantity": 1})
+        assert response.status_code == 201, response.text
+
+    summary = (await auth_client.get("/stats/summary")).json()
+    # Jediná séria je Icons: Botanicals sú podľa Brickset v nej a Shrek má
+    # len sáčok a figúrku zo série.
+    assert summary["theme_count"] == 1

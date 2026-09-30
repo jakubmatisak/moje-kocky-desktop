@@ -185,6 +185,9 @@ class CatalogItem(Base):
     brickset_id = _facts_field(visibility.BRICKSET, "brickset_id")
     bs_image_count = _facts_field(visibility.BRICKSET, "bs_image_count", "image_count")
     bs_images = _facts_field(visibility.BRICKSET, "bs_images", "images")
+    #: Téma a rok tak, ako ich vedie Brickset (Série), nie zmes zdrojov ako ``theme``.
+    bs_theme = _facts_field(visibility.BRICKSET, "bs_theme", "theme")
+    bs_year = _facts_field(visibility.BRICKSET, "bs_year", "year")
 
     subtheme = _facts_field(visibility.BRICKECONOMY, "subtheme")
     retired_date = _facts_field(visibility.BRICKECONOMY, "retired_date")

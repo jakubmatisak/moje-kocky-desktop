@@ -3412,6 +3412,11 @@ export interface components {
              * @default false
              */
             followed: boolean;
+            /**
+             * Complete
+             * @default false
+             */
+            complete: boolean;
         };
         /** ThemeSliceOut */
         ThemeSliceOut: {

@@ -129,7 +129,7 @@
     {
       title: 'Kde sú tvoje údaje',
       body: [
-        String.raw`Všetko je len na tomto počítači v priečinku %APPDATA%\MojeKocky: databáza, fotky, zašifrované kľúče a denník. Appka nemá server ani prevádzkovateľa a autor k údajom nemá prístup.`,
+        String.raw`Všetko je len na tomto počítači v priečinku %APPDATA%\MojeKocky: databáza a jej zálohy, fotky, zašifrované kľúče a denník. Appka nemá server ani prevádzkovateľa a autor k údajom nemá prístup.`,
         'Ide o osobné použitie v domácnosti; na také spracúvanie sa GDPR nevzťahuje (čl. 2 ods. 2 písm. c). Ak na počítači používa appku viac ľudí, každý má svoj účet s heslom.',
       ],
     },
@@ -140,6 +140,7 @@
         'Zbierku: kusy, ceny, dátumy, umiestnenie, poznámky, Chcem, kategórie, uložené pohľady, overené a ručne zadané ceny.',
         'Fotky kusov, zmenšené a bez údajov fotoaparátu vrátane polohy GPS.',
         'Kľúče k službám zašifrované súborom secret.key a záznam volaní služieb za posledných 30 dní.',
+        String.raw`Pred každou aktualizáciou appky na inú verziu kópiu celej databázy v priečinku %APPDATA%\MojeKocky\backups. Uchováva sa 5 posledných záloh, staršie sa mažú. Údaje zmazaného účtu v nich môžu ostať, kým sa zálohy neprestriedajú.`,
       ],
     },
     {
@@ -153,7 +154,7 @@
     {
       title: 'Tvoja kontrola',
       body: [
-        'V Nastaveniach → Účet si stiahneš všetky svoje údaje (ZIP) alebo zmažeš účet so všetkým, čo k nemu patrí.',
+        'V Nastaveniach → Účet si stiahneš všetky svoje údaje (ZIP) alebo zmažeš účet so všetkým, čo k nemu patrí. V zálohách pred aktualizáciou ostane, kým sa neprestriedajú.',
         String.raw`Pri odinštalovaní sa appka opýta, či zmazať aj priečinok s údajmi. Záloha je kópia priečinka %APPDATA%\MojeKocky.`,
       ],
     },
@@ -163,7 +164,7 @@
     {
       title: 'Where your data is',
       body: [
-        String.raw`Everything stays on this computer in %APPDATA%\MojeKocky: the database, photos, encrypted keys and the log. The app has no server or operator and its author has no access to the data.`,
+        String.raw`Everything stays on this computer in %APPDATA%\MojeKocky: the database and its backups, photos, encrypted keys and the log. The app has no server or operator and its author has no access to the data.`,
         'This is personal, household use, which GDPR does not cover (Art. 2(2)(c)). If several people use the app on this computer, each has their own account with a password.',
       ],
     },
@@ -174,6 +175,7 @@
         'Collection: pieces, prices, dates, location, notes, wishlist, categories, saved views, price checks and manual prices.',
         'Photos of pieces, shrunk and without camera data including the GPS location.',
         'Keys to services encrypted with secret.key and a log of service calls for the last 30 days.',
+        String.raw`Before every update of the app to another version, a copy of the whole database in %APPDATA%\MojeKocky\backups. The last 5 backups are kept, older ones are deleted. Data of a deleted account may remain in them until the backups rotate out.`,
       ],
     },
     {
@@ -187,7 +189,7 @@
     {
       title: 'Your control',
       body: [
-        'In Settings → Account you download all your data (ZIP) or delete the account with everything that belongs to it.',
+        'In Settings → Account you download all your data (ZIP) or delete the account with everything that belongs to it. It stays in the pre-update backups until they rotate out.',
         String.raw`Uninstalling asks whether to delete the data folder too. A backup is a copy of %APPDATA%\MojeKocky.`,
       ],
     },

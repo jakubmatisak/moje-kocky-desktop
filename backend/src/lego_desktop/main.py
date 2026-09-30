@@ -5,6 +5,7 @@ prostredia pri prvom importe, preto sa premenné pre %APPDATA% nastavia
 skôr, než sa appka naimportuje.
 """
 
+import json
 import logging
 import os
 import sys
@@ -32,24 +33,70 @@ def _logging(data: DataDir) -> None:
     logging.basicConfig(level=logging.INFO, handlers=[handler], force=True)
 
 
+#: Ikona okna so správou (MessageBoxW): chyba, informácia.
+_ICON_ERROR = 0x10
+_ICON_INFO = 0x40
+
+
+def _message_box(text: str, flags: int) -> None:
+    import ctypes
+
+    ctypes.windll.user32.MessageBoxW(None, text, TITLE, flags)
+
+
 def _already_running() -> None:
-    import ctypes
+    _message_box("Moje kocky už bežia. Pozri sa na panel úloh.", _ICON_INFO)
 
-    ctypes.windll.user32.MessageBoxW(
-        None, "Moje kocky už bežia. Pozri sa na panel úloh.", TITLE, 0x40
+
+def _failed_update_backup(data: DataDir) -> Path | None:
+    """Záloha spred aktualizácie, po ktorej migrácia spadla; inak None.
+
+    Značku (``db_backup.failure_marker``) zapíše appka, keď migrácia po
+    zálohe spadne, a zmaže ju po úspešnom štarte. Keď je tu, patrí k tomuto
+    pádu (alebo k predchádzajúcemu s tou istou databázou, záloha je tá istá).
+    """
+    from lego_api.services import db_backup
+
+    marker = db_backup.failure_marker(data.database)
+    try:
+        name = json.loads(marker.read_text(encoding="utf-8"))["backup"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+    saved = marker.parent / str(name)
+    if saved.parent != marker.parent or not saved.is_file():
+        return None
+    return saved
+
+
+def startup_failure_text(data: DataDir, exc: BaseException) -> str:
+    """Správa pre používateľa, keď appka nenabehne.
+
+    Denník ani konzolu nevidí, preto mu správa povie, čo sa stalo: pri
+    zlyhanej zálohe dôvod z ``BackupFailed`` (databáza ostala bez zmeny),
+    pri zlyhanej migrácii kde je záloha spred aktualizácie a ako ju vrátiť.
+    """
+    from lego_api.services import db_backup
+
+    details = f"Podrobnosti sú v denníku:\n{data.logs / 'moje-kocky.log'}"
+    if isinstance(exc, db_backup.BackupFailed):
+        return f"Moje kocky sa nepodarilo spustiť.\n\n{exc}\n\n{details}"
+    saved = _failed_update_backup(data)
+    if saved is None:
+        return f"Moje kocky sa nepodarilo spustiť. {details}"
+    db = data.database
+    leftovers = ", ".join(f"{db.name}-{suffix}" for suffix in ("journal", "wal", "shm"))
+    return (
+        "Moje kocky sa nepodarilo spustiť: aktualizácia databázy zlyhala.\n\n"
+        f"Zbierka spred aktualizácie je v zálohe:\n{saved}\n\n"
+        f"Na návrat zatvor appku, v priečinku {db.parent} zmaž súbory {leftovers}, "
+        f"ak tam sú, a zálohu skopíruj na miesto databázy {db}. Kým nebude oprava, "
+        "nainštaluj predchádzajúcu verziu appky.\n\n"
+        f"{details}"
     )
 
 
-def _fatal(data: DataDir) -> None:
-    import ctypes
-
-    ctypes.windll.user32.MessageBoxW(
-        None,
-        "Moje kocky sa nepodarilo spustiť. Podrobnosti sú v denníku:\n"
-        f"{data.logs / 'moje-kocky.log'}",
-        TITLE,
-        0x10,
-    )
+def _fatal(data: DataDir, exc: BaseException) -> None:
+    _message_box(startup_failure_text(data, exc), _ICON_ERROR)
 
 
 def _allow_camera(window) -> None:
@@ -108,9 +155,9 @@ def main() -> None:
 
     try:
         bridge = Bridge(create_app())
-    except Exception:
-        logging.exception("Appka sa nepodarilo spustiť")
-        _fatal(data)
+    except Exception as exc:
+        logging.exception("Appku sa nepodarilo spustiť")
+        _fatal(data, exc)
         lock.release()
         return
 

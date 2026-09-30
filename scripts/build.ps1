@@ -1,8 +1,18 @@
-# Zostavenie Moje kocky Desktop: frontend, PyInstaller a inštalátor (Inno Setup).
-# Použitie:  powershell -ExecutionPolicy Bypass -File scripts\build.ps1 [-Version 0.1.0]
-param([string]$Version = "0.1.0")
+﻿# Zostavenie Moje kocky Desktop: frontend, PyInstaller a inštalátor (Inno Setup).
+# Použitie:  powershell -ExecutionPolicy Bypass -File scripts\build.ps1 [-Version 1.0.0]
+# Súbor je v UTF-8 s BOM, inak by Windows PowerShell 5.1 pokazil diakritiku.
+param([string]$Version = "1.0.0")
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
+
+# Verzia inštalátora je verzia appky. Appka podľa nej pri štarte novej verzie
+# zálohuje databázu; inštalátor 1.0.1 s appkou 1.0.0 by aktualizáciu bez
+# migrácie nezálohoval. Kontrola ide pred zostavením, nech nič nezačne.
+$pyproject = Join-Path $root "backend\pyproject.toml"
+$appVersion = (Select-String -Path $pyproject -Pattern '^version = "(.+)"$' | Select-Object -First 1).Matches[0].Groups[1].Value
+if ($Version -ne $appVersion) {
+  throw "Verzia $Version sa nezhoduje s verziou appky $appVersion v backend\pyproject.toml. Zvýš ju tam (potom uv lock a verziu vo frontend\package.json aj package-lock.json) alebo zostav s -Version $appVersion."
+}
 
 Write-Host "1/3 Frontend (režim desktop)"
 Push-Location (Join-Path $root "frontend")

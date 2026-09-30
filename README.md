@@ -100,9 +100,20 @@ Potrebuje Windows 10 alebo 11 (64-bit) a Microsoft Edge WebView2, ktorý
 v nich býva. Ak chýba, inštalátor ponúkne stránku na jeho stiahnutie.
 
 **Údaje** sú v `%APPDATA%\MojeKocky`: `lego.db` (databáza), `photos\`,
-`secret.key` (šifruje uložené kľúče k službám) a `logs\`. **Záloha** je kópia
-celého priečinka. Nová verzia sa nainštaluje cez starú a údaje ostanú.
-Odinštalovanie sa opýta, či ich zmazať.
+`secret.key` (šifruje uložené kľúče k službám), `logs\` a `backups\`.
+**Záloha** je kópia celého priečinka. Nová verzia sa nainštaluje cez starú
+a údaje ostanú. Odinštalovanie sa opýta, či ich zmazať.
+
+Pri prvom spustení každej inej verzie (aktualizácia aj návrat na staršiu),
+aj keď sa schéma databázy nemení, appka najprv skopíruje databázu do
+`%APPDATA%\MojeKocky\backups`, napríklad
+`lego-20261015-083000-v1.0.0-<revízia>.db`: verzia v mene je tá, ktorá
+bežala naposledy. Po úspešnom štarte ostane posledných 5 záloh. Fotky
+záloha nenesie. Akú verziu máš, ukazuje Nastavenia → Aplikácia. Keby sa
+aktualizácia nepodarila, appka to povie v okne aj s cestou k zálohe. Na
+návrat zatvor appku, zmaž `lego.db-journal` (a `-wal`, `-shm`), ak tam sú,
+skopíruj zálohu na miesto `lego.db` a nainštaluj predchádzajúcu verziu.
+Bez zmazania žurnálu by ho SQLite vrátil do obnoveného súboru a pokazil ho.
 
 Ako to funguje bez servera: okno (pywebview nad WebView2) načíta stránku
 zo súborov a každé volanie appky pošle priamo Pythonu v tom istom procese
@@ -168,13 +179,17 @@ cd ..\frontend; npm run type-check; npm run lint; npm test
 ### Zostavenie inštalátora
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\build.ps1 -Version 0.1.0
+powershell -ExecutionPolicy Bypass -File scripts\build.ps1 -Version 1.0.0
 ```
 
 Frontend → PyInstaller (`packaging/moje-kocky.spec`, výsledok
 `build/dist/MojeKocky/MojeKocky.exe`) → Inno Setup (`packaging/moje-kocky.iss`,
-výsledok `build/installer/MojeKocky-Setup-0.1.0.exe`). Bez nainštalovaného
-Inno Setup skript skončí pri programe. Na GitHube zostaví inštalátor
+výsledok `build/installer/MojeKocky-Setup-1.0.0.exe`). Bez nainštalovaného
+Inno Setup skript skončí pri programe. Verzia musí byť tá z
+`backend/pyproject.toml`, inú skript nezostaví: appka podľa nej pri
+aktualizácii zálohuje databázu. Nové vydanie teda zvýši `version`
+v `pyproject.toml`, spustí `uv lock` a upraví verziu vo
+`frontend/package.json` aj `package-lock.json`. Na GitHube zostaví inštalátor
 workflow `release` pri každom tagu `v*` a priloží ho k Release.
 
 ```
@@ -273,6 +288,9 @@ a podmienky služieb (k septembru 2026).
 - **Tvoje práva a kontrola:** v Nastaveniach → Účet si stiahneš všetky svoje
   údaje (ZIP) alebo zmažeš účet. Odinštalovanie sa opýta, či zmazať aj
   priečinok s údajmi.
+- **Zálohy pred aktualizáciou** (posledných 5) sú v
+  `%APPDATA%\MojeKocky\backups`; údaje zmazaného účtu v nich ostanú, kým sa
+  neprestriedajú.
 - **Fotky** sa ukladajú zmenšené a bez polohy GPS.
 - **Cookies ani sledovanie** appka nepoužíva. Okno si pamätá len nastavenia
   zobrazenia (tmavý režim, skryté ceny a pod.).

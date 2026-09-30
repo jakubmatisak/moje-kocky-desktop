@@ -37,9 +37,12 @@ jobs:
         run: |
           if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
 
+      # Tag musí byť verzia appky z backend/pyproject.toml, inak build.ps1 skončí
+      # (appka podľa verzie zálohuje databázu pri aktualizácii). Bez tagu ide jej verzia.
       - name: Zostavenie
         run: |
-          $version = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME.TrimStart('v') } else { '0.0.0' }
+          $appVersion = (Select-String -Path backend\pyproject.toml -Pattern '^version = "(.+)"$' | Select-Object -First 1).Matches[0].Groups[1].Value
+          $version = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME.TrimStart('v') } else { $appVersion }
           powershell -ExecutionPolicy Bypass -File scripts\build.ps1 -Version $version
 
       - uses: actions/upload-artifact@v4

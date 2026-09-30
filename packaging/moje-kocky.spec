@@ -1,8 +1,12 @@
 # PyInstaller: Moje kocky Desktop ako priečinok s MojeKocky.exe (onedir).
 # Zostavenie: scripts\build.ps1 (najprv frontend: npm run build-desktop).
+import sys
 from pathlib import Path
 
-from PyInstaller.utils.hooks import collect_data_files, collect_submodules
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules, copy_metadata
+
+sys.path.insert(0, SPECPATH)
+from version_info import app_version, version_resource  # noqa: E402
 
 ROOT = Path(SPECPATH).parent
 BACKEND = ROOT / "backend"
@@ -14,6 +18,9 @@ datas = [
     (str(ROOT / "packaging" / "icon.ico"), "."),
 ]
 datas += collect_data_files("webview")
+# Verzia appky (lego_api.__version__) sa číta z metadát balíka; bez nich by
+# program hlásil 0+unknown a pri aktualizácii bez migrácie by nezálohoval.
+datas += copy_metadata("lego-api")
 
 hiddenimports = (
     collect_submodules("lego_api")
@@ -43,6 +50,6 @@ exe = EXE(
     name="MojeKocky",
     icon=str(ROOT / "packaging" / "icon.ico"),
     console=False,
-    version=None,
+    version=version_resource(app_version(ROOT)),
 )
 coll = COLLECT(exe, a.binaries, a.datas, name="MojeKocky")

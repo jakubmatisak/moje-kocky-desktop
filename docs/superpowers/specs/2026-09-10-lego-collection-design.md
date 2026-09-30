@@ -102,7 +102,8 @@ docs/superpowers/specs/  tieto dokumenty
   Desktop štartuje so systémom.
 - **Dáta:** zväzok `./data:/app/data` drží `lego.db` aj `photos/`.
   Obraz dáta nenesie, takže nové nasadenie ich nezmaže.
-- **Migrácie:** Alembic ich spustí pri štarte kontajnera. Keď migrácia
+- **Migrácie:** Alembic ich spustí pri štarte kontajnera (v desktope pri
+  spustení programu, zálohy v `%APPDATA%\MojeKocky\backups`). Keď migrácia
   niečo zmení (revízia v `alembic_version` nie je head), alebo nad
   databázou naposledy bežala iná verzia appky (aktualizácia aj návrat na
   staršiu, aj bez zmeny schémy), databáza sa najprv skopíruje zálohovacím

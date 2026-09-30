@@ -17,14 +17,27 @@ zdieľanie odkazom je skryté. Klient API hľadá `fetch` až pri volaní, inak
 by si zapamätal pôvodný a prvé volanie by sa zaseklo.
 
 **Údaje v `%APPDATA%\MojeKocky`** (`lego_desktop/paths.py`): databáza,
-fotky, `secret.key` (vznikne pri prvom spustení), denníky; zámok proti
-druhému spusteniu. Kamera sa pre `file://` povolí bez pýtania
-(`_allow_camera` v `lego_desktop/main.py`).
+fotky, `secret.key` (vznikne pri prvom spustení), denníky, zálohy databázy
+pred aktualizáciou (`backups\`, vedľa databázy podľa absolútnej
+`DATABASE_URL`); zámok proti druhému spusteniu. Kamera sa pre `file://`
+povolí bez pýtania (`_allow_camera` v `lego_desktop/main.py`).
+
+**Pád pri štarte ukáže okno so správou**, denník používateľ nevidí.
+`lego_desktop/main.py::startup_failure_text`: pri `BackupFailed` jej text
+(databáza ostala bez zmeny), pri spadnutej migrácii záloha zo značky
+`backups/lego-failed-migration.json` a ako ju vrátiť, inak cesta k denníku.
+Testy v `tests/test_desktop_backup.py` majú vlastný `APPDATA` v `tmp_path`.
 
 **Balenie:** `scripts/build.ps1` → `npm run build-desktop` → PyInstaller
 (`packaging/moje-kocky.spec`; migrácie a ich importy musia byť v spec, lebo
 sa načítavajú zo súborov) → Inno Setup (`packaging/moje-kocky.iss`).
-GitHub Actions `release` pri tagu `v*`.
+GitHub Actions `release` pri tagu `v*`. Spec pribaľuje metadáta balíka
+`lego-api` (`copy_metadata`), inak by zabalený program hlásil `0+unknown`
+a pri aktualizácii bez migrácie nezálohoval; verziu do .exe zapíše
+`packaging/version_info.py`. Verzia inštalátora je verzia appky:
+`build.ps1` inú nepustí (tag `v1.2.3` = `version` v `pyproject.toml`),
+predvolené čísla v `build.ps1` a `moje-kocky.iss` stráži
+`tests/test_desktop_version.py`. Každé vydanie zvýši verziu.
 
 Nižšie sú pravidlá appky prevzaté z webového repa; platia aj tu, okrem
 Dockeru, portu 8000 a zdieľania odkazom.
@@ -125,7 +138,8 @@ cez `services/db_backup.py::upgrade_with_backup`: keď revízia v
 verzia appky (aj staršia), zálohovacie API SQLite (konzistentné aj pri
 otvorenom spojení) skopíruje databázu do `backups/` vedľa nej
 (`lego-RRRRMMDD-HHMMSS-v<verzia>-<revízia>.db`, stav pred štartom;
-v kontajneri `/app/data/backups`). Verzia je `lego_api.__version__`
+v kontajneri `/app/data/backups`, v desktope `%APPDATA%\MojeKocky\backups`).
+Verzia je `lego_api.__version__`
 (metadáta balíka, teda `pyproject.toml`, žiadna ručná kópia) a po úspešnej
 migrácii sa zapíše do `app_settings` → `app_version` (`record_version`).
 Pred migráciou ju `recorded_version` číta surovým SQL, lebo schéma môže
@@ -142,16 +156,19 @@ kým sa databáza odvtedy nezmenila, ďalší štart novú zálohu nerobí a hl�
 tú pôvodnú. Verzia sa pri páde nezapíše, takže to platí aj pre štart novej
 verzie bez migrácie. Nové vydanie = zvýšiť `version` v `pyproject.toml`,
 `uv lock` a verziu vo `frontend/package.json` aj `package-lock.json`
-(zhodu stráži `tests/test_version.py`), inak sa pri aktualizácii bez
-migrácie nezálohuje. Verziu hlási `/health`, OpenAPI a Nastavenia →
-Aplikácia (`components/AppVersion.vue`). Log pri páde povie, kde je záloha
+(zhodu stráži `tests/test_version.py`; v desktope aj predvolenú verziu
+v `build.ps1` a `moje-kocky.iss`, `tests/test_desktop_version.py`), inak sa
+pri aktualizácii bez migrácie nezálohuje. Verziu hlási `/health`, OpenAPI
+a Nastavenia → Aplikácia (`components/AppVersion.vue`, v desktope bez
+prevádzkovateľa, verzia ostáva). Log pri páde povie, kde je záloha
 a že pred jej skopírovaním treba zmazať `lego.db-journal` (`-wal`, `-shm`), inak ho SQLite vráti do
 obnoveného súboru. Aby sa to do logu dostalo, `_migrate` nastaví
 `config.attributes["keep_logging"]` a `alembic/env.py` potom nevolá
 `fileConfig`, ktorý by vypol loggery appky aj uvicornu. Fotky záloha
 nenesie. Zálohy obsahujú aj údaje neskôr zmazaných účtov, preto to
-spomínajú zásady `/sukromie` (Ako dlho, Vymazanie); `data/backups/` je
-v `.gitignore`.
+spomínajú zásady `/sukromie` (Ako dlho, Vymazanie; v desktope `SK_DESKTOP`
+a `EN_DESKTOP` v sekciách Čo appka ukladá a Tvoja kontrola);
+`data/backups/` je v `.gitignore`.
 
 **Bez trhovej ceny sa nezobrazuje nula.** Keď `price_source == "missing"`,
 rozhranie ukáže pomlčku alebo „cena neznáma“, nie `0 €` a `−100 %`.
@@ -590,7 +607,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 554 testov, frontend 194. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 567 testov, frontend 197. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

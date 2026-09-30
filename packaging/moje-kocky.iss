@@ -3,8 +3,9 @@
 ; Inštaluje sa pre aktuálneho používateľa, bez práv správcu. Údaje appky sú
 ; v %APPDATA%\MojeKocky a odinštalovanie ich zmaže, len keď to používateľ chce.
 
+; Verzia je verzia appky (backend/pyproject.toml); build.ps1 inú nepustí.
 #ifndef AppVersion
-  #define AppVersion "0.1.0"
+  #define AppVersion "1.0.0"
 #endif
 
 [Setup]

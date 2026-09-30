@@ -93,6 +93,19 @@ Overené skúškou na zahodenie (pywebview 6.2, WebView2, Windows 11):
   je voliteľný neskôr.
 - **Zostavenie**: GitHub Actions `windows-latest` pri tagu `v*`, výsledok
   `MojeKocky-Setup-x.y.z.exe` v Releases. Lokálne `scripts\build.ps1`.
+- **Verzia**: jediný zdroj je `version` v `backend/pyproject.toml` (ako na
+  webe). Inštalátor, `MojeKocky.exe` (Podrobnosti súboru,
+  `packaging/version_info.py`) aj appka (Nastavenia → Aplikácia) hlásia to
+  isté číslo; `build.ps1` inú verziu nezostaví, takže tag `v1.2.3` musí
+  sedieť s `pyproject.toml`. PyInstaller pribaľuje metadáta balíka
+  `lego-api`, inak by program hlásil `0+unknown`.
+- **Záloha pri aktualizácii**: nová verzia sa inštaluje cez starú a pri
+  prvom spustení (aj bez zmeny schémy) appka skopíruje databázu do
+  `%APPDATA%\MojeKocky\backups` (posledných 5, `services/db_backup.py`, ako na
+  webe). Keď záloha alebo migrácia zlyhá, okno so správou povie dôvod,
+  prípadne kde je záloha a ako ju vrátiť (zmazať `lego.db-journal`, `-wal`,
+  `-shm`, skopírovať zálohu na miesto `lego.db`, nainštalovať predchádzajúcu
+  verziu); podrobnosti ostanú v `logs\moje-kocky.log`.
 
 ## Fázy
 
@@ -118,6 +131,9 @@ Overené skúškou na zahodenie (pywebview 6.2, WebView2, Windows 11):
   telo, chyba), hash router.
 - Kontrola „žiadny port“: test spustí most bez okna a overí, že proces
   nepočúva na žiadnom porte (netstat pre vlastný PID).
+- Záloha pri aktualizácii a správa pri páde štartu (`test_desktop_backup.py`,
+  vlastný `APPDATA` v dočasnom priečinku); zhoda verzie inštalátora, skriptu
+  zostavenia a .exe s `pyproject.toml` (`test_desktop_version.py`).
 - Ručne na čistom Windows (Fáza 3): inštalácia bez práv správcu, prvé
   spustenie, skenovanie čítačkou aj kamerou, obnova cien, export, aktualizácia,
   odinštalovanie.

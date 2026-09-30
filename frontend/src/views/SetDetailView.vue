@@ -355,6 +355,12 @@
   /** Stránka série: kusy sú jej členovia, séria sama cenu nemá. Aj nezačatá. */
   const isSeriesPage = computed(() => isSeriesDetail(catalog.value, pieces.value))
 
+  /**
+   * Figúrka zo série (aj blind-box) alebo séria sama: patrí do Figúrok.
+   * Zbierka ju neukazuje, takže štítok odtiaľto do Zbierky neodkazuje.
+   */
+  const inFigures = computed(() => Boolean(catalog.value?.parent_num) || isSeriesPage.value)
+
   /** Hromadná úprava vlastnených kusov série; rozsah pre server je séria. */
   const selection = createSelection({ items: () => owned.value.map(p => p.id) })
   const seriesScope = computed(() => ({ series: [num.value] }))
@@ -606,14 +612,17 @@
             </div>
 
             <div v-if="catalog.tags?.length" class="d-flex flex-wrap ga-1">
-              <!-- Štítok vedie do Zbierky vyfiltrovanej podľa neho. -->
+              <!--
+                Štítok setu vedie do Zbierky vyfiltrovanej podľa neho. Figúrka
+                zo série v Zbierke nie je, tam by odkaz ukázal zoznam bez nej.
+              -->
               <v-chip
                 v-for="tag in catalog.tags"
                 :key="tag"
                 label
                 prepend-icon="mdi-tag-outline"
                 size="small"
-                :to="{ name: 'collection', query: { tag } }"
+                :to="inFigures ? undefined : { name: 'collection', query: { tag } }"
                 variant="tonal"
               >{{ tag }}</v-chip>
             </div>

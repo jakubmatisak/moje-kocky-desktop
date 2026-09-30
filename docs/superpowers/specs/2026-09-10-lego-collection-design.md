@@ -658,7 +658,9 @@ Podrobnosti:
   otvorení Zbierky, najviac 40 za beh, a detail setu pri otvorení (jedno
   volanie).
 - Existujúcim údajom Brickset nič neprepisuje, len dopĺňa chýbajúce.
-  Štítky sú aj filter.
+  Štítky sú aj filter; štítok v detaile setu vedie do Zbierky s ním, na
+  detaile figúrky zo série (aj série samej) je obyčajný čip, lebo Zbierka
+  figúrku neukazuje.
 
 **Témy a vlny** (`services/themes.py`):
 
@@ -808,8 +810,10 @@ Podrobnosti:
   súčtov je nenápadný riadok „N figúrok zo sérií je vo Figúrkach“
   s odkazom Otvoriť Figúrky (`FacetsOut.hidden_figures`); keď Zbierka
   nenašla nič a filter by trafil figúrky, ten istý riadok je v prázdnom
-  stave. Bežný filter (stav, umiestnenie…), ktorý niečo ukazuje, figúrky
-  nehlási. Kým sa hľadanie spresňuje a nové počty ešte neprišli, riadok
+  stave. Filter Umiestnenie či Krabica, ktorý figúrky skryl, ich hlási aj
+  pri neprázdnom výsledku (v krabici 3 sú sety aj figúrky). Iný bežný
+  filter (stav, téma…), ktorý niečo ukazuje, figúrky nehlási. Kým sa
+  hľadanie spresňuje alebo mení miesto a nové počty ešte neprišli, riadok
   drží miesto bez starého počtu, aby výsledky neposkakovali. Písmo 14 px
   (`text-body-medium`). Starý odkaz s filtrom série vedie do
   Figúrok, uložený pohľad s filtrom figúrok je označený a po kliknutí to
@@ -1001,7 +1005,8 @@ Pravidlá API:
   - skupina sa zadáva opakovaním parametra (`?theme=a&theme=b`);
   - hodnota „nič“ je `__none__`;
   - `sets_only` je rozsah sekcie Zbierka, nie filter: vyradí figúrky zo
-    sérií (`kind_of`) aj z ponuky volieb (`in_section`);
+    sérií (`kind_of`) aj z ponuky volieb (`in_section`), okrem Umiestnenia
+    a Krabice: miesto len s figúrkami ostane v ponuke s nulou setov;
   - počet pri voľbe ráta s ostatnými skupinami, nie s vlastnou. Voľba,
     po ktorej by nič neostalo, zošedne, ale ostane.
 - **`Literal` na číselnom query parametri nefunguje**, lebo hodnota príde

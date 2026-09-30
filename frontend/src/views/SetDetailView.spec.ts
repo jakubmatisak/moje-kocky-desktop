@@ -3,7 +3,7 @@ import type { ValuedItem } from '@/api/types'
 import type * as Router from 'vue-router'
 import { flushPromises, shallowMount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import PieceDialog from '@/components/PieceDialog.vue'
 import i18n from '@/plugins/i18n'
 import { useNotifyStore } from '@/stores/notify'
@@ -14,6 +14,8 @@ const NUM = '10294-1'
 let pieces: ValuedItem[] = []
 /** Odpoveď servera na úpravu kusu. */
 let patched: { data?: unknown, error?: unknown } = { data: {} }
+/** Doplnky katalógu (štítky, rodič série). */
+let catalogExtra: Record<string, unknown> = {}
 
 vi.mock('vue-router', async original => ({
   ...(await original<typeof Router>()),
@@ -25,7 +27,7 @@ vi.mock('@/api/client', async original => ({
   api: {
     GET: async (path: string) => {
       if (path === '/catalog/{num}') {
-        return { data: { catalog_num: NUM, name: 'Titanic', kind: 'set', source: 'manual', tags: [] } }
+        return { data: { catalog_num: NUM, name: 'Titanic', kind: 'set', source: 'manual', tags: [], ...catalogExtra } }
       }
       if (path === '/items') {
         return { data: pieces }
@@ -232,5 +234,37 @@ describe('detail setu: úprava kusu', () => {
 
     expect(dialog.props('modelValue')).toBe(false)
     expect(done).toHaveBeenCalledWith(true)
+  })
+})
+
+describe('detail setu: štítky z Brickset', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    i18n.global.locale.value = 'sk'
+    pieces = [piece(1, {})]
+  })
+
+  afterEach(() => {
+    catalogExtra = {}
+  })
+
+  function tagChip (wrapper: Awaited<ReturnType<typeof mountDetail>>) {
+    const chip = wrapper.findAll('v-chip').find(c => c.text() === 'Minifig Pack')
+    expect(chip).toBeDefined()
+    return chip!
+  }
+
+  it('štítok setu vedie do Zbierky vyfiltrovanej podľa neho', async () => {
+    catalogExtra = { tags: ['Minifig Pack'] }
+    const wrapper = await mountDetail()
+
+    expect(tagChip(wrapper).attributes('to')).toBeDefined()
+  })
+
+  it('štítok figúrky zo série do Zbierky nevedie: figúrka tam nie je', async () => {
+    catalogExtra = { tags: ['Minifig Pack'], parent_num: '71046' }
+    const wrapper = await mountDetail()
+
+    expect(tagChip(wrapper).attributes('to')).toBeUndefined()
   })
 })

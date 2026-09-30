@@ -402,7 +402,9 @@ diakritiku (`filters.fold`), každé slovo musí sedieť.
 
 **Zbierka sú len sety, figúrky zo sérií sú vo Figúrkach.** Zbierka posiela
 `sets_only=true` (`filterStore.sectionQuery()` v zozname, počtoch aj hromadnej
-úprave), čo vyradí figúrky aj z ponuky volieb panela. Do adresy ani do
+úprave), čo vyradí figúrky aj z ponuky volieb panela, okrem Umiestnenia
+a Krabice: miesto len s figúrkami tam ostane s nulou setov, inak by
+krabica s figúrkami vo filtri chýbala. Do adresy ani do
 uloženého pohľadu nejde, takže Prehľad, export, súpis a detail setu počítajú
 všetko. Filtre len pre figúrky (Typ, Séria, Podoba, nekompletné, chýbajúce)
 a zoskupenie podľa série panel ani `facets()` nemajú; zo stavu účtu ich
@@ -413,11 +415,13 @@ uložený pohľad s nimi je označený a po kliknutí to oznámi
 nenašlo“, `FacetsOut.hidden_figures` povie, koľko figúrok zo sérií by filter
 našiel, a `FiguresElsewhere.vue` odkáže do Figúrok. Je to nenápadný riadok
 pod súčtami, nie `v-alert`, a len keď na tom záleží: hľadanie (`q`) ich
-trafilo, alebo Zbierka nenašla nič (vtedy je riadok v prázdnom stave).
-Bežný filter s výsledkom nehlási nič. Počty musia patriť tomu istému
-hľadaniu (`filterStore.facetsSearch`), inak by po napísaní chvíľu svietil
-počet zo starého filtra. Pri spresňovaní hľadania, ktoré tiež trafilo
-figúrky, riadok drží miesto (`pending`, `visibility: hidden`), kým neprídu
+trafilo, filter Umiestnenie či Krabica ich skryl („čo je v krabici 3“
+sú aj figúrky), alebo Zbierka nenašla nič (vtedy je riadok v prázdnom
+stave). Iný bežný filter s výsledkom nehlási nič. Počty musia patriť tomu
+istému hľadaniu a miestu (`filterStore.facetsSearch`, `facetsPlaces`),
+inak by po napísaní chvíľu svietil počet zo starého filtra. Pri
+spresňovaní hľadania či zmene miesta, ktoré tiež trafilo figúrky, riadok
+drží miesto (`pending`, `visibility: hidden`), kým neprídu
 nové počty, inak by výsledky pri každej pauze v písaní poskočili. Písmo je
 `text-body-medium`: Vuetify 4 má typografiu MD3 a staré triedy
 (`text-body-2`, `text-caption`, `text-subtitle-1`…) v jeho CSS nie sú.
@@ -595,7 +599,9 @@ hodnotenie a obľúbenosť. Nové sety ich dostanú pri vyhľadaní; staršie do
 `services/brickset_extras.py` na pozadí pri otvorení Zbierky, najviac 40 za
 beh, a detail setu pri otvorení (jedno volanie). Prístup kľúča v
 `source_access` (aj pri nenájdenom sete, `found=False`) stráži, aby sa ten
-istý kľúč na set nepýtal znova. Štítky sú aj filter.
+istý kľúč na set nepýtal znova. Štítky sú aj filter: štítok v detaile
+setu vedie do Zbierky s ním, na detaile figúrky zo série (aj série samej)
+je obyčajný čip, lebo Zbierka figúrku neukazuje.
 
 **Ďalšie fotky setu sú z Brickset, raz na set.** `getAdditionalImages`
 sa do limitu nepočíta, ale chce `setID` Brickset, nie číslo setu. `setID`

@@ -183,17 +183,18 @@ docs/superpowers/specs/  tieto dokumenty
 - Obnovovací token je v httpOnly cookie, v databáze je jeho sha256. Pri
   každom použití sa vymení a starý sa odvolá. Výmena je atómová
   (podmienený `UPDATE`): keď prehliadač po reštarte obnoví viac kariet
-  naraz s tým istým cookie, token vymení len jedna a nové cookie dostane
-  len jej odpoveď. Ostatné, ktoré prídu do 60 s od výmeny (ochranná lehota),
-  dostanú len prístupový token; reťaz sa tak nerozdvojí a nikoho to
-  neodhlási.
+  naraz s tým istým cookie, token vymení len jedna. Ostatné, ktoré prídu
+  do 60 s od výmeny (ochranná lehota), dostanú prístup aj vlastný nový token;
+  rovnako prehliadač, ku ktorému odpoveď s cookie nedorazila (F5 počas
+  obnovy). Nikoho to neodhlási a po lehote nemá nikto vymenený token.
 - Vymenený token prijatý po ochrannej lehote znamená skopírované cookie
   (útočník obnovil prvý alebo obnovuje po obeti): zmažú sa všetky tokeny
   účtu, do logu ide varovanie a odpoveď je 401. Vymenený token preto
   v databáze ostáva do svojho vypršania (najviac 30 dní), už bez údaja
   o prehliadači.
-- Odhlásenie zmaže aktuálny token aj vymenené tokeny účtu; z prihlásenia
-  v databáze nič neostane, platné prihlásenia iných zariadení ostávajú.
+- Odhlásenie zmaže aktuálny token. Vymenené tokeny (bez údaja o prehliadači)
+  ostávajú do vypršania, aby sa ukradnuté cookie spoznalo aj po odhlásení na
+  inom zariadení; platné prihlásenia iných zariadení ostávajú.
 - **Zapamätať si prihlásenie na tomto počítači** (políčko pri prihlásení
   aj registrácii, predvolene nie, `remember` v tele): trvalé cookie na
   30 dní. Bez neho session cookie bez Max-Age, ktoré zanikne so zatvorením

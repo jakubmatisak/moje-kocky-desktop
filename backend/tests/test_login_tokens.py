@@ -112,8 +112,9 @@ async def file_app(tmp_path, settings) -> AsyncGenerator[tuple[ASGITransport, as
 async def test_tabs_refreshing_with_one_cookie_all_stay_signed_in(file_app, delay) -> None:
     """Prehliadač po reštarte obnoví viac kariet naraz, všetky so starým cookie.
 
-    Každá dostane prístup, nové cookie len jedna (prehliadač ho má jedno)
-    a platný ostane jediný token: zrušenie je atómové, reťaz sa nerozdvojí.
+    Každá dostane prístup aj nové cookie. Vymení token len jedna (zrušenie
+    je atómové), ostatné sú v ochrannej lehote. Cookie, ktoré si prehliadač
+    nechá, ďalej funguje.
     """
     transport, maker = file_app
     async with AsyncClient(transport=transport, base_url=BASE) as first:
@@ -140,24 +141,25 @@ async def test_tabs_refreshing_with_one_cookie_all_stay_signed_in(file_app, dela
 
         assert [a.status_code for a in answers] == [200, 200, 200, 200], [a.text for a in answers]
         rotated = [a.cookies.get("lego_refresh") for a in answers if _refresh_cookies(a)]
-        assert len(rotated) == 1, [a.headers.get_list("set-cookie") for a in answers]
+        assert len(rotated) == 4, [a.headers.get_list("set-cookie") for a in answers]
         async with AsyncClient(transport=transport, base_url=BASE) as check:
             for answer in answers:
                 me = await check.get("/auth/me", headers=_bearer(answer.json()["access_token"]))
                 assert me.status_code == 200
-        raw = rotated[0]
+        raw = rotated[-1]
 
-    valid = [t for t in await _tokens(maker) if t.revoked_at is None]
-    assert [t.token_hash for t in valid] == [hash_refresh_token(raw)]
+    valid = [t.token_hash for t in await _tokens(maker) if t.revoked_at is None]
+    assert hash_refresh_token(raw) in valid
 
 
 # --- ochranná lehota a znova použitý token ----------------------------------------
 
 
-async def test_replay_within_grace_gets_only_an_access_token(client: AsyncClient) -> None:
-    """Karta, ktorá poslala cookie tesne pred výmenou, nové cookie nedostane.
+async def test_replay_within_grace_gets_its_own_new_cookie(client: AsyncClient) -> None:
+    """Prehliadač, ku ktorému nové cookie nedorazilo (F5 počas obnovy), dostane ďalšie.
 
-    Prehliadač ho už má z víťaznej odpovede; ďalšie by reťaz rozdvojilo.
+    Inak by si držal vymenený token a po lehote by ho appka vzala za
+    ukradnutý a odhlásila všetky zariadenia. Aj víťazné cookie ďalej platí.
     """
     await client.post("/auth/register", json={**REGISTER, "remember": True})
     old = client.cookies.get("lego_refresh") or ""
@@ -168,11 +170,58 @@ async def test_replay_within_grace_gets_only_an_access_token(client: AsyncClient
     replay = await client.post("/auth/refresh")
 
     assert replay.status_code == 200, replay.text
-    assert _refresh_cookies(replay) == []
+    assert _refresh_cookies(replay)
+    again = replay.cookies.get("lego_refresh")
     me = await client.get("/auth/me", headers=_bearer(replay.json()["access_token"]))
     assert me.status_code == 200
     client.cookies.set("lego_refresh", newest or "")
     assert (await client.post("/auth/refresh")).status_code == 200
+    client.cookies.set("lego_refresh", again or "")
+    assert (await client.post("/auth/refresh")).status_code == 200
+
+
+async def test_lost_cookie_answer_does_not_look_like_theft(
+    client: AsyncClient, sessionmaker_
+) -> None:
+    """Odpoveď s novým cookie sa stratila, prehliadač poslal starý token ešte v lehote.
+
+    Keď sa potom lehota skončí, prehliadač už má vlastný platný token:
+    nič sa neodhlási, telefón ani iný počítač nie.
+    """
+    await client.post("/auth/register", json={**REGISTER, "remember": True})
+    old = client.cookies.get("lego_refresh") or ""
+    other = await client.post("/auth/login", json={**LOGIN, "remember": True})
+    elsewhere = other.cookies.get("lego_refresh") or ""
+    client.cookies.set("lego_refresh", old)
+    assert (await client.post("/auth/refresh")).status_code == 200  # odpoveď sa stratila
+
+    client.cookies.set("lego_refresh", old)
+    retry = await client.post("/auth/refresh")
+    assert retry.status_code == 200
+    kept = retry.cookies.get("lego_refresh") or ""
+    await _revoked_ago(sessionmaker_, old, 120)
+
+    client.cookies.set("lego_refresh", kept)
+    assert (await client.post("/auth/refresh")).status_code == 200
+    client.cookies.set("lego_refresh", elsewhere)
+    assert (await client.post("/auth/refresh")).status_code == 200
+
+
+async def test_logout_elsewhere_keeps_theft_detection(client: AsyncClient, sessionmaker_) -> None:
+    """Odhlásenie na telefóne nezmaže stopy: ukradnuté cookie z PC sa spozná aj potom."""
+    await client.post("/auth/register", json={**REGISTER, "remember": True})
+    stolen = client.cookies.get("lego_refresh") or ""
+    assert (await client.post("/auth/refresh")).status_code == 200  # útočník obnovil prvý
+    thief = client.cookies.get("lego_refresh") or ""
+    phone = await client.post("/auth/login", json={**LOGIN, "remember": True})
+    client.cookies.set("lego_refresh", phone.cookies.get("lego_refresh") or "")
+    assert (await client.post("/auth/logout")).status_code == 204
+    await _revoked_ago(sessionmaker_, stolen, 120)
+
+    client.cookies.set("lego_refresh", stolen)
+    assert (await client.post("/auth/refresh")).status_code == 401
+    client.cookies.set("lego_refresh", thief)
+    assert (await client.post("/auth/refresh")).status_code == 401
 
 
 async def test_reused_old_token_ends_every_login_of_the_account(
@@ -217,10 +266,13 @@ async def test_rotated_token_keeps_no_browser_details(client: AsyncClient, sessi
 # --- upratovanie -----------------------------------------------------------------
 
 
-async def test_logout_after_several_refreshes_leaves_no_rows(
+async def test_logout_after_several_refreshes_keeps_only_anonymous_rotated_rows(
     client: AsyncClient, sessionmaker_
 ) -> None:
-    """Po odhlásení v databáze neostane nič z tohto prihlásenia, ani vymenené tokeny."""
+    """Po odhlásení nič z tohto prihlásenia neotvorí a vymenené tokeny nemajú prehliadač.
+
+    Ostávajú do vypršania kvôli rozpoznaniu ukradnutého cookie.
+    """
     await client.post("/auth/register", json={**REGISTER, "email": "b@example.com"})
     await client.post("/auth/register", json={**REGISTER, "remember": True})
     for _ in range(5):
@@ -229,7 +281,9 @@ async def test_logout_after_several_refreshes_leaves_no_rows(
 
     assert (await client.post("/auth/logout")).status_code == 204
 
-    assert await _tokens(sessionmaker_, user_id=2) == []
+    left = await _tokens(sessionmaker_, user_id=2)
+    assert len(left) == 5
+    assert all(t.revoked_at is not None and t.user_agent is None for t in left)
     assert len(await _tokens(sessionmaker_, user_id=1)) == 1
 
 

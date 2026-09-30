@@ -740,14 +740,17 @@ obnova tokenu ho zdedí a platnosť posunie (kĺzavé). Tokeny spred stĺpca sú
 bez zapamätania, inak by kĺzavých 30 dní ostalo trvalých naveky; migrácia
 `9332cb64e9a6` im skrátila platnosť na 12 h. Výmena pri obnove je atómová
 (`UPDATE … WHERE revoked_at IS NULL`, rowcount): z kariet s tým istým cookie
-vymení token len jedna, reťaz sa nerozdvojí. Vymenený token do
-`refresh_grace_seconds` (60 s) dá len prístupový token bez nového cookie
-(súbežné karty po reštarte prehliadača), po lehote je to ukradnuté cookie:
+vymení token len jedna. Vymenený token do `refresh_grace_seconds` (60 s)
+dá prístup aj vlastný nový token v tom istom režime (súbežné karty po
+reštarte prehliadača, stratená odpoveď s cookie pri F5): bez neho by
+prehliadač držal vymenený token a po lehote by to vyzeralo ako krádež.
+Po lehote je to ukradnuté cookie:
 zmažú sa všetky tokeny účtu a do logu ide varovanie. Vymenený token preto
 ostáva do vypršania, bez `user_agent`. Vypršané tokeny všetkých účtov maže
 `auth/tokens.py::prune` pri každom vydaní aj pri štarte, zásady sľubujú
-najviac 30 dní. Odhlásenie zmaže aktuálny token aj vymenené tokeny účtu,
-zmazanie účtu všetky (`_OWNED`). Zmena hesla (`_end_logins`) zmaže všetky
+najviac 30 dní. Odhlásenie zmaže len aktuálny token (vymenené ostanú, inak
+by odhlásenie na telefóne zmazalo stopu ukradnutého cookie z PC), zmazanie
+účtu všetky (`_OWNED`). Zmena hesla (`_end_logins`) zmaže všetky
 tokeny účtu a nastaví `users.password_changed_at`: `current_user` odmietne
 prístupový token so starším `iat` (na celé sekundy), takže iné zariadenia
 stratia prístup hneď. Tento prehliadač dostane nový token v tom istom
@@ -836,7 +839,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 678 testov, frontend 248. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 757 testov, frontend 273. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

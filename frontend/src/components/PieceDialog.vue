@@ -93,9 +93,12 @@
   async function saveCategories (num: string): Promise<boolean> {
     if (!categories.dirty.value) return false
     let written = false
+    const before = categories.changes.value.length
     try {
       written = (await categories.apply(num)) > 0
     } catch (error_) {
+      // Časť kategórií sa mohla zapísať aj pri chybe: zmien potom ubudlo.
+      written = categories.changes.value.length < before
       notify.error(error_, t('notice.categoriesFailed'))
     }
     emit('categories-changed')

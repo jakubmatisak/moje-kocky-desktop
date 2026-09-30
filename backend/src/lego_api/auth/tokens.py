@@ -2,8 +2,8 @@
 
 Vymenený token ostáva v databáze do svojho vypršania (najviac 30 dní, ako
 sľubujú zásady), bez údajov o prehliadači: podľa neho sa spozná ukradnuté
-cookie (``router.py::refresh``). Odhlásenie zmaže aktuálny token aj vymenené
-tokeny účtu, zmena hesla a zmazanie účtu všetky.
+cookie (``router.py::refresh``), aj keď sa medzitým na inom zariadení
+odhlásilo. Odhlásenie zmaže aktuálny token, zmena hesla a zmazanie účtu všetky.
 """
 
 from datetime import UTC, datetime

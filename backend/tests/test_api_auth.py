@@ -90,12 +90,12 @@ async def test_refresh_rotates_the_token(client: AsyncClient) -> None:
     second_cookie = client.cookies.get("lego_refresh")
     assert second_cookie != first_cookie
 
-    # Starý token je zrušený: v ochrannej lehote dá len prístupový token,
-    # nové cookie už nie (test_login_tokens.py), po nej neprejde vôbec.
+    # Starý token je zrušený: v ochrannej lehote dá prístup aj vlastné nové
+    # cookie (test_login_tokens.py), po nej neprejde vôbec.
     client.cookies.set("lego_refresh", first_cookie or "")
     replay = await client.post("/auth/refresh")
     assert replay.status_code == 200
-    assert not [c for c in replay.headers.get_list("set-cookie") if "lego_refresh=" in c]
+    assert [c for c in replay.headers.get_list("set-cookie") if "lego_refresh=" in c]
 
 
 async def test_logout_revokes_the_token(client: AsyncClient) -> None:

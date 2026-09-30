@@ -14,7 +14,7 @@ from fastapi import (
     Response,
     status,
 )
-from sqlalchemy import delete, func, or_, select, update
+from sqlalchemy import delete, func, select, update
 
 from lego_api.auth import tokens
 from lego_api.auth.deps import CurrentUser, SessionDep
@@ -156,7 +156,7 @@ async def refresh(
     if user is None or not user.is_active:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Účet nie je dostupný")
     if stored.revoked_at is not None:
-        return await _replayed(session, stored, user, settings)
+        return await _replayed(session, stored, user, request, response, settings)
 
     # Rotácia: starý token sa zruší a vydá sa nový, v tom istom režime
     # (zapamätaný sa posunie o 30 dní, bez zapamätania o pár hodín).
@@ -178,7 +178,7 @@ async def refresh(
         )
         if current is None or current.revoked_at is None:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Neplatný obnovovací token")
-        return await _replayed(session, current, user, settings)
+        return await _replayed(session, current, user, request, response, settings)
 
     new_raw = await _issue_refresh(session, user, request, stored.remember)
     await session.commit()
@@ -186,12 +186,24 @@ async def refresh(
     return _access_for(user, settings)
 
 
-async def _replayed(session, token: RefreshToken, user: User, settings: Settings) -> TokenResponse:
+async def _replayed(
+    session,
+    token: RefreshToken,
+    user: User,
+    request: Request,
+    response: Response,
+    settings: Settings,
+) -> TokenResponse:
     """Prišiel už vymenený token.
 
     V ochrannej lehote je to karta, ktorá poslala cookie tesne pred výmenou
-    alebo súčasne s ňou: dostane len prístupový token. Nové cookie nie,
-    prehliadač nástupcu už má z prvej odpovede a ďalší by reťaz rozdvojil.
+    alebo súčasne s ňou, alebo prehliadač, ku ktorému odpoveď s novým
+    cookie nedorazila (F5 počas obnovy, výpadok spojenia). Dostane prístup
+    aj vlastný nový token v tom istom režime: bez neho by si prehliadač
+    držal vymenený token a po lehote by to vyzeralo ako krádež, ktorá
+    odhlási všetky zariadenia. Reťaz sa tým rozdvojí najviac na 60 s
+    a token, ktorý si prehliadač nenechal (súbežné karty, cookie je jedno),
+    vyprší sám.
     Po lehote má token niekto, kto ho mať nemá (skopírované cookie
     zapamätaného prihlásenia): skončia všetky prihlásenia účtu, inak by si
     útočník, ktorý obnovil prvý, reťaz posúval donekonečna.
@@ -199,6 +211,9 @@ async def _replayed(session, token: RefreshToken, user: User, settings: Settings
     now = datetime.now(UTC)
     age = now - _aware(token.revoked_at or now)
     if age <= timedelta(seconds=settings.refresh_grace_seconds):
+        raw = await _issue_refresh(session, user, request, token.remember)
+        await session.commit()
+        _set_refresh_cookie(response, raw, settings, token.remember)
         return _access_for(user, settings)
     log.warning(
         "Účet %d: prišiel obnovovací token vymenený pred %d s. Mohol ho niekto "
@@ -222,27 +237,17 @@ async def logout(
     settings: SettingsDep,
     lego_refresh: Annotated[str | None, Cookie()] = None,
 ) -> Response:
-    # Token sa zmaže, nielen zruší, a s ním aj vymenené tokeny účtu (každá
-    # obnova jeden): po odhlásení z tohto prihlásenia v databáze nič neostane.
-    # Platné prihlásenia na iných zariadeniach ostávajú.
+    # Aktuálny token sa zmaže, nielen zruší. Vymenené tokeny ostávajú do
+    # vypršania (bez údaju o prehliadači): podľa nich sa spozná ukradnuté
+    # cookie aj po odhlásení na inom zariadení. Platné prihlásenia na iných
+    # zariadeniach ostávajú.
     if lego_refresh:
-        token_hash = hash_refresh_token(lego_refresh)
-        owner = await session.scalar(
-            select(RefreshToken.user_id).where(RefreshToken.token_hash == token_hash)
+        await session.execute(
+            delete(RefreshToken)
+            .where(RefreshToken.token_hash == hash_refresh_token(lego_refresh))
+            .execution_options(synchronize_session=False)
         )
-        if owner is not None:
-            await session.execute(
-                delete(RefreshToken)
-                .where(
-                    RefreshToken.user_id == owner,
-                    or_(
-                        RefreshToken.token_hash == token_hash,
-                        RefreshToken.revoked_at.is_not(None),
-                    ),
-                )
-                .execution_options(synchronize_session=False)
-            )
-            await session.commit()
+        await session.commit()
     response.delete_cookie(REFRESH_COOKIE, path="/", domain=settings.cookie_domain)
     response.status_code = status.HTTP_204_NO_CONTENT
     return response

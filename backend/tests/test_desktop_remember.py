@@ -241,8 +241,8 @@ def test_refused_refresh_deletes_the_file(start, data: DataDir, sessionmaker_) -
 def test_stale_cookie_within_grace_keeps_the_remembered_login(start, data: DataDir) -> None:
     """Dve obnovy naraz (pywebview volá most z viacerých vlákien).
 
-    Neskoršia príde so starým cookie do ochrannej lehoty: dostane len
-    prístupový token, bez Set-Cookie. Súbor ostane s novým prihlásením.
+    Neskoršia príde so starým cookie do ochrannej lehoty: dostane prístup
+    aj vlastné nové cookie, most ho uloží a zapamätanie ostane platné.
     """
     bridge = start()
     _register(bridge, remember=True)
@@ -254,9 +254,10 @@ def test_stale_cookie_within_grace_keeps_the_remembered_login(start, data: DataD
     late = bridge.request("POST", "/api/v1/auth/refresh", {"cookie": f"lego_refresh={stale}"}, None)
     assert late["status"] == 200, _json(late)
     assert "access_token" in _json(late)
-    assert "set-cookie" not in late["headers"]
-    assert data.session_file.read_bytes() == saved
-    assert _refresh_cookies(bridge) == [current]
+    assert "set-cookie" in late["headers"]
+    assert data.session_file.is_file()
+    assert data.session_file.read_bytes() != saved
+    assert _refresh_cookies(bridge) != [current]
     assert _refresh(start())["status"] == 200
 
 

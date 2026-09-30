@@ -15,7 +15,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
-from lego_api import visibility
+from lego_api import __version__, visibility
 from lego_api.auth import router as auth_router
 from lego_api.config import get_settings
 from lego_api.db import get_engine
@@ -35,6 +35,7 @@ from lego_api.routers import (
     themes,
     usage,
 )
+from lego_api.schemas import HealthOut
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 log = logging.getLogger(__name__)
@@ -73,13 +74,19 @@ async def _migrate() -> None:
     from alembic.config import Config
 
     from alembic import command
+    from lego_api.services import db_backup
 
     def _upgrade() -> None:
         config = Config(str(ini))
-        # Appka má vlastné zapisovanie denníka (desktop do súboru); Alembic ho nemení.
-        config.attributes["keep_logging"] = True
         config.set_main_option("script_location", str(BACKEND_ROOT / "alembic"))
-        command.upgrade(config, "head")
+        # Appka má vlastné zapisovanie denníka (desktop do súboru); Alembic ho
+        # nemení, inak by env.py vypol aj hlášku o zálohe.
+        config.attributes["keep_logging"] = True
+        # Nová verzia appky alebo migrácia, ktorá niečo zmení, dostane najprv
+        # zálohu; bez nej migrácia nebeží. Po úspechu sa zapíše verzia appky.
+        db_backup.upgrade_with_backup(
+            get_settings().database_url, config, lambda: command.upgrade(config, "head")
+        )
 
     await asyncio.to_thread(_upgrade)
 
@@ -129,7 +136,8 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="Moje kocky",
         description="Evidencia LEGO zbierky",
-        version="1.0.0",
+        # Jeden zdroj verzie: pyproject.toml cez metadáta balíka.
+        version=__version__,
         lifespan=lifespan,
         openapi_url=f"{API_PREFIX}/openapi.json",
         docs_url=f"{API_PREFIX}/docs",
@@ -165,8 +173,8 @@ def create_app() -> FastAPI:
     api.include_router(misc.router)
 
     @api.get("/health", tags=["misc"])
-    async def health() -> dict[str, str]:
-        return {"status": "ok"}
+    async def health() -> HealthOut:
+        return HealthOut(status="ok", version=__version__)
 
     app.include_router(api)
     _mount_frontend(app)

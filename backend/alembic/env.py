@@ -13,6 +13,10 @@ from lego_api.models import Base
 
 config = context.config
 
+# Z príkazového riadku logovanie nastaví alembic.ini. Appka pri štarte
+# (main.py::_migrate) má vlastné a chce ho nechať: fileConfig by vypol
+# loggery, ktoré už existujú, a chyba migrácie aj cesta k zálohe by sa
+# do logu nedostali.
 if config.config_file_name is not None and not config.attributes.get("keep_logging"):
     fileConfig(config.config_file_name)
 

@@ -8,6 +8,7 @@ import sys
 
 import pytest
 
+import lego_api
 from lego_desktop.bridge import Bridge
 from lego_desktop.paths import DataDir
 
@@ -46,7 +47,7 @@ JSON = {"content-type": "application/json"}
 def test_request_goes_to_the_app_and_keeps_the_session_cookie(bridge: Bridge) -> None:
     health = bridge.request("GET", "/api/v1/health", {}, None)
     assert health["status"] == 200
-    assert _json(health) == {"status": "ok"}
+    assert _json(health) == {"status": "ok", "version": lego_api.__version__}
 
     reg = bridge.request(
         "POST",

@@ -10,6 +10,7 @@
   import { useTheme } from 'vuetify'
   import { api } from '@/api/client'
   import AccountDataCard from '@/components/AccountDataCard.vue'
+  import AppVersion from '@/components/AppVersion.vue'
   import ExportCsvButton from '@/components/ExportCsvButton.vue'
   import FormMemoryCard from '@/components/FormMemoryCard.vue'
   import ImportPanel from '@/components/ImportPanel.vue'
@@ -439,6 +440,8 @@
               {{ t('settings.save') }}
             </v-btn>
           </template>
+
+          <AppVersion class="mt-2" />
         </v-card>
       </v-window-item>
 

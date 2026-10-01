@@ -699,6 +699,13 @@ chýba môj set (stará vlna, ktorú brána nepustila stiahnuť znova):
 a otvorený rok čip neprepne na presný. Existujúcim setom
 Brickset nič neprepisuje, len dopĺňa chýbajúce.
 
+**Hľadanie setu v Sériách nevolá von.** `GET /themes/find?q=` hľadá podľa
+názvu, čísla či témy len v katalógu (a vlnách Brickset, ktoré účet vidí),
+bez figúrok zo sérií a sáčkov (`themes.py::_known_sets`); tému a rok dáva
+`assign`, ako ich rátajú Série. Upozornenie nad poľom (`ThemeSetSearch.vue`)
+povie, že hľadá len medzi známymi setmi, aj koľko ich je
+(`GET /themes/find/count`).
+
 **UPCitemdb je posledná možnosť.** Rebrickable kódy
 nemá a BrickEconomy podľa kódu hľadať nevie (kód len posiela v odpovedi
 o cene, `apply_catalog_extras` ho uloží). `services/barcode.py` skúsi

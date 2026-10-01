@@ -761,6 +761,10 @@
     "closeDialogFirst": "Najprv zavri otvorené okno, potom skenuj"
   },
   "themes": {
+    "findKnown": " (appka pozná {count})",
+    "findSet": "Nájsť set podľa názvu alebo čísla",
+    "findNote": "Hľadá len medzi setmi, ktoré appka už pozná: tvoje sety, Chcem a sety zo stiahnutých sérií a rokov. Set, ktorý appka ešte nevidela, nemusí nájsť{known}.",
+    "findNone": "Medzi známymi setmi sa nič nenašlo. Skús iné slovo alebo otvor sériu a rok, appka ich stiahne z Brickset.",
     "title": "Série",
     "search": "Nájsť sériu (Speed Champions, Technic…)",
     "mine": "Moje série",

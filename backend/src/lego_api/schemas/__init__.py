@@ -1123,6 +1123,20 @@ class ThemesOut(BaseModel):
     provider_enabled: bool
 
 
+class KnownSetsOut(BaseModel):
+    count: int
+
+
+class ThemeFoundOut(BaseModel):
+    """Set nájdený na stránke Série: kam patrí a či ho mám alebo chcem."""
+
+    catalog: CatalogOut
+    theme: str | None
+    year: int | None
+    owned: int
+    wanted: bool
+
+
 class ThemeYearOut(BaseModel):
     year: int
     set_count: int

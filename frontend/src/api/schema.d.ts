@@ -1378,6 +1378,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/themes/find/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Known Sets
+         * @description Koľko setov appka pozná; hľadanie v Sériách nájde len medzi nimi.
+         */
+        get: operations["known_sets_api_v1_themes_find_count_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/themes/find": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Find Set
+         * @description Set podľa názvu či čísla, len medzi setmi, ktoré appka pozná; nič nevolá von.
+         */
+        get: operations["find_set_api_v1_themes_find_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/themes/years": {
         parameters: {
             query?: never;
@@ -2844,6 +2884,11 @@ export interface components {
             /** Note */
             note?: string | null;
         };
+        /** KnownSetsOut */
+        KnownSetsOut: {
+            /** Count */
+            count: number;
+        };
         /** LoginRequest */
         LoginRequest: {
             /**
@@ -3758,6 +3803,21 @@ export interface components {
             top_profit: components["schemas"]["TopProfitOut"][];
             /** Real Month */
             real_month?: string | null;
+        };
+        /**
+         * ThemeFoundOut
+         * @description Set nájdený na stránke Série: kam patrí a či ho mám alebo chcem.
+         */
+        ThemeFoundOut: {
+            catalog: components["schemas"]["CatalogOut"];
+            /** Theme */
+            theme: string | null;
+            /** Year */
+            year: number | null;
+            /** Owned */
+            owned: number;
+            /** Wanted */
+            wanted: boolean;
         };
         /** ThemeOut */
         ThemeOut: {
@@ -6974,6 +7034,57 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ThemesOut"];
+                };
+            };
+        };
+    };
+    known_sets_api_v1_themes_find_count_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KnownSetsOut"];
+                };
+            };
+        };
+    };
+    find_set_api_v1_themes_find_get: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThemeFoundOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

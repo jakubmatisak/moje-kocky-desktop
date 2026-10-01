@@ -16,6 +16,7 @@
   import LoadFailed from '@/components/LoadFailed.vue'
   import PageSkeleton from '@/components/PageSkeleton.vue'
   import SeriesBar from '@/components/SeriesBar.vue'
+  import ThemeSetSearch from '@/components/ThemeSetSearch.vue'
   import { usePageLoad } from '@/composables/usePageLoad'
   import { arrangeThemes } from '@/utils/themeList'
 
@@ -84,6 +85,8 @@
       style="max-width: 480px"
       @update:model-value="open"
     />
+
+    <ThemeSetSearch v-if="enabled" />
 
     <!-- Kým server neodpovedal, kostra; „Zatiaľ žiadne série“ až po odpovedi. -->
     <PageSkeleton v-if="page.initial" kind="cards" />

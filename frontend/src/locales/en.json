@@ -761,6 +761,10 @@
     "closeDialogFirst": "Close the open window first, then scan"
   },
   "themes": {
+    "findKnown": " (the app knows {count})",
+    "findSet": "Find a set by name or number",
+    "findNote": "Searches only the sets the app already knows: your sets, the wishlist and sets of downloaded themes and years. It may not find a set the app has not seen yet{known}.",
+    "findNone": "Nothing found among the known sets. Try another word, or open the theme and year so the app downloads them from Brickset.",
     "title": "Series",
     "search": "Find a series (Speed Champions, Technic…)",
     "mine": "My series",

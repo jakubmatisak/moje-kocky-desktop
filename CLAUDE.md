@@ -15,6 +15,11 @@ adresy `https://moje-kocky.desktop/…`, router je `hash`, súbory sa ukladajú
 cez `utils/saveBlob.ts` (dialóg „Uložiť ako“), obrázky priamo bez `/img`,
 zdieľanie odkazom je skryté. Klient API hľadá `fetch` až pri volaní, inak
 by si zapamätal pôvodný a prvé volanie by sa zaseklo.
+`ASGITransport` čaká, kým appka skončí celá, aj s úlohami z
+`BackgroundTasks`; most ho preto obaľuje `bridge.py::answer_first`: odpoveď
+sa vráti po poslednej časti tela a úloha dobehne v slučke mosta ako
+v uvicorne. Bez toho by 202 z obnovy cien prišla až po celej dávke a okno
+by stav „beží“ nevidelo (`test_background_task_runs_after_the_answer`).
 
 **Údaje v `%APPDATA%\MojeKocky`** (`lego_desktop/paths.py`): databáza,
 fotky, `secret.key` (vznikne pri prvom spustení), zapamätané prihlásenie
@@ -307,6 +312,12 @@ cez `_decimal`, ktoré zahadzuje nulu a mínus ako neplatnú cenu.
 **Hromadná obnova raz za týždeň, ručná hneď.** `price_max_age_hours` je 168.
 `POST /prices/refresh-all?num=` je ručná obnova z detailu a vek snímky
 nepozerá (`force`); strop dávky a zvyšok kvóty platia aj pre ňu.
+Hromadná obnova z hornej lišty ide cez dialóg `RefreshPricesDialog.vue`
+(„Chcete obnoviť ceny?“, počet predvolene 50, najviac zvyšok dňa) a posiela
+`?limit=`, ktorý nahradí predvolený strop `price_refresh_budget`; zvyšok
+kvóty, rezerva a `price_batch` účtu platia ďalej. Riadok „Dnes použité X
+z 90“ berie `calls_used`/`calls_limit` z `refresh-status`, rátané tou istou
+`routers/usage.py::brickeconomy_used` ako karta limitov.
 Vek je čas od posledného volania vlastného kľúča, s cenou aj bez nej
 (`pricing.last_attempts`: `source_access` čísla a `miss:{číslo}`, k tomu
 `price_misses`), alebo od novšej ručnej ceny. Poradie v `collect_targets`:
@@ -574,9 +585,12 @@ sety sú v `price_checks` pri účte; `/prices/checks` je v routeri pred
 
 **Obnova cien nemá plánovač a nespúšťa ju prihlásenie.** Spúšťa ju výhradne
 používateľ tlačidlom v hornej lište (`POST /prices/refresh-all`), ďalej to
-beží cez `BackgroundTasks`. Poistky sú v `services/refresh.py`: vek
-posledného volania, strop na dávku, zvyšok dennej kvóty, jedno volanie na
-položku a zámok proti súbehu. Do stropu idú najprv neznáme ceny.
+beží cez `BackgroundTasks`. Stav „beží“ zaberá už požiadavka
+(`refresh.claim`), úloha ho len uvoľní (`claimed=True`): úloha štartuje až
+po odpovedi a bez toho by 202 aj ďalší `refresh-status` hlásili „nebeží“,
+takže prvé kliknutie akoby nič nespravilo. Frontend berie stav z odpovede.
+Poistky sú v `services/refresh.py`: vek posledného volania, strop na dávku,
+zvyšok dennej kvóty, jedno volanie na položku a zámok proti súbehu. Do stropu idú najprv neznáme ceny.
 
 **Registráciu otvára správca v appke, nie `.env`.** Stav je v tabuľke
 `app_settings` (`services/app_settings.py`); `ALLOW_REGISTRATION` platí,

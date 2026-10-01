@@ -30,6 +30,50 @@ log = logging.getLogger(__name__)
 TIMEOUT_SECONDS = 600
 
 
+def answer_first(app):
+    """Odpoveď odíde hneď, úloha z ``BackgroundTasks`` dobehne potom.
+
+    ``httpx.ASGITransport`` čaká, kým appka skončí celá, aj s úlohami na
+    pozadí, ktoré Starlette spúšťa až po odoslaní tela. V uvicorne obnova
+    cien či dohľadanie importu bežia po odpovedi; cez most by okno čakalo
+    na celú dávku a stav „beží“ by nevidelo nikdy. Preto appka beží ako
+    samostatná úloha v slučke mosta a požiadavka sa vráti, keď príde
+    posledná časť tela. Chyba pred odpoveďou ide ďalej ako doteraz, chyba
+    úlohy po odpovedi skončí v denníku (ako v uvicorne).
+    """
+    running: set[asyncio.Task] = set()
+
+    def _finished(task: asyncio.Task) -> None:
+        running.discard(task)
+        if not task.cancelled() and task.exception() is not None:
+            log.error("Úloha po odpovedi zlyhala", exc_info=task.exception())
+
+    async def detached(scope, receive, send) -> None:
+        if scope["type"] != "http":
+            await app(scope, receive, send)
+            return
+        answered = asyncio.Event()
+
+        async def send_and_mark(message) -> None:
+            await send(message)
+            if message["type"] == "http.response.body" and not message.get("more_body", False):
+                answered.set()
+
+        task = asyncio.ensure_future(app(scope, receive, send_and_mark))
+        waiter = asyncio.ensure_future(answered.wait())
+        await asyncio.wait({task, waiter}, return_when=asyncio.FIRST_COMPLETED)
+        if task.done():
+            waiter.cancel()
+            task.result()
+            return
+        # Silná referencia, inak by nedobehnutú úlohu mohol zobrať zberač.
+        running.add(task)
+        task.add_done_callback(_finished)
+
+    detached.running = running
+    return detached
+
+
 def _sent_login(request: httpx.Request) -> str | None:
     """Obnovovacie cookie, s ktorým požiadavka odišla."""
     for part in request.headers.get("cookie", "").split(";"):
@@ -48,7 +92,7 @@ class Bridge:
         self._thread = threading.Thread(target=self._loop.run_forever, daemon=True)
         self._thread.start()
         self._client = httpx.AsyncClient(
-            transport=httpx.ASGITransport(app=app),
+            transport=httpx.ASGITransport(app=answer_first(app)),
             base_url="http://desktop",
             timeout=TIMEOUT_SECONDS,
         )

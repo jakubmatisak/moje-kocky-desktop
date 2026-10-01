@@ -465,6 +465,10 @@ class RefreshStatusOut(BaseModel):
     calls_left: int = 0
     quota_exhausted: bool = False
     skipped_fresh: int = 0
+    #: Denný limit appky pre BrickEconomy (``brickeconomy_daily_limit``) a
+    #: dnes použité volania; tie isté čísla ako karta limitov (``/usage``).
+    calls_limit: int = 0
+    calls_used: int = 0
 
 
 # --- štatistiky -------------------------------------------------------------

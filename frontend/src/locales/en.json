@@ -451,7 +451,16 @@
     "providerOff": "No BrickEconomy key, prices are entered manually",
     "manualTitle": "Your own price",
     "manualHint": "Saved as today's market price and shown in the chart.",
-    "manualSave": "Save price"
+    "manualSave": "Save price",
+    "dialog": {
+      "title": "Refresh prices?",
+      "count": "How many prices to refresh",
+      "order": "Missing prices first, then the ones refreshed longest ago. Each price is one call.",
+      "range": "Enter a number from 1 to {max}",
+      "usage": "Used today {used} of {limit}, {left} left",
+      "reserve": "The service allows {service} calls a day; the app keeps {reserve} in reserve.",
+      "confirm": "Refresh"
+    }
   },
   "common": {
     "cancel": "Cancel",

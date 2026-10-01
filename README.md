@@ -236,14 +236,16 @@ kľúče treba zadať znova.
 ### Ako sa šetria volania
 
 Nič sa nedeje samo od seba, nie je tu plánovač. Obnovu cien spúšťa tlačidlo
-v hornej lište a beží na pozadí. Denná kvóta BrickEconomy je 100 volaní,
-preto:
+v hornej lište a beží na pozadí. Pred spustením sa dialóg spýta, koľko cien
+obnoviť (predvolene 50, najviac toľko, koľko dnes ostáva) a ukáže, koľko
+volaní je dnes použitých. Denná kvóta BrickEconomy je 100 volaní, preto:
 
 1. Hromadná obnova sa nepýta na položku, na ktorú sa pýtala pred menej než
    týždňom, ani keď vtedy zdroj cenu nemal.
-2. Na jedno spustenie najviac 40 položiek. Najprv tie, ktorých cenu ešte
+2. Na jedno spustenie najviac toľko položiek, koľko si vyberieš v dialógu
+   (a najviac dávka z karty BrickEconomy). Najprv tie, ktorých cenu ešte
    nepoznáme (naposledy pridané prvé), potom od najstaršej; zvyšok pri
-   ďalšom (dávka sa dá zmeniť na karte BrickEconomy).
+   ďalšom.
 3. Platí zvyšok dennej kvóty, po odpovedi 429 sa dávka zastaví.
 4. Jedno volanie na set: odpoveď nesie cenu nového aj použitého kusu
    a históriu, takže nový aj postavený kus sa obnovia spolu.
@@ -700,14 +702,16 @@ just have to enter the keys again.
 ### How calls are rationed
 
 Nothing happens on its own; there is no scheduler. A price refresh is started
-by a button in the top bar and runs in the background. BrickEconomy's daily
-quota is 100 calls, so:
+with the button in the top bar and runs in the background. Before it starts,
+a dialog asks how many prices to refresh (50 by default, at most what is left
+today) and shows how many calls were used today. BrickEconomy's daily quota
+is 100 calls, so:
 
 1. A bulk refresh skips items it asked about less than a week ago, even when
    the source had no price then.
-2. At most 40 items per run. Items with no known price go first (most
-   recently added first), then the oldest; the rest next time (the batch size
-   can be changed on the BrickEconomy card).
+2. At most as many items per run as you pick in the dialog (and no more than
+   the batch size on the BrickEconomy card). Items with no known price go
+   first (most recently added first), then the oldest; the rest next time.
 3. The remaining daily quota is respected, and the batch stops after a 429
    response.
 4. One call per set: the response carries the price new and used plus the

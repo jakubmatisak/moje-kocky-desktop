@@ -1,10 +1,12 @@
 """Desktop: okno volá appku cez most v tom istom procese, bez portu."""
 
+import asyncio
 import base64
 import json
 import os
 import subprocess
 import sys
+import threading
 
 import pytest
 
@@ -78,6 +80,52 @@ def test_save_file_writes_what_the_dialog_chose(bridge: Bridge, tmp_path) -> Non
     assert target.read_bytes() == b"a;b\n"
     bridge.choose_save_path = lambda name: None
     assert bridge.save_file("zbierka.csv", base64.b64encode(b"x").decode()) is False
+
+
+def test_background_task_runs_after_the_answer() -> None:
+    """Ako v uvicorne: odpoveď nečaká na úlohu z BackgroundTasks.
+
+    Inak by obnova cien cez most vrátila 202 až po celej dávke a okno by
+    stav „beží“ nevidelo; ďalšia požiadavka počas behu musí prejsť.
+    """
+    from fastapi import BackgroundTasks, FastAPI
+
+    app = FastAPI()
+    release = threading.Event()
+    finished = threading.Event()
+
+    async def slow() -> None:
+        while not release.is_set():
+            await asyncio.sleep(0.01)
+        finished.set()
+
+    @app.post("/start", status_code=202)
+    async def start(background: BackgroundTasks) -> dict:
+        background.add_task(slow)
+        return {"running": True}
+
+    @app.get("/status")
+    async def status_() -> dict:
+        return {"finished": finished.is_set()}
+
+    @app.get("/boom")
+    async def boom() -> dict:
+        raise RuntimeError("chyba pred odpoveďou")
+
+    started = Bridge(app, run_lifespan=False)
+    try:
+        answer = started.request("POST", "/start", {}, None)
+        assert answer["status"] == 202
+        assert _json(answer) == {"running": True}
+        assert _json(started.request("GET", "/status", {}, None)) == {"finished": False}
+        release.set()
+        assert finished.wait(5)
+        assert _json(started.request("GET", "/status", {}, None)) == {"finished": True}
+        # Chyba pred odpoveďou okno dostane ako doteraz, most nespadne.
+        assert started.request("GET", "/boom", {}, None)["status"] in (500, 599)
+    finally:
+        release.set()
+        started.close()
 
 
 def test_data_dir_creates_folders_and_keeps_one_secret(tmp_path) -> None:

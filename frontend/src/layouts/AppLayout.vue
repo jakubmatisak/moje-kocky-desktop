@@ -11,6 +11,7 @@
 
   import { api } from '@/api/client'
   import ApiUsageDialog from '@/components/ApiUsageDialog.vue'
+  import RefreshPricesDialog from '@/components/RefreshPricesDialog.vue'
   import { useDisplayPrefs } from '@/composables/useDisplayPrefs'
   import { isDesktop } from '@/desktop/bridge'
   import { useScanCodes } from '@/scanner/useScanCodes'
@@ -39,6 +40,7 @@
 
   const mobile = computed(() => display.smAndDown.value)
   const usageOpen = ref(false)
+  const refreshOpen = ref(false)
   /** Stránka na výšku okna nepotrebuje dolnú rezervu, stránka by inak pretiekla. */
   const fitScreen = computed(() => route.meta.fitScreen === true && !mobile.value)
 
@@ -167,12 +169,13 @@
   /**
    * Obnovu cien spúšťa len používateľ týmto tlačidlom. Kvóta je 100 volaní
    * na deň a je osobná, takže nemá zmysel ju míňať pri každom prihlásení.
+   * Pred spustením dialóg ukáže minuté volania a spýta sa, koľko cien.
    */
-  async function refreshPrices (): Promise<void> {
+  async function refreshPrices (count: number): Promise<void> {
     await prices.refreshEverything(() => {
       collection.refreshAll()
       auth.loadKeys()
-    })
+    }, count)
   }
 
   const refreshHint = computed(() => {
@@ -392,7 +395,7 @@
               :disabled="!auth.hasPriceKey || prices.quotaExhausted"
               icon="mdi-cloud-refresh-outline"
               :loading="prices.running"
-              @click="refreshPrices"
+              @click="refreshOpen = true"
             />
           </div>
         </template>
@@ -492,6 +495,7 @@
     </v-bottom-navigation>
 
     <ApiUsageDialog v-model="usageOpen" />
+    <RefreshPricesDialog v-model="refreshOpen" @confirm="refreshPrices" />
 
     <!-- Oznámenia celej appky (stores/notify.ts). -->
     <v-snackbar-queue v-model="notify.queue" total-visible="3">

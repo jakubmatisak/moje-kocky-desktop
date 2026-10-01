@@ -515,10 +515,29 @@ stoja jedno volanie. Predané kusy sa neobnovujú.
 
 **Kedy sa obnovuje.** Ceny obnovuje len tlačidlo v hornej lište
 (`POST /prices/refresh-all`), ďalej to beží cez `BackgroundTasks`. Nemá to
-plánovač a nespúšťa to ani prihlásenie. Poistky v `services/refresh.py`:
+plánovač a nespúšťa to ani prihlásenie. Tlačidlo najprv otvorí dialóg
+„Chcete obnoviť ceny?“ (`components/RefreshPricesDialog.vue`): počet cien
+(predvolene 50, najviac zvyšok dnešného limitu), poradie a riadok „Dnes
+použité X z 90, ostáva Y“. Čísla sú tie isté ako na karte limitov:
+`RefreshStatusOut.calls_used` a `calls_limit` ráta
+`routers/usage.py::brickeconomy_used` aj pre `/usage`. Limit appky je
+`brickeconomy_daily_limit` (90 zo 100 služby, 10 je rezerva). Zvolený počet
+ide ako `?limit=` (1 až 1000, kontrola v tele funkcie). Obnova jedného setu
+z detailu dialóg nemá.
+
+Stav „beží“ si zaberie samotná požiadavka (`refresh.claim` pod
+`_state_lock`), úloha na pozadí ho len uvoľní (`refresh_prices(claimed=True)`,
+vždy vo `finally`, aj keď nemá čo ťahať). Úloha z `BackgroundTasks` štartuje
+až po odoslaní odpovede; kým si stav brala sama, odpoveď 202 aj hneď
+nasledujúci `refresh-status` hlásili „nebeží“ a prvé kliknutie akoby nič
+nespravilo. Druhé kliknutie počas behu druhú dávku nespustí. Frontend
+(`stores/prices.ts::follow`) berie stav z odpovede na POST.
+
+Poistky v `services/refresh.py`:
 
 - **vek posledného volania:** obnoví sa, len čo je staršie ako 168 h;
-- **strop dávky:** 40 položiek;
+- **strop dávky:** počet z dialógu (`limit`), bez neho 40 položiek
+  (`price_refresh_budget`); strop dávky účtu (`price_batch`) platí vždy;
 - **zvyšok dennej kvóty:** počítadlo je v `providers/brickeconomy.py`,
   pri 429 sa dávka zastaví;
 - **jedno volanie na (číslo, druh);**
@@ -987,7 +1006,7 @@ prihlásenie. Úplná schéma je v OpenAPI (`openapi_export`).
 | kusy | `GET items` (filtre, `sort`, `real`), `items/grouped` (`by`), `items/facets` (počty + súčty, `hidden_figures`), `locations`, `suggestions`; `POST items`, `items/bulk`; `GET/PATCH/DELETE items/{id}`; `PATCH {id}/identify`; `POST {id}/sell`, `{id}/unsell` |
 | fotky | `GET/POST items/{id}/photos`; `GET photos`; `GET/DELETE photos/{id}` |
 | kategórie | `GET/POST categories`; `PATCH/DELETE categories/{id}`; `PUT categories/{id}/members/{num}`; `GET/POST views`, `DELETE views/{id}` |
-| ceny | `GET prices/refresh-status`; `POST prices/refresh-all?num=`; `GET prices/{num}`; `POST prices/{num}/refresh?max_age_hours=`; `PUT prices/{num}/manual`; `POST prices/lookup/{num}`; `GET/POST/DELETE prices/checks` |
+| ceny | `GET prices/refresh-status`; `POST prices/refresh-all?num=&limit=`; `GET prices/{num}`; `POST prices/{num}/refresh?max_age_hours=`; `PUT prices/{num}/manual`; `POST prices/lookup/{num}`; `GET/POST/DELETE prices/checks` |
 | štatistiky | `GET stats/summary`, `breakdown`, `sales`, `timeline` (všetky s `real`), `movers?window=30/90/365`, `series` |
 | figúrky | `GET minifigs/series`, `minifigs/series/{num}`; `GET/POST minifigs/sync` |
 | témy | `GET themes`, `themes/years?theme=`, `themes/wave?theme=&year=&force=` |

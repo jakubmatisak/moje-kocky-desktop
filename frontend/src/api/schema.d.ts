@@ -853,6 +853,10 @@ export interface paths {
          *     to ručná obnova jednej položky z detailu, pri sérii jej figúrok, a tá
          *     vek snímky nepozerá: používateľ chce cenu teraz. Jedno volanie na
          *     položku a zvyšok kvóty platia v oboch prípadoch.
+         *
+         *     ``limit`` je počet z dialógu obnovy (najviac toľko volaní). Stav „beží“
+         *     sa zaberie ešte pred odpoveďou, úloha na pozadí štartuje až po nej;
+         *     druhé kliknutie počas behu druhú dávku nespustí.
          */
         post: operations["refresh_all_api_v1_prices_refresh_all_post"];
         delete?: never;
@@ -2987,6 +2991,16 @@ export interface components {
              * @default 0
              */
             skipped_fresh: number;
+            /**
+             * Calls Limit
+             * @default 0
+             */
+            calls_limit: number;
+            /**
+             * Calls Used
+             * @default 0
+             */
+            calls_used: number;
         };
         /** RegisterRequest */
         RegisterRequest: {
@@ -5454,6 +5468,7 @@ export interface operations {
         parameters: {
             query?: {
                 num?: string | null;
+                limit?: number | null;
             };
             header?: never;
             path?: never;

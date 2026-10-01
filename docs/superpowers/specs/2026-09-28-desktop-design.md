@@ -41,7 +41,10 @@ Overené skúškou na zahodenie (pywebview 6.2, WebView2, Windows 11):
 - **Jeden proces, žiadny port.** FastAPI appka sa nespúšťa cez uvicorn;
   požiadavky z okna idú cez `httpx.ASGITransport` priamo do nej, v
   samostatnom vlákne s vlastnou slučkou asyncio (`run_coroutine_threadsafe`).
-  Celá logika backendu, migrácie a testy ostávajú.
+  Celá logika backendu, migrácie a testy ostávajú. `ASGITransport` by čakal
+  aj na úlohy z `BackgroundTasks`; `bridge.py::answer_first` vráti odpoveď
+  po poslednej časti tela a úloha dobehne v slučke mosta, ako v uvicorne
+  (obnova cien hlási „beží“, import dohľadáva sety, kým okno čaká).
 - **Most** (`desktop/bridge.py`): jedna metóda `request` pre všetky
   volania API (telo aj odpoveď v base64, hlavičky ako slovník) a
   `save_file(name, data_base64)` s natívnym dialógom „Uložiť ako“

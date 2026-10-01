@@ -51,6 +51,8 @@
   const isSeries = computed(() => (found.value?.members?.length ?? 0) > 0)
 
   const headers = computed(() => [
+    // Fotka v rovnako vysokom riadku ako tabuľky Zbierky a Chcem.
+    { key: 'image', title: '', width: 104, sortable: false },
     { key: 'num', title: t('check.colNumber'), width: 96, value: (c: Check) => c.catalog.catalog_num },
     { key: 'name', title: t('check.colName'), value: (c: Check) => c.catalog.name },
     { key: 'theme', title: t('check.colSeries'), width: 160, value: (c: Check) => c.catalog.theme ?? '' },
@@ -377,6 +379,12 @@
           <LoadFailed :loading="page.loading" @retry="page.run()" />
         </template>
 
+        <template #[`item.image`]="{ item }">
+          <div class="check-table__photo">
+            <SetImage :alt="item.catalog.name" rounded="sm" :size="64" :src="imageSrc(item.catalog.image_url) ?? undefined" />
+          </div>
+        </template>
+
         <template #[`item.year`]="{ item }">{{ item.catalog.year ?? '—' }}</template>
         <template #[`item.new`]="{ item }">{{ money(item.new_value) }}</template>
         <template #[`item.used`]="{ item }">{{ money(item.used_value) }}</template>
@@ -451,5 +459,9 @@
 
   .check-table :deep(tbody tr) {
     cursor: pointer;
+  }
+
+  .check-table__photo {
+    padding: 6px 0;
   }
 </style>

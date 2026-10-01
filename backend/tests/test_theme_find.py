@@ -82,3 +82,17 @@ async def test_count_of_known_sets_skips_series_figures(
 
     assert response.status_code == 200, response.text
     assert response.json() == {"count": 3}
+
+
+async def test_sets_known_only_by_number_go_last(auth_client: AsyncClient, sessionmaker_) -> None:
+    """„Set 40602-1“ (zo stiahnutej vlny, bez názvu) až za sety s názvom."""
+    async with sessionmaker_() as session:
+        session.add(CatalogItem(catalog_num="40602-1", name="Set 40602-1", kind=CatalogKind.SET))
+        session.add(
+            CatalogItem(catalog_num="40651-1", name="Australia Postcard", kind=CatalogKind.SET)
+        )
+        await session.commit()
+
+    nums = [r["catalog"]["catalog_num"] for r in await _find(auth_client, "406")]
+
+    assert nums == ["40651-1", "40602-1"]

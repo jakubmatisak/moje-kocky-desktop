@@ -703,7 +703,7 @@ Brickset nič neprepisuje, len dopĺňa chýbajúce.
 názvu, čísla či témy len v katalógu (a vlnách Brickset, ktoré účet vidí),
 bez figúrok zo sérií a sáčkov (`themes.py::_known_sets`); tému a rok dáva
 `assign`, ako ich rátajú Série. Upozornenie nad poľom (`ThemeSetSearch.vue`)
-povie, že hľadá len medzi známymi setmi, aj koľko ich je
+povie riadkom pod poľom, že hľadá len medzi známymi setmi, aj koľko ich je
 (`GET /themes/find/count`).
 
 **UPCitemdb je posledná možnosť.** Rebrickable kódy
@@ -931,6 +931,11 @@ pravidlo je v `plugins/i18n.ts`, kľúče končia na `Plural` a volajú sa cez
 
 Čísla formátuje `utils/format.ts`. Tisíce oddeľuje nezlomiteľná medzera, aby
 sa suma nezlomila do dvoch riadkov. Desatinná čiarka, znak eura za číslom.
+
+V textoch pre používateľa nie je slovo „appka“ (lokalizácie, zásady
+v `PrivacyView.vue`, okná so správou v `lego_desktop/main.py`, hlášky
+inštalátora, README): neosobne („sa uloží“), alebo „Moje kocky“ so slovesom
+v množnom čísle („Moje kocky používajú“). Komentárov v kóde sa to netýka.
 
 ## Triedy písma sú z Vuetify 4
 

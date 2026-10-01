@@ -14,7 +14,7 @@ V časti **Releases** vpravo je vždy najnovší `MojeKocky-Setup-x.y.z.exe`
 ukáže „Windows chránil tento počítač“: **Ďalšie informácie → Spustiť aj tak**.
 
 Evidencia zbierky LEGO® setov ako **bežná inštalácia pre Windows**. Je to tá
-istá appka ako webová [Moje kocky](https://github.com/jakubmatisak/moje-kocky-webapp)
+istá evidencia ako webové [Moje kocky](https://github.com/jakubmatisak/moje-kocky-webapp)
 (okrem odkazu na pozretie, ten má len webová verzia),
 len beží v okne na tvojom počítači: bez servera, bez Dockeru a **bez
 otvoreného portu**. Všetky údaje (zbierka, fotky, kľúče) ostávajú u teba
@@ -45,14 +45,20 @@ zálohuje.
   série, aj nezačaté, a ukáže, čo chýba. Nerozbalené sáčky, predané figúrky,
   obnova cien a hromadná úprava figúrok série sú v jej detaile (tlačidlo
   **Kusy série**). Prehľad, export aj súpis pre poistku počítajú
-  všetko, sety aj figúrky. Keď hľadanie v Zbierke nájde figúrku, appka
+  všetko, sety aj figúrky. Keď hľadanie v Zbierke nájde figúrku, Zbierka
   odkáže do Figúrok.
 - **Série a vlny.** Koľko setov z témy a roku máš, podľa zoznamu Brickset.
+  Set nájdeš podľa názvu alebo čísla aj bez otvárania série: hľadá medzi
+  známymi setmi (tvoje sety, Chcem a stiahnuté série) a nič nesťahuje.
 - **Vlastné kategórie** s pravidlami (napr. všetko s „F1“ v názve naprieč
   sériami) aj ručným zaradením. Kategória patrí setu a vyberieš ju pri
   pridaní setu, pri úprave kusu aj v detaile setu.
-- **Chcem**: zoznam želaných setov s cieľovou cenou a poznámkou. Set, ktorý na
-  cieľ klesol, sa zvýrazní. „Kúpil som“ ho presunie do zbierky.
+- **Chcem**: zoznam želaných setov s cieľovou cenou a poznámkou, ako karty
+  alebo tabuľka, s filtrom podľa série. Set, ktorý na cieľ klesol, sa
+  zvýrazní, a set, ktorý už máš, nesie štítok „V zbierke“. Pri zadaní čísla
+  upozorní, že set už je v zbierke alebo v Chcem. Pri kúpe vyberieš
+  **Pridať a odstrániť z Chcem** alebo **Pridať a nechať v Chcem**
+  (napríklad keď chceš ďalší kus).
 - **Vlastné fotky kusu** a **súpis pre poistku** na tlač alebo do PDF.
 - **Galéria ďalších oficiálnych fotiek setu** z Brickset (dá sa vypnúť).
 - **Diely setu** z Rebrickable podľa farby, náhradné zvlášť, a **kontrola
@@ -100,6 +106,8 @@ zálohuje.
 - Filtre, ktoré sa skladajú (v skupine ALEBO, medzi skupinami A), hľadanie
   bez diakritiky, desať spôsobov zoradenia, uložené pohľady, karty alebo
   tabuľka, hromadná úprava vybraných kusov.
+- Tabuľky v Zbierke, Chcem a Overiť cenu majú malú fotku setu, aby sa set
+  dal spoznať na prvý pohľad.
 - Prehľad sa dá zúžiť na sériu, kategóriu, zoznam alebo uložený pohľad.
 - Kým sa stránka načítava, ukáže kostru v tvare obsahu, nie prázdny zoznam;
   keď sa načítať nepodarí, povie to a ponúkne Skúsiť znova. Tlačidlo
@@ -111,10 +119,10 @@ zálohuje.
 - Viac ľudí na jednom počítači (napríklad členovia rodiny), každý so
   svojou zbierkou, heslom a kľúčmi. Každý používateľ Windows má vlastné
   údaje a prvý účet si v nich založí sám, bez povolenia. Pod jedným
-  používateľom Windows môže byť aj viac účtov appky; ďalší povolí prvý účet
-  (správca appky) v Nastaveniach → Aplikácia.
+  používateľom Windows môže byť aj viac účtov; ďalší povolí prvý účet
+  (správca) v Nastaveniach → Aplikácia.
 - **Zapamätať si prihlásenie na tomto počítači**: so zaškrtnutým políčkom
-  sa po otvorení appky netreba prihlasovať, 30 dní od posledného použitia.
+  sa po otvorení Mojich kociek netreba prihlasovať, 30 dní od posledného použitia.
   Odhlásenie ho zruší. Zmena hesla zruší prihlásenia účtu všade inde, okno,
   v ktorom heslo meníš, ostane prihlásené aj so zapamätaním.
 - Rozhranie po slovensky aj po anglicky, svetlý a tmavý režim. Nastavenia
@@ -150,7 +158,7 @@ v nich býva. Ak chýba, inštalátor ponúkne stránku na jeho stiahnutie.
 **Údaje** sú v `%APPDATA%\MojeKocky`: `lego.db` (databáza), `photos\`,
 `secret.key` (šifruje uložené kľúče k službám), `logs\` (denník
 `moje-kocky.log`) a `backups\` (zálohy databázy pri aktualizácii). Úplná
-záloha je kópia celého priečinka, najlepšie pri zatvorenej appke. Nová
+záloha je kópia celého priečinka, najlepšie pri zatvorenom okne. Nová
 verzia sa nainštaluje cez starú a údaje ostanú. Odinštalovanie sa opýta,
 či zmazať údaje účtu Windows, pod ktorým po otázke UAC beží; otázka ho
 menuje aj s priečinkom (predvolene nie) a údaje ostatných používateľov
@@ -178,27 +186,27 @@ a otázku, či zmazať aj údaje, zamietne.
 
 ### Záloha pri aktualizácii
 
-Pri prvom spustení inej verzie appky, novšej aj staršej, a aj vtedy, keď
-sa schéma databázy nemení, appka najprv skopíruje databázu do
-`%APPDATA%\MojeKocky\backups` a až potom ju prípadne zmigruje. Kópia ide
+Pri prvom spustení inej verzie, novšej aj staršej, a aj vtedy, keď
+sa schéma databázy nemení, sa databáza najprv skopíruje do
+`%APPDATA%\MojeKocky\backups` a až potom sa prípadne zmigruje. Kópia ide
 cez zálohovacie API SQLite, takže je úplná a konzistentná.
 
 - **Meno** je `lego-RRRRMMDD-HHMMSS-v<verzia>-<revízia>.db`, napríklad
-  `lego-20261015-083000-v1.0.0-<revízia>.db`: čas zálohy a verzia appky
+  `lego-20261015-083000-v1.0.0-<revízia>.db`: čas zálohy a verzia Mojich kociek
   a revízia schémy, s ktorými databáza do štartu bola, teda verzia, ktorá
   bežala naposledy. Databáza zo staršej inštalácie, ktorá si verziu ešte
   nezapisovala, má v mene len revíziu.
 - **Koľko sa drží:** po každom úspešnom štarte, aj keď sa nič nezálohovalo,
   ostane posledných 5 záloh a žiadna staršia než 90 dní; ostatné sa zmažú.
-  Iné súbory v priečinku appka nechá. Po neúspešnom štarte sa nemaže nič,
+  Iné súbory v priečinku ostanú. Po neúspešnom štarte sa nemaže nič,
   aby opakované spúšťanie nevytlačilo zálohu spred aktualizácie.
 - **Fotky** v zálohe nie sú, ostávajú v `photos\` a aktualizácia na ne
   nesiaha.
 - **Nezálohuje sa** nová databáza (prvé spustenie) ani ďalší štart tej
   istej verzie.
-- **Keď sa záloha nepodarí** (plný disk, práva), appka databázu nezmení,
-  nespustí sa a v okne povie prečo.
-- **Keď zlyhá aktualizácia databázy**, appka ukáže okno s cestou k zálohe
+- **Keď sa záloha nepodarí** (plný disk, práva), databáza ostane bez zmeny,
+  Moje kocky sa nespustia a v okne povedia prečo.
+- **Keď zlyhá aktualizácia databázy**, ukáže sa okno s cestou k zálohe
   spred aktualizácie a s postupom návratu. Kým sa databáza odvtedy nezmenila,
   ďalšie spustenie novú zálohu nerobí a ukáže tú istú.
 
@@ -223,16 +231,16 @@ Akú verziu máš, ukazuje Nastavenia → Aplikácia (vidí ju správca, teda pr
 ### Ako to funguje bez servera
 
 Okno (pywebview nad WebView2) načíta stránku zo súborov a každé volanie
-appky pošle priamo Pythonu v tom istom procese (most `window.pywebview.api`
+rozhrania pošle priamo Pythonu v tom istom procese (most `window.pywebview.api`
 → FastAPI cez `httpx.ASGITransport`). Na žiadnom porte nič nepočúva.
 
 ## Kľúče k službám
 
-Appka funguje aj bez kľúčov; vtedy je to evidencia, kde si názov setu a cenu
+Moje kocky fungujú aj bez kľúčov; vtedy je to evidencia, kde si názov setu a cenu
 vyplníš sám. Každá služba pridá niečo navyše.
 
-Kľúče vložíš v appke v **Nastaveniach → Dáta**. Kde nejaký kľúč chýba,
-appka to povie priamo pri údaji (a na Prehľade v karte „Čo ešte appka vie“)
+Kľúče vložíš v **Nastaveniach → Dáta**. Kde nejaký kľúč chýba,
+rozhranie to povie priamo pri údaji (a na Prehľade v karte „Čo ešte Moje kocky vedia“)
 aj s odkazom na pripojenie. Kľúče sú uložené zašifrované v databáze na tomto
 počítači a rozhranie ukáže len ich koncovku. Šifruje ich súbor
 `%APPDATA%\MojeKocky\secret.key`: keby sa stratil, zbierka ostane, len
@@ -300,10 +308,10 @@ otázka na údaje pri odinštalovaní v `packaging/uninstall-data.iss`,
 výsledok `build/installer/MojeKocky-Setup-<verzia>.exe`). Bez nainštalovaného
 Inno Setup skript skončí pri programe. Bez `-Version` zostaví svoju predvolenú
 verziu, tú istú ako v `backend/pyproject.toml`. Inú verziu (`-Version X.Y.Z`)
-skript nezostaví: appka podľa nej pri aktualizácii zálohuje databázu.
+skript nezostaví: podľa nej sa pri aktualizácii zálohuje databáza.
 
 ```
-backend/src/lego_api/      appka (FastAPI, SQLAlchemy 2, SQLite, Alembic)
+backend/src/lego_api/      backend (FastAPI, SQLAlchemy 2, SQLite, Alembic)
 backend/src/lego_desktop/  okno, most, %APPDATA%, zámok jednej inštancie
 frontend/                  Vue 3, Vuetify 4; src/desktop/ = fetch cez most
 packaging/                 PyInstaller, Inno Setup, ikona
@@ -363,12 +371,12 @@ a zobrazujú sa len na nekomerčné informačné účely v súlade s pravidlami
 - **Vyhľadanie podľa čiarového kódu (záložné):** [UPCitemdb](https://www.upcitemdb.com).
 - **Inflácia (HICP Slovensko):** Zdroj: Eurostat, dátový súbor
   [prc_hicp_minr](https://ec.europa.eu/eurostat/databrowser/view/prc_hicp_minr/default/table).
-  Appka z indexu počíta prepočet cien do dnešných peňazí; je to úprava dát,
+  Moje kocky z indexu počítajú prepočet cien do dnešných peňazí; je to úprava dát,
   za ktorú Eurostat nezodpovedá
   ([podmienky opätovného použitia](https://ec.europa.eu/eurostat/help/copyright-notice)).
 - **Kurzy mien:** Zdroj: ECB, referenčné výmenné kurzy eura
   ([eurofxref](https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html)).
-  Appka nimi len prepočítava sumy, kurzy nemení.
+  Moje kocky nimi len prepočítavajú sumy, kurzy nemenia.
 
 Kľúče k službám patria jednotlivým používateľom a ich použitie sa riadi
 podmienkami danej služby.
@@ -418,10 +426,10 @@ výrobkov LEGO; tie patria svojim vlastníkom.
 
 ## Súkromie a licencie
 
-Nie je to právna rada, len to, ako desktopová appka rieši súkromie
-a podmienky služieb (k septembru 2026). Zásady sú aj priamo v appke.
+Nie je to právna rada, len to, ako desktopová verzia rieši súkromie
+a podmienky služieb (k septembru 2026). Zásady sú aj priamo v programe.
 
-- **Údaje sú len na tvojom počítači** v `%APPDATA%\MojeKocky`. Appka nemá
+- **Údaje sú len na tvojom počítači** v `%APPDATA%\MojeKocky`. Moje kocky nemajú
   server ani prevádzkovateľa, autor k nim nemá prístup. Ide o osobné použitie
   v domácnosti, na ktoré sa GDPR nevzťahuje (čl. 2 ods. 2 písm. c).
 - **Čo odchádza z počítača:** len otázky na služby, ktoré si pripojíš
@@ -437,11 +445,11 @@ a podmienky služieb (k septembru 2026). Zásady sú aj priamo v appke.
   a svoj priečinok `%APPDATA%\MojeKocky` zmažeš sám.
 - **Zálohy pri aktualizácii** (posledných 5, najviac 90 dní) sú v
   `%APPDATA%\MojeKocky\backups` a nesú celú databázu; údaje zmazaného účtu
-  v nich ostanú, kým sa neprestriedajú, najdlhšie do prvého štartu appky
-  po 90 dňoch.
+  v nich ostanú, kým sa neprestriedajú, najdlhšie do prvého štartu Mojich
+  kociek po 90 dňoch.
 - **Fotky** sa ukladajú zmenšené a bez polohy GPS.
-- **Sledovanie** appka nepoužíva. Okno si pamätá nastavenia zobrazenia
-  (tmavý režim, skryté ceny a pod.) a appka zapamätané prihlásenie, ak si
+- **Sledovanie** Moje kocky nepoužívajú. Okno si pamätá nastavenia zobrazenia
+  (tmavý režim, skryté ceny a pod.) a program zapamätané prihlásenie, ak si
   ho zaškrtol: zašifrované v `%APPDATA%\MojeKocky\session.bin` na 30 dní
   od posledného použitia, odhlásenie ho zmaže.
 - **Služby:** Rebrickable dovoľuje akékoľvek použitie; BrickEconomy a
@@ -449,7 +457,7 @@ a podmienky služieb (k septembru 2026). Zásady sú aj priamo v appke.
   s vlastným kľúčom. Ak svoj kľúč BrickEconomy vložíš do viacerých účtov,
   zdieľaš licenciu.
 - **Nekomerčne:** pravidlá LEGO Fair Play aj licencia BrickEconomy platia
-  len pre osobné, nekomerčné použitie. Logo LEGO appka nepoužíva.
+  len pre osobné, nekomerčné použitie. Logo LEGO Moje kocky nepoužívajú.
 
 ---
 
@@ -511,13 +519,19 @@ The app's interface is available in Slovak and English.*
   a search in the Collection matches a figure, the app points you to
   Minifigures.
 - **Series and waves.** How many sets of a theme and year you own, based on
-  Brickset's lists.
+  Brickset's lists. You can find a set by name or number without opening a
+  theme: the search looks among known sets (your sets, the wishlist and
+  downloaded themes) and downloads nothing.
 - **Custom categories** with rules (e.g. everything with "F1" in the name,
   across themes) as well as manual assignment. A category belongs to the set;
   you pick it when adding a set, when editing a copy and on the set's page.
-- **Wishlist**: sets you want, with a target price and a note. A set that has
-  dropped to its target is highlighted. "I bought it" moves it into the
-  collection.
+- **Wishlist**: sets you want, with a target price and a note, as cards or a
+  table, with a theme filter. A set that has dropped to its target is
+  highlighted, and a set you already own carries an "In collection" tag.
+  Typing a number warns you when the set is already in your collection or
+  on the wishlist. When you buy one you choose **Add and remove from
+  wishlist** or **Add and keep on wishlist** (when you want another copy,
+  say).
 - **Your own photos of each copy** and an **insurance inventory** to print or
   save as PDF.
 - **A gallery of additional official set photos** from Brickset (can be
@@ -574,6 +588,8 @@ The app's interface is available in Slovak and English.*
 - Filters that combine (OR within a group, AND between groups), search that
   ignores diacritics, ten sort orders, saved views, cards or a table, bulk
   editing of selected copies.
+- The tables in the Collection, the wishlist and Check price show a small
+  picture of the set, so you recognise it at a glance.
 - The Overview can be narrowed to a theme, a category, a list or a saved view.
 - While a page loads it shows a skeleton shaped like its content, not an
   empty list; when loading fails it says so and offers Try again. The

@@ -51,9 +51,9 @@ _TEXTS = {
         "update_failed": (
             "Moje kocky sa nepodarilo spustiť: aktualizácia databázy zlyhala.\n\n"
             "Zbierka spred aktualizácie je v zálohe:\n{saved}\n\n"
-            "Na návrat zatvor appku, v priečinku {folder} zmaž súbory {leftovers}, "
+            "Na návrat zatvor Moje kocky, v priečinku {folder} zmaž súbory {leftovers}, "
             "ak tam sú, a zálohu skopíruj na miesto databázy {db}. Kým nebude oprava, "
-            "nainštaluj predchádzajúcu verziu appky.\n\n"
+            "nainštaluj predchádzajúcu verziu Mojich kociek.\n\n"
             "{details}"
         ),
     },
@@ -244,7 +244,7 @@ def main() -> None:
     try:
         bridge = Bridge(create_app(), remembered=remembered_login(data))
     except Exception as exc:
-        logging.exception("Appku sa nepodarilo spustiť")
+        logging.exception("Moje kocky sa nepodarilo spustiť")
         _fatal(data, exc)
         lock.release()
         return

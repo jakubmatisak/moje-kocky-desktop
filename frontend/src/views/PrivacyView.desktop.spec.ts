@@ -52,14 +52,14 @@ describe('zásady desktopu: zálohy pred aktualizáciou', () => {
 
     expect(body).toContain('Kde sú tvoje údaje')
     expect(body).toContain(String.raw`%APPDATA%\MojeKocky\backups`)
-    expect(body).toContain('Pred každou aktualizáciou appky na inú verziu')
+    expect(body).toContain('Pred každou aktualizáciou na inú verziu')
     expect(body).toContain('5 posledných záloh')
     expect(body).toContain('zmazaného účtu')
     // Zálohy nemajú ostať natrvalo, ani keď nová verzia dlho nevyjde.
     expect(body).toContain('staršiu než 90 dní')
-    expect(body).toContain('najdlhšie do prvého štartu appky po 90 dňoch')
+    expect(body).toContain('najdlhšie do prvého štartu Mojich kociek po 90 dňoch')
     // Tvoja kontrola: zmazaný účet v zálohách tiež najviac 90 dní.
-    expect(body).toContain('kým sa neprestriedajú, najdlhšie do prvého štartu appky po 90 dňoch.')
+    expect(body).toContain('kým sa neprestriedajú, najdlhšie do prvého štartu Mojich kociek po 90 dňoch.')
     // Desktop nemá server, zálohy sú na tomto počítači.
     expect(body).not.toContain('na server')
   })

@@ -761,10 +761,12 @@
     "closeDialogFirst": "Close the open window first, then scan"
   },
   "themes": {
-    "findKnown": " (the app knows {count})",
+    "findKnownPlural": "{count} known set | {count} known sets | {count} known sets",
+    "findHint": "Searches only among {count} (your sets, the wishlist and downloaded themes). It won’t find others.",
+    "findHintPlain": "Searches only among known sets (your sets, the wishlist and downloaded themes). It won’t find others.",
+    "findType": "Type at least two letters or a set number",
     "findSet": "Find a set by name or number",
-    "findNote": "Searches only the sets the app already knows: your sets, the wishlist and sets of downloaded themes and years. It may not find a set the app has not seen yet{known}.",
-    "findNone": "Nothing found among the known sets. Try another word, or open the theme and year so the app downloads them from Brickset.",
+    "findNone": "Nothing found among the known sets. Try another word, or open the theme and year so they are downloaded from Brickset.",
     "title": "Series",
     "search": "Find a series (Speed Champions, Technic…)",
     "mine": "My series",

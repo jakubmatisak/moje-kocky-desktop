@@ -214,7 +214,9 @@ async def find_sets(session: AsyncSession, user_id: int, q: str) -> list[FoundSe
     def rank(catalog: CatalogItem) -> tuple:
         num = catalog.catalog_num.lower()
         exact = num == asked or num == f"{asked}-1"
-        return (not exact, owned.get(catalog.catalog_num, 0) == 0, fold(catalog.name))
+        # „Set 40602-1“: appka o sete pozná len číslo (zo stiahnutej vlny), nie názov.
+        nameless = fold(catalog.name) == fold(f"Set {catalog.catalog_num}")
+        return (not exact, nameless, owned.get(catalog.catalog_num, 0) == 0, fold(catalog.name))
 
     out = []
     for catalog in sorted(hits, key=rank)[:FIND_LIMIT]:

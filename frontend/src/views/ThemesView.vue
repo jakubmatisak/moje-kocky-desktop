@@ -73,20 +73,22 @@
       </template>
     </v-alert>
 
-    <v-autocomplete
-      v-if="enabled"
-      v-model="picked"
-      clearable
-      density="comfortable"
-      hide-details
-      :items="themeItems"
-      :label="t('themes.search')"
-      prepend-inner-icon="mdi-magnify"
-      style="max-width: 480px"
-      @update:model-value="open"
-    />
+    <!-- Séria aj set v jednom riadku; výsledky v plávajúcej ponuke, stránka sa neposúva. -->
+    <div v-if="enabled" class="d-flex flex-wrap align-start ga-3">
+      <v-autocomplete
+        v-model="picked"
+        clearable
+        density="comfortable"
+        hide-details
+        :items="themeItems"
+        :label="t('themes.search')"
+        prepend-inner-icon="mdi-magnify"
+        style="max-width: 480px; flex: 1 1 320px"
+        @update:model-value="open"
+      />
 
-    <ThemeSetSearch v-if="enabled" />
+      <ThemeSetSearch />
+    </div>
 
     <!-- Kým server neodpovedal, kostra; „Zatiaľ žiadne série“ až po odpovedi. -->
     <PageSkeleton v-if="page.initial" kind="cards" />

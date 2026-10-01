@@ -81,8 +81,8 @@
   }
 
   /** Výška riadku s fotkou; virtuálna tabuľka ju potrebuje na odhad posúvania. */
-  const PHOTO = 48
-  const ROW_HEIGHT = 57
+  const PHOTO = 64
+  const ROW_HEIGHT = 77
 
   function conditionText (conditions: Record<string, number>): string {
     const entries = Object.entries(conditions)
@@ -185,7 +185,7 @@
    */
   .collection-table :deep(table) {
     table-layout: fixed;
-    min-width: 1476px;
+    min-width: 1504px;
   }
 
   /* Hlavička sa nesmie lámať („Kus / y“), šírky sú na to dosť veľké. */
@@ -208,9 +208,10 @@
     cursor: pointer;
   }
 
+  /* Rovnako vysoké riadky ako tabuľka v Chcem. */
   .collection-table__photo {
-    padding-top: 4px !important;
-    padding-bottom: 4px !important;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
   }
 
   .collection-table__row--selected {

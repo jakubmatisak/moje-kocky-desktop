@@ -1107,6 +1107,16 @@ Pravidlá API:
 - **index.html sa nekešuje** (`cache-control: no-cache`). Súbory s
   otlačkom v názve sa kešujú na rok. Inak by si prehliadač držal starú
   appku.
+- **Mena zobrazenia (1.1.0).** Sumy sa ukladajú v eurách. Zobrazujú sa
+  v mene účtu dnešným kurzom ECB, prepočet robí formátovač `utils/format.ts`.
+  Kúpa a predaj sa dajú zadať v cudzej mene: do eur sa prepočítajú kurzom
+  zo dňa kúpy a pôvodná suma ostane uložená. Podrobne v
+  `2026-10-01-mena-a-diely-design.md`, časť 1.
+- **Diely setu a alternatívne stavby (1.1.0).** Údaje z Rebrickable sa
+  sťahujú raz na set a v detaile až po rozbalení karty, len pre účet
+  s vlastným kľúčom. Kontrola úplnosti sa ukladá pri kuse a ukazuje štítok
+  „chýbajú N“. Podrobne v tom istom specu, časť 2. Synchronizácia s účtom
+  Rebrickable je zamietnutá (pozri časť 12).
 
 ---
 
@@ -1114,6 +1124,7 @@ Pravidlá API:
 
 | čo | prečo |
 |---|---|
+| Synchronizácia zbierky s účtom Rebrickable a „Postavíš z toho, čo máš?“ | používateľ ich nechce (1. 10. 2026) |
 | BrickLink ako zdroj cien | vyžaduje účet predajcu a kľúče viazané na IP, domáci server pevnú adresu nemá |
 | BrickOwl | ceny až po schválení prístupu ku katalógu |
 | eBay | produkčný prístup cez schvaľovanie |

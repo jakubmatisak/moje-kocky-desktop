@@ -25,6 +25,7 @@ export interface Column {
 }
 
 export const COLUMNS: Column[] = [
+  { key: 'image', sort: null, width: 76 },
   { key: 'number', sort: null, width: 96 },
   { key: 'name', sort: 'name' },
   { key: 'theme', sort: null, width: 150 },

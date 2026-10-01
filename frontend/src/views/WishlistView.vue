@@ -385,7 +385,7 @@
         <tbody>
           <tr v-for="item in items" :key="item.id">
             <td class="wish-table__photo">
-              <SetImage :alt="item.catalog.name" rounded="sm" :size="44" :src="imageSrc(item.catalog.image_url) ?? undefined" />
+              <SetImage :alt="item.catalog.name" rounded="sm" :size="64" :src="imageSrc(item.catalog.image_url) ?? undefined" />
             </td>
 
             <td>
@@ -677,7 +677,9 @@
 }
 
 .wish-table__photo {
-  width: 64px;
+  width: 104px;
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
 }
 
 .wish-table__name {

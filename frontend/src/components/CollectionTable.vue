@@ -13,7 +13,9 @@
   import { useI18n } from 'vue-i18n'
   import { useRouter } from 'vue-router'
   import { VDataTable, VDataTableVirtual } from 'vuetify/components'
+  import SetImage from '@/components/SetImage.vue'
   import { defaultDir, useCollectionStore } from '@/stores/collection'
+  import { imageSrc } from '@/utils/imageSrc'
   import { COLUMNS, rowFromGroup, rowFromItem, sortFromHeader } from '@/utils/tableColumns'
 
   /**
@@ -78,6 +80,10 @@
     router.push({ name: 'set-detail', params: { num: row.num } })
   }
 
+  /** Výška riadku s fotkou; virtuálna tabuľka ju potrebuje na odhad posúvania. */
+  const PHOTO = 48
+  const ROW_HEIGHT = 57
+
   function conditionText (conditions: Record<string, number>): string {
     const entries = Object.entries(conditions)
     if (entries.length === 1) return t(`condition.${entries[0]![0]}`)
@@ -96,7 +102,7 @@
       :height="fill ? '100%' : undefined"
       :hide-default-footer="!fill"
       hover
-      :item-height="fill ? 41 : undefined"
+      :item-height="fill ? ROW_HEIGHT : undefined"
       item-value="key"
       :items="rows"
       :items-per-page="fill ? undefined : -1"
@@ -122,7 +128,11 @@
           :class="{ 'collection-table__row--selected': selection.active.value && selected(slot.item) }"
           @click="onRow(slot.item)"
         >
-          <!-- Tabuľka je na prehľad čísel, fotky sú na kartách. -->
+          <!-- Malá fotka, nech sa set spozná; veľká je na kartách a v detaile. -->
+          <td class="collection-table__photo">
+            <SetImage :alt="slot.item.name" rounded="sm" :size="PHOTO" :src="imageSrc(slot.item.image) ?? undefined" />
+          </td>
+
           <td class="text-no-wrap">
             <v-icon
               v-if="selection.active.value"
@@ -175,7 +185,7 @@
    */
   .collection-table :deep(table) {
     table-layout: fixed;
-    min-width: 1400px;
+    min-width: 1476px;
   }
 
   /* Hlavička sa nesmie lámať („Kus / y“), šírky sú na to dosť veľké. */
@@ -196,6 +206,11 @@
 
   .collection-table__row {
     cursor: pointer;
+  }
+
+  .collection-table__photo {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
   }
 
   .collection-table__row--selected {

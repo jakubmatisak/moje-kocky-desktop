@@ -115,6 +115,13 @@ async def usage(
             used=await count("eurostat", False, counted_only=False),
             limit=None,
         ),
+        # Kurzy ECB pre menu zobrazenia: bez kľúča a bez limitu, raz denne.
+        ProviderUsageOut(
+            provider="ecb",
+            enabled=True,
+            used=await count("ecb", False, counted_only=False),
+            limit=None,
+        ),
     ]
 
     calls = (

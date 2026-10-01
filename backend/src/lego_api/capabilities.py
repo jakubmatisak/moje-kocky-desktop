@@ -28,6 +28,7 @@ class Cap(StrEnum):
     BRICKECONOMY_PRICE_DETAIL = "brickeconomy.price_detail"
     UPCITEMDB_BARCODE = "upcitemdb.barcode"
     EUROSTAT_INFLATION = "eurostat.inflation"
+    ECB_RATES = "ecb.rates"
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,6 +65,9 @@ CAPABILITIES: dict[Cap, CapSpec] = {
     Cap.BRICKECONOMY_PRICE_DETAIL: CapSpec("brickeconomy", counted=True),
     Cap.UPCITEMDB_BARCODE: CapSpec("upcitemdb", counted=True, default_enabled=False),
     Cap.EUROSTAT_INFLATION: CapSpec("eurostat", counted=False, default_enabled=False),
+    # Kurzy pre menu zobrazenia: ťahajú sa, len keď si účet vyberie inú menu
+    # než euro alebo zadá sumu v cudzej mene, takže môžu byť predvolene zapnuté.
+    Cap.ECB_RATES: CapSpec("ecb", counted=False),
 }
 
 
@@ -82,4 +86,5 @@ PROVIDERS: dict[str, ProviderSpec] = {
     "brickeconomy": ProviderSpec(paid=True, needs_key=True, daily_limit=None),
     "upcitemdb": ProviderSpec(paid=False, needs_key=False, daily_limit=100),
     "eurostat": ProviderSpec(paid=False, needs_key=False, daily_limit=None),
+    "ecb": ProviderSpec(paid=False, needs_key=False, daily_limit=None),
 }

@@ -15,6 +15,7 @@ from lego_api.models.collection import (
     ItemStatus,
     PriceVariant,
 )
+from lego_api.models.exchange_rate import ExchangeRate
 from lego_api.models.facts import BrickEconomyFacts, BricksetFacts, SourceAccess
 from lego_api.models.imports import ImportBatch, ImportState
 from lego_api.models.inflation import InflationIndex
@@ -42,6 +43,7 @@ __all__ = [
     "BlindSeries",
     "CmfSeries",
     "CollectionItem",
+    "ExchangeRate",
     "ImportBatch",
     "ImportState",
     "InflationIndex",

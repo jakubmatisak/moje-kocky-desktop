@@ -1,3 +1,5 @@
+import type { paths } from '@/api/schema'
+import createClient from 'openapi-fetch'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DESKTOP_ORIGIN, desktopFetch } from './bridge'
 
@@ -45,6 +47,21 @@ describe('desktop: fetch cez most namiesto siete', () => {
     }))
     const response = await desktopFetch(`${DESKTOP_ORIGIN}/api/v1/photos/1`)
     expect([...new Uint8Array(await response.arrayBuffer())]).toEqual([0, 255, 128, 7])
+  })
+
+  it('pole v dotaze (viac sérií) pošle mostu ako opakovaný parameter, celé', async () => {
+    const request = installBridge(() => ({
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+      body: toBase64('[]'),
+    }))
+    const client = createClient<paths>({ baseUrl: `${DESKTOP_ORIGIN}/api/v1`, fetch: r => desktopFetch(r) })
+    await client.GET('/wishlist/themes', { params: { query: { theme: ['Icons', 'Star Wars'], q: 'falcon' } } })
+    const path = request.mock.calls[0]![1]
+    const url = new URL(path, DESKTOP_ORIGIN)
+    expect(url.pathname).toBe('/api/v1/wishlist/themes')
+    expect(url.searchParams.getAll('theme')).toEqual(['Icons', 'Star Wars'])
+    expect(url.searchParams.get('q')).toBe('falcon')
   })
 
   it('iné adresy (súbory appky) idú obyčajným fetch', async () => {

@@ -73,6 +73,37 @@ def test_errors_and_query_strings_pass_through(bridge: Bridge) -> None:
     assert bad["status"] == 400
 
 
+def test_repeated_query_parameter_reaches_the_app_whole(bridge: Bridge) -> None:
+    """Filter s viacerými hodnotami (``?theme=A&theme=B``) príde celý, nie len prvá či posledná."""
+    bridge.request(
+        "POST",
+        "/api/v1/auth/register",
+        JSON,
+        _body({"email": "ja@doma.sk", "password": "tajneheslo123", "accept_privacy": True}),
+    )
+    token = _json(bridge.request("POST", "/api/v1/auth/refresh", {}, None))["access_token"]
+    auth = {**JSON, "authorization": f"Bearer {token}"}
+    created = bridge.request(
+        "POST", "/api/v1/catalog", auth, _body({"catalog_num": "10294", "theme": "Icons"})
+    )
+    assert created["status"] in (200, 201), _json(created)
+    wished = bridge.request("POST", "/api/v1/wishlist", auth, _body({"catalog_num": "10294-1"}))
+    assert wished["status"] == 201, _json(wished)
+
+    def nums(query: str) -> list[str]:
+        answer = bridge.request("GET", f"/api/v1/wishlist?{query}", auth, None)
+        assert answer["status"] == 200, _json(answer)
+        return [row["catalog_num"] for row in _json(answer)]
+
+    # Sériu bez kľúča Rebrickable účet nemusí vidieť; potom je set „bez série“.
+    own = "Icons" if nums("theme=Icons") else "__none__"
+    assert nums("theme=Nic") == []
+    assert nums(f"theme=Nic&theme={own}") == ["10294-1"]
+    assert nums(f"theme={own}&theme=Nic") == ["10294-1"]
+    themes = bridge.request("GET", f"/api/v1/wishlist/themes?theme={own}&theme=Nic", auth, None)
+    assert themes["status"] == 200
+
+
 def test_save_file_writes_what_the_dialog_chose(bridge: Bridge, tmp_path) -> None:
     target = tmp_path / "zbierka.csv"
     bridge.choose_save_path = lambda name: str(target)

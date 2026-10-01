@@ -518,7 +518,7 @@ stoja jedno volanie. Predané kusy sa neobnovujú.
 plánovač a nespúšťa to ani prihlásenie. Tlačidlo najprv otvorí dialóg
 „Chcete obnoviť ceny?“ (`components/RefreshPricesDialog.vue`): počet cien
 (predvolene 50, najviac zvyšok dnešného limitu), poradie a riadok „Dnes
-použité X z 90, ostáva Y“. Čísla sú tie isté ako na karte limitov:
+použité X zo 100, ostáva Y“. Čísla sú tie isté ako na karte limitov:
 `RefreshStatusOut.calls_used` a `calls_limit` ráta
 `routers/usage.py::brickeconomy_used` aj pre `/usage`. Limit appky je
 `brickeconomy_daily_limit` (100, celá kvóta služby). Zvolený počet

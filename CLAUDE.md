@@ -316,7 +316,7 @@ Hromadná obnova z hornej lišty ide cez dialóg `RefreshPricesDialog.vue`
 („Chcete obnoviť ceny?“, počet predvolene 50, najviac zvyšok dňa) a posiela
 `?limit=`, ktorý nahradí predvolený strop `price_refresh_budget`; zvyšok
 kvóty, rezerva a `price_batch` účtu platia ďalej. Riadok „Dnes použité X
-z 90“ berie `calls_used`/`calls_limit` z `refresh-status`, rátané tou istou
+zo 100“ berie `calls_used`/`calls_limit` z `refresh-status`, rátané tou istou
 `routers/usage.py::brickeconomy_used` ako karta limitov.
 Vek je čas od posledného volania vlastného kľúča, s cenou aj bez nej
 (`pricing.last_attempts`: `source_access` čísla a `miss:{číslo}`, k tomu
@@ -930,7 +930,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 757 testov, frontend 273. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 810 testov, frontend 327. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

@@ -14,12 +14,14 @@
   import { useRoute } from 'vue-router'
   import { api, errorMessage } from '@/api/client'
   import CardGrid from '@/components/CardGrid.vue'
+  import GhostActions from '@/components/GhostActions.vue'
   import GhostCard from '@/components/GhostCard.vue'
   import LoadFailed from '@/components/LoadFailed.vue'
   import PageSkeleton from '@/components/PageSkeleton.vue'
   import SeriesBar from '@/components/SeriesBar.vue'
   import SeriesPurchaseDialog from '@/components/SeriesPurchaseDialog.vue'
   import SetImage from '@/components/SetImage.vue'
+  import { useMinifigsView } from '@/composables/useMinifigsView'
   import { usePageLoad } from '@/composables/usePageLoad'
   import { imageSrc } from '@/utils/imageSrc'
   import { memberShowFrom } from '@/utils/seriesList'
@@ -33,6 +35,8 @@
   /** Z Prehľadu („Ukázať chýbajúce“) prichádza `?show=missing`. */
   const show = ref(memberShowFrom(route.query.show))
   const allOpen = ref(false)
+  /** Karty alebo tabuľka, voľba pri účte (`preferences.minifigs.series`). */
+  const { tableView, setView } = useMinifigsView('series')
 
   /** Text chyby (napríklad neznáma séria), pre LoadFailed. */
   const error = ref<string | null>(null)
@@ -171,6 +175,17 @@
           <v-btn value="missing">{{ t('minifigs.showMissing') }} · {{ missingCount }}</v-btn>
         </v-btn-toggle>
 
+        <v-btn-toggle
+          density="comfortable"
+          mandatory
+          :model-value="tableView ? 'table' : 'cards'"
+          variant="outlined"
+          @update:model-value="value => setView(value === 'table')"
+        >
+          <v-btn icon="mdi-view-grid-outline" :title="t('collection.viewCards')" value="cards" />
+          <v-btn icon="mdi-table" :title="t('collection.viewTable')" value="table" />
+        </v-btn-toggle>
+
         <v-spacer />
 
         <!-- Celá séria naraz za jednu sumu, rozpočíta sa na figúrky. -->
@@ -184,7 +199,96 @@
 
       <SeriesPurchaseDialog v-model="allOpen" :members="members" :series="series" @saved="page.run()" />
 
-      <CardGrid>
+      <v-card v-if="tableView" border class="minifigs-table" flat>
+        <v-table density="comfortable" hover>
+          <thead>
+            <tr>
+              <th class="minifigs-table__photo" />
+              <th>{{ t('minifigs.colNumber') }}</th>
+              <th>{{ t('minifigs.colFigure') }}</th>
+              <th>{{ t('minifigs.colState') }}</th>
+              <th class="text-center">{{ t('minifigs.colWish') }}</th>
+              <th />
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr
+              v-for="member in shown"
+              :key="member.catalog.catalog_num"
+              :class="{ 'minifigs-table__row--missing': member.owned === 0 }"
+            >
+              <td class="minifigs-table__photo">
+                <SetImage
+                  :alt="member.catalog.name"
+                  class="minifigs-table__image"
+                  rounded="sm"
+                  :size="64"
+                  :src="imageSrc(member.catalog.image_url) ?? undefined"
+                />
+              </td>
+
+              <td class="text-body-medium text-medium-emphasis text-no-wrap">{{ member.catalog.catalog_num }}</td>
+
+              <td>
+                <RouterLink
+                  class="minifigs-table__name"
+                  :to="{ name: 'set-detail', params: { num: member.catalog.catalog_num }, query: { from: 'minifigs' } }"
+                >{{ member.catalog.name }}</RouterLink>
+              </td>
+
+              <td class="text-no-wrap">
+                <div v-if="member.owned > 0" class="d-flex ga-1">
+                  <v-chip
+                    color="positive"
+                    label
+                    prepend-icon="mdi-check"
+                    size="x-small"
+                    variant="tonal"
+                  >{{ t('minifigs.have') }}</v-chip>
+
+                  <v-chip v-if="member.owned > 1" label size="x-small" variant="tonal">× {{ member.owned }}</v-chip>
+                </div>
+
+                <v-chip v-else label size="x-small" variant="outlined">{{ t('minifigs.missing') }}</v-chip>
+              </td>
+
+              <td class="text-center">
+                <v-icon
+                  v-if="member.wanted"
+                  color="primary"
+                  data-test="wanted"
+                  icon="mdi-heart"
+                  size="small"
+                  :title="t('filters.inWish')"
+                />
+              </td>
+
+              <td class="text-end text-no-wrap">
+                <v-btn
+                  v-if="member.owned > 0"
+                  icon="mdi-chevron-right"
+                  size="small"
+                  :title="t('minifigs.openDetail')"
+                  :to="{ name: 'set-detail', params: { num: member.catalog.catalog_num }, query: { from: 'minifigs' } }"
+                  variant="text"
+                />
+
+                <GhostActions
+                  v-else
+                  :catalog="member.catalog"
+                  compact
+                  :wanted="member.wanted"
+                  @owned="page.run()"
+                  @wished="member.wanted = true"
+                />
+              </td>
+            </tr>
+          </tbody>
+        </v-table>
+      </v-card>
+
+      <CardGrid v-else>
         <template v-for="member in shown" :key="member.catalog.catalog_num">
           <v-card
             v-if="member.owned > 0"
@@ -223,6 +327,33 @@
 </template>
 
 <style scoped>
+/* Tabuľka série: riadky ako v Chcem a Zbierke, na telefóne sa posúva do strany. */
+.minifigs-table {
+  overflow-x: auto;
+}
+
+.minifigs-table__photo {
+  width: 104px;
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+}
+
+.minifigs-table__name {
+  color: inherit;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.minifigs-table__name:hover {
+  text-decoration: underline;
+}
+
+/* Chýbajúca figúrka tlmene, ako prerušovaná karta. */
+.minifigs-table__row--missing .minifigs-table__image {
+  filter: grayscale(0.6);
+  opacity: 0.6;
+}
+
 /* Žltá z témy je na bielej nečitateľná, text potrebuje tmavší odtieň. */
 .missing-count {
   color: #B25E00;

@@ -713,7 +713,18 @@
     },
     "categoryMinifigs": "Minifigúrky",
     "summaryOther": "Kúskov zo sérií: {figures} · zbierané série: {collecting} · kompletné: {complete}",
-    "syncSwitchedOff": "Sťahovanie všetkých sérií je vypnuté v Nastaveniach → Dáta. Ukážu sa série, ktoré sú už stiahnuté."
+    "syncSwitchedOff": "Sťahovanie všetkých sérií je vypnuté v Nastaveniach → Dáta. Ukážu sa série, ktoré sú už stiahnuté.",
+    "colSeries": "Séria",
+    "colYear": "Rok",
+    "colOwned": "Mám",
+    "colMissing": "Chýba",
+    "colProgress": "Kompletnosť",
+    "colNumber": "Číslo",
+    "colFigure": "Figúrka",
+    "colState": "Stav",
+    "colWish": "Chcem",
+    "missing": "Chýba",
+    "openDetail": "Otvoriť detail"
   },
   "purchase": {
     "title": "Kúpil som",

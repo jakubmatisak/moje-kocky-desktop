@@ -25,6 +25,7 @@
   import PageSkeleton from '@/components/PageSkeleton.vue'
   import SeriesBar from '@/components/SeriesBar.vue'
   import SetImage from '@/components/SetImage.vue'
+  import { useMinifigsView } from '@/composables/useMinifigsView'
   import { usePageLoad } from '@/composables/usePageLoad'
   import { imageSrc } from '@/utils/imageSrc'
   import { compareSeries, matchesState, seriesState } from '@/utils/seriesList'
@@ -57,6 +58,8 @@
   const years = ref<number[]>([])
   const sort = ref<Sort>('leastMissing')
   let poll: ReturnType<typeof setTimeout> | null = null
+  /** Karty alebo tabuľka, voľba pri účte (`preferences.minifigs.list`). */
+  const { tableView, setView } = useMinifigsView('list')
 
   async function load (): Promise<boolean> {
     const { data, error: err } = await api.GET('/minifigs/series', {})
@@ -363,6 +366,17 @@
         :label="t('collection.sortBy')"
         prepend-inner-icon="mdi-sort"
       />
+
+      <v-btn-toggle
+        density="comfortable"
+        mandatory
+        :model-value="tableView ? 'table' : 'cards'"
+        variant="outlined"
+        @update:model-value="value => setView(value === 'table')"
+      >
+        <v-btn icon="mdi-view-grid-outline" :title="t('collection.viewCards')" value="cards" />
+        <v-btn icon="mdi-table" :title="t('collection.viewTable')" value="table" />
+      </v-btn-toggle>
     </div>
 
     <div class="d-flex align-center flex-wrap ga-2">
@@ -391,6 +405,86 @@
       :text="series.length === 0 ? t('minifigs.emptyHint') : t('minifigs.noMatchHint')"
       :title="series.length === 0 ? t('minifigs.empty') : t('minifigs.noMatch')"
     />
+
+    <v-card v-else-if="tableView" border class="minifigs-table" flat>
+      <v-table density="comfortable" hover>
+        <thead>
+          <tr>
+            <th class="minifigs-table__photo" />
+            <th>{{ t('minifigs.colSeries') }}</th>
+            <th>{{ t('minifigs.colYear') }}</th>
+            <th class="text-end">{{ t('minifigs.colOwned') }}</th>
+            <th class="text-end">{{ t('minifigs.colMissing') }}</th>
+            <th class="minifigs-table__progress">{{ t('minifigs.colProgress') }}</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr
+            v-for="row in shown"
+            :key="row.series_num ?? `theme-${row.theme_id}`"
+            :class="{ 'series-card--untouched': state(row) === 'untouched' }"
+          >
+            <td class="minifigs-table__photo">
+              <SetImage
+                :alt="row.name"
+                class="series-card__image"
+                rounded="sm"
+                :size="64"
+                :src="imageSrc(row.image_url) ?? undefined"
+              />
+            </td>
+
+            <td>
+              <RouterLink
+                v-if="row.series_num"
+                class="minifigs-table__name"
+                :to="{ name: 'minifig-series', params: { num: row.series_num } }"
+              >{{ row.name }}</RouterLink>
+
+              <span v-else class="minifigs-table__name text-medium-emphasis">{{ row.name }}</span>
+
+              <div class="d-flex align-center flex-wrap ga-1 text-body-small text-medium-emphasis">
+                <template v-if="row.series_num">{{ row.series_num }}</template>
+
+                <v-chip v-if="row.duplicates" label size="x-small" variant="tonal">
+                  {{ t('minifigs.duplicatesPlural', row.duplicates, { named: { count: row.duplicates } }) }}
+                </v-chip>
+
+                <v-chip v-if="row.sealed_bags" label size="x-small" variant="tonal">
+                  {{ t('minifigs.bagsPlural', row.sealed_bags, { named: { count: row.sealed_bags } }) }}
+                </v-chip>
+              </div>
+            </td>
+
+            <td class="text-body-medium">{{ row.year ?? '—' }}</td>
+
+            <template v-if="row.total > 0">
+              <td class="text-end text-no-wrap">{{ t('dashboard.seriesOf', { owned: row.owned, total: row.total }) }}</td>
+
+              <td class="text-end text-no-wrap">
+                <v-chip
+                  v-if="state(row) === 'complete'"
+                  color="positive"
+                  label
+                  prepend-icon="mdi-check"
+                  size="x-small"
+                  variant="tonal"
+                >{{ t('dashboard.seriesDone') }}</v-chip>
+
+                <template v-else>{{ Math.max(row.total - row.owned, 0) }}</template>
+              </td>
+
+              <td class="minifigs-table__progress">
+                <SeriesBar :owned="row.owned" :total="row.total" />
+              </td>
+            </template>
+
+            <td v-else class="text-body-small text-medium-emphasis" colspan="3">{{ t('minifigs.notSynced') }}</td>
+          </tr>
+        </tbody>
+      </v-table>
+    </v-card>
 
     <CardGrid v-else>
       <v-card
@@ -475,6 +569,32 @@
   .mf-control--years {
     max-width: none;
   }
+}
+
+/* Tabuľka Figúrok: riadky ako v Chcem a Zbierke, na telefóne sa posúva do strany. */
+.minifigs-table {
+  overflow-x: auto;
+}
+
+.minifigs-table__photo {
+  width: 104px;
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+}
+
+.minifigs-table__name {
+  color: inherit;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+a.minifigs-table__name:hover {
+  text-decoration: underline;
+}
+
+.minifigs-table__progress {
+  min-width: 120px;
+  width: 20%;
 }
 
 /* Séria, z ktorej nič nemám, je v zozname, ale nekričí. */

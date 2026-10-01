@@ -42,7 +42,8 @@ zálohuje.
   aj blind-box série iných radov (Mighty Machines, Super Mario a pod.) sú len
   vo **Figúrkach**. Séria sa pridáva výberom z mriežky figúrok, nerozbalený
   sáčok sa po rozbalení priradí ku konkrétnej figúrke. Sekcia pozná všetky
-  série, aj nezačaté, a ukáže, čo chýba. Nerozbalené sáčky, predané figúrky,
+  série, aj nezačaté, a ukáže, čo chýba. Zoznam sérií aj figúrky série
+  sú ako karty alebo tabuľka. Nerozbalené sáčky, predané figúrky,
   obnova cien a hromadná úprava figúrok série sú v jej detaile (tlačidlo
   **Kusy série**). Prehľad, export aj súpis pre poistku počítajú
   všetko, sety aj figúrky. Keď hľadanie v Zbierke nájde figúrku, Zbierka
@@ -512,7 +513,8 @@ The app's interface is available in Slovak and English.*
   Machines, Super Mario and the like) live only under **Minifigures**. You add
   a series by picking figures from a grid, and a sealed bag can be assigned to
   a specific figure once you open it. The section knows every series, including
-  ones you haven't started, and shows what is missing. Sealed bags, sold
+  ones you haven't started, and shows what is missing. Both the list of
+  series and a series' figures come as cards or a table. Sealed bags, sold
   figures, the price refresh and bulk editing of a series' figures are on
   that series' page (the **Series pieces** button). The Overview, the export
   and the insurance inventory count everything, sets and figures alike. When

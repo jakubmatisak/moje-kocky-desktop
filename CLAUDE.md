@@ -378,7 +378,9 @@ pri sete z Chcem majú dve tlačidlá: „Pridať a odstrániť z Chcem“ a „
 a nechať v Chcem“ (pošle `keep_wishlist`, server set nevyradí; Chcem potom
 karty načíta, aby bol hneď vidieť štítok). Automatické uloženie po skene set
 vyradí ako doteraz, Späť ostáva. Filter Séria je čip s ponukou, ako ostatné
-čipy. Chcem má karty aj tabuľku, voľba v `preferences.wishlist`.
+čipy. Chcem má karty aj tabuľku, voľba v `preferences.wishlist`. Figúrky
+rovnako, voľba v `preferences.minifigs` (`list` a `series`, `useMinifigsView`);
+akcie chýbajúcej figúrky sú `GhostActions.vue` pre kartu aj riadok.
 
 **„Kúpil som“ je jeden dialóg pre všetko, z Chcem vyraďuje server.**
 `components/PurchaseDialog.vue` pridá do zbierky vec, ktorú katalóg už

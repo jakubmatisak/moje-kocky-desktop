@@ -713,7 +713,18 @@
     },
     "categoryMinifigs": "Minifigures",
     "summaryOther": "Pieces from series: {figures} · collecting: {collecting} · complete: {complete}",
-    "syncSwitchedOff": "Downloading all series is switched off in Settings → Data. Series the app already knows are shown."
+    "syncSwitchedOff": "Downloading all series is switched off in Settings → Data. Series the app already knows are shown.",
+    "colSeries": "Series",
+    "colYear": "Year",
+    "colOwned": "Owned",
+    "colMissing": "Missing",
+    "colProgress": "Completeness",
+    "colNumber": "Number",
+    "colFigure": "Figure",
+    "colState": "State",
+    "colWish": "Wishlist",
+    "missing": "Missing",
+    "openDetail": "Open detail"
   },
   "purchase": {
     "title": "I bought it",

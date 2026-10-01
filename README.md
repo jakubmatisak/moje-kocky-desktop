@@ -55,6 +55,11 @@ zálohuje.
   cieľ klesol, sa zvýrazní. „Kúpil som“ ho presunie do zbierky.
 - **Vlastné fotky kusu** a **súpis pre poistku** na tlač alebo do PDF.
 - **Galéria ďalších oficiálnych fotiek setu** z Brickset (dá sa vypnúť).
+- **Diely setu** z Rebrickable podľa farby, náhradné zvlášť, a **kontrola
+  úplnosti** každého kusu: zadáš, koľko dielika je, kus potom nesie štítok
+  „chýbajú N“ a zoznam chýbajúcich sa uloží do CSV. **Čo ešte z neho
+  postavíš**: alternatívne stavby z dielikov setu s odkazom na Rebrickable.
+  Oboje sa stiahne raz na set, až keď kartu rozbalíš.
 
 **Pridávanie**
 
@@ -231,7 +236,7 @@ kľúče treba zadať znova.
 
 | Služba | Na čo je | Cena a limit | Kľúč |
 |---|---|---|---|
-| [Rebrickable](https://rebrickable.com/api/) | názvy, roky, dieliky, fotky, série, figúrky | zdarma, ~1 volanie/s | nastavenia účtu na rebrickable.com |
+| [Rebrickable](https://rebrickable.com/api/) | názvy, roky, dieliky, fotky, série, figúrky, zoznam dielov, alternatívne stavby | zdarma, ~1 volanie/s | nastavenia účtu na rebrickable.com |
 | [Brickset](https://brickset.com/article/52664/api-version-3-documentation) | pôvodná cena, čiarové kódy, popis, štítky, vlny sérií, ďalšie fotky setu | zdarma, 100 volaní/deň | [žiadosť o kľúč](https://brickset.com/tools/webservices/requestkey) |
 | [BrickEconomy](https://www.brickeconomy.com/api-reference) | trhová cena nového a použitého kusu, história, odhady | súčasť Premium, 100 volaní/deň | profil na brickeconomy.com |
 | [UPCitemdb](https://www.upcitemdb.com/) | záložné hľadanie podľa čiarového kódu | zdarma, bez kľúča, ~100 dotazov/deň na IP adresu | netreba, zapína sa v Nastaveniach |
@@ -509,6 +514,12 @@ The app's interface is available in Slovak and English.*
   save as PDF.
 - **A gallery of additional official set photos** from Brickset (can be
   turned off).
+- **Set parts** from Rebrickable by colour, spares listed apart, and a
+  **completeness check** for each copy: enter how many of a part you have,
+  the copy then carries a “N parts missing” label and the missing parts
+  list can be saved as CSV. **What else you can build**: alternate builds
+  from the set's parts with a link to Rebrickable. Both are fetched once per
+  set, only when you expand the card.
 
 **Adding sets**
 
@@ -701,7 +712,7 @@ just have to enter the keys again.
 
 | Service | What it provides | Price and limit | Key |
 |---|---|---|---|
-| [Rebrickable](https://rebrickable.com/api/) | names, years, part counts, photos, themes, minifigures | free, ~1 call/s | account settings on rebrickable.com |
+| [Rebrickable](https://rebrickable.com/api/) | names, years, part counts, photos, themes, minifigures, parts lists, alternate builds | free, ~1 call/s | account settings on rebrickable.com |
 | [Brickset](https://brickset.com/article/52664/api-version-3-documentation) | retail price, barcodes, description, tags, theme waves, additional set photos | free, 100 calls/day | [request a key](https://brickset.com/tools/webservices/requestkey) |
 | [BrickEconomy](https://www.brickeconomy.com/api-reference) | market price new and used, history, forecasts | part of Premium, 100 calls/day | profile on brickeconomy.com |
 | [UPCitemdb](https://www.upcitemdb.com/) | fallback barcode lookup | free, no key, ~100 lookups/day per IP address | none, switched on in Settings |

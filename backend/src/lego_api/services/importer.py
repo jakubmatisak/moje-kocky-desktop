@@ -41,6 +41,7 @@ from lego_api.providers.brickset import BricksetProvider
 from lego_api.services.catalog import CatalogService
 from lego_api.services.import_file import OWNED, SOLD, WISH, ParsedFile
 from lego_api.services.keys import UserKeys
+from lego_api.services.set_parts import delete_checks
 from lego_api.services.wishlist import added_at, drop_bought
 
 log = logging.getLogger(__name__)
@@ -412,6 +413,7 @@ async def undo(
         for photo in photos:
             (Path(settings.photos_dir) / photo.filename).unlink(missing_ok=True)
             await session.delete(photo)
+        await delete_checks(session, [i.id for i in items])
     for item in items:
         await session.delete(item)
     await session.execute(

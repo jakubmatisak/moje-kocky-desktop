@@ -112,7 +112,8 @@ const authMiddleware: Middleware = {
  * a potvrdený či vrátený import. Fotka kusu ani náhľad importu nie.
  */
 const COLLECTION_CHANGES = [
-  /^\/items(\/|$)(?!.*\/photos$)/,
+  // Fotky a kontrola úplnosti počty v ponuke nemenia.
+  /^\/items(\/|$)(?!.*\/(photos|part-checks)$)/,
   /^\/wishlist(\/|$)/,
   /^\/imports\/\{import_id\}\/(commit|undo)$/,
 ]

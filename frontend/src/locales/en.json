@@ -995,6 +995,16 @@
       "series_sync": {
         "title": "All minifigure series",
         "hint": "The Minifigures section checks for new series once a week (dozens of calls, no limit). Off: only series you own something from are shown."
+      },
+      "parts": {
+        "title": "Set parts",
+        "hint": "When you expand the Parts card in the set detail, once per set (two or three calls for a big set), again at the earliest after 90 days.",
+        "brings": "parts list by colour and a completeness check for each piece"
+      },
+      "alternates": {
+        "title": "What else you can build",
+        "hint": "When you expand the card in the set detail, one call per set, again at the earliest after 90 days.",
+        "brings": "alternate builds from the set's parts with a link to Rebrickable"
       }
     },
     "brickset": {
@@ -1292,6 +1302,35 @@
     "rebrickableDetail": "Rebrickable (free key) adds the name, photo, series and parts.",
     "wishlist": "BrickEconomy (Premium key) adds the current price and a notice when a set drops to your target price.",
     "barcode": "Brickset (free key) recognises barcodes, UPCitemdb is the fallback (just switch it on)."
+  },
+  "parts": {
+    "title": "Parts",
+    "titleCount": "Parts · {count}",
+    "empty": "Rebrickable does not know the parts of this set.",
+    "spares": "Spare parts",
+    "totalPlural": "{count} part | {count} parts",
+    "sparesPlural": "{count} spare | {count} spares",
+    "check": "Completeness check",
+    "checkDone": "Done",
+    "checkHint": "Enter how many of each part there are. Only what is missing is saved.",
+    "piece": "Piece",
+    "pieceLabel": "{condition} · bought {date}",
+    "have": "Have",
+    "missingPlural": "{count} part missing | {count} parts missing",
+    "missingShort": "{count} missing",
+    "complete": "Nothing missing",
+    "missingList": "Missing parts list",
+    "missingListFailed": "Could not download the missing parts list",
+    "saveFailed": "Could not save the check",
+    "credit": "Parts and pictures: Rebrickable"
+  },
+  "alternates": {
+    "title": "What else you can build",
+    "titleCount": "What else you can build · {count}",
+    "empty": "Rebrickable has no alternate builds for this set.",
+    "by": "by {name}",
+    "open": "Open on Rebrickable",
+    "credit": "Fan builds from Rebrickable. Instructions are on the build's page, some are paid."
   },
   "unlock": {
     "title": "What else the app can do",

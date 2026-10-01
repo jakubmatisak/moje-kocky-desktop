@@ -995,6 +995,16 @@
       "series_sync": {
         "title": "Všetky série figúrok",
         "hint": "Sekcia Figúrky raz za týždeň skontroluje nové série (desiatky volaní, bez limitu). Vypnuté: ukážu sa len série, z ktorých niečo máš."
+      },
+      "parts": {
+        "title": "Diely setu",
+        "hint": "Po rozbalení karty Diely v detaile setu, raz na set (pri veľkom sete dve-tri volania), znova najskôr po 90 dňoch.",
+        "brings": "zoznam dielikov podľa farby a kontrola úplnosti kusu"
+      },
+      "alternates": {
+        "title": "Čo ešte z neho postavíš",
+        "hint": "Po rozbalení karty v detaile setu, jedno volanie na set, znova najskôr po 90 dňoch.",
+        "brings": "alternatívne stavby z dielikov setu s odkazom na Rebrickable"
       }
     },
     "brickset": {
@@ -1292,6 +1302,35 @@
     "rebrickableDetail": "Názov, fotku, sériu a dieliky doplní Rebrickable (kľúč zadarmo).",
     "wishlist": "Aktuálnu cenu a upozornenie, keď set klesne na cieľovú cenu, doplní BrickEconomy (kľúč Premium).",
     "barcode": "Čiarové kódy spozná Brickset (kľúč zadarmo) a ako záloha UPCitemdb (stačí ho zapnúť)."
+  },
+  "parts": {
+    "title": "Diely",
+    "titleCount": "Diely · {count}",
+    "empty": "Rebrickable diely tohto setu nepozná.",
+    "spares": "Náhradné diely",
+    "totalPlural": "{count} dielik | {count} dieliky | {count} dielikov",
+    "sparesPlural": "{count} náhradný | {count} náhradné | {count} náhradných",
+    "check": "Kontrola úplnosti",
+    "checkDone": "Hotovo",
+    "checkHint": "Pri každom dieliku zadaj, koľko ho je. Uloží sa len to, čo chýba.",
+    "piece": "Kus",
+    "pieceLabel": "{condition} · kúpené {date}",
+    "have": "Je",
+    "missingPlural": "chýba {count} dielik | chýbajú {count} dieliky | chýba {count} dielikov",
+    "missingShort": "chýba {count}",
+    "complete": "Nič nechýba",
+    "missingList": "Zoznam chýbajúcich",
+    "missingListFailed": "Zoznam chýbajúcich sa nepodarilo stiahnuť",
+    "saveFailed": "Kontrolu sa nepodarilo uložiť",
+    "credit": "Diely a obrázky: Rebrickable"
+  },
+  "alternates": {
+    "title": "Čo ešte z neho postavíš",
+    "titleCount": "Čo ešte z neho postavíš · {count}",
+    "empty": "Rebrickable pre tento set alternatívne stavby nemá.",
+    "by": "autor {name}",
+    "open": "Otvoriť na Rebrickable",
+    "credit": "Stavby fanúšikov z Rebrickable. Návod je na stránke stavby, niektoré sú platené."
   },
   "unlock": {
     "title": "Čo ešte appka vie",

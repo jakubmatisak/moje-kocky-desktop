@@ -354,6 +354,8 @@ class ValuedItemOut(ItemOut):
     cagr_pct: float | None = None
     #: Vlastné kategórie setu, ku ktorému kus patrí.
     categories: list[int] = Field(default_factory=list)
+    #: Koľko dielikov kusu chýba podľa kontroly úplnosti (bez náhradných).
+    missing_parts: int = 0
 
 
 class GroupedItemOut(BaseModel):
@@ -377,6 +379,8 @@ class GroupedItemOut(BaseModel):
     #: Ročný výnos vlastnených kusov ako celku; pod rok držania prázdne.
     cagr_pct: float | None = None
     categories: list[int] = Field(default_factory=list)
+    #: Chýbajúce dieliky vlastnených kusov podľa kontroly úplnosti (bez náhradných).
+    missing_parts: int = 0
 
 
 # --- ceny -------------------------------------------------------------------

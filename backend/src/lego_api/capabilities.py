@@ -14,6 +14,8 @@ from enum import StrEnum
 class Cap(StrEnum):
     REBRICKABLE_SET = "rebrickable.set"
     REBRICKABLE_SERIES_SYNC = "rebrickable.series_sync"
+    REBRICKABLE_PARTS = "rebrickable.parts"
+    REBRICKABLE_ALTERNATES = "rebrickable.alternates"
     BRICKSET_ON_ADD = "brickset.on_add"
     BRICKSET_BACKFILL = "brickset.backfill"
     BRICKSET_ON_DETAIL = "brickset.on_detail"
@@ -47,6 +49,9 @@ class CapSpec:
 CAPABILITIES: dict[Cap, CapSpec] = {
     Cap.REBRICKABLE_SET: CapSpec("rebrickable", counted=False, required=True),
     Cap.REBRICKABLE_SERIES_SYNC: CapSpec("rebrickable", counted=False, background=True),
+    # Diely a alternatívne stavby v detaile setu: raz na set, až po rozbalení karty.
+    Cap.REBRICKABLE_PARTS: CapSpec("rebrickable", counted=False),
+    Cap.REBRICKABLE_ALTERNATES: CapSpec("rebrickable", counted=False),
     Cap.BRICKSET_ON_ADD: CapSpec("brickset", counted=True),
     Cap.BRICKSET_BACKFILL: CapSpec("brickset", counted=True, background=True),
     Cap.BRICKSET_ON_DETAIL: CapSpec("brickset", counted=True),

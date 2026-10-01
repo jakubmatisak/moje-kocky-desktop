@@ -62,6 +62,7 @@ from lego_api.services.portfolio import (
     value_items,
 )
 from lego_api.services.purchase import split_total
+from lego_api.services.set_parts import delete_checks, missing_by_item
 from lego_api.services.sorting import SORT_KEYS, Group, sort_groups, sort_items
 from lego_api.services.wishlist import DroppedWish, drop_bought
 
@@ -211,6 +212,7 @@ async def list_items(
 ) -> list[ValuedItemOut]:
     _, valued, ctx = await _filtered(session, user, f)
     valued = sort_items(valued, sort, direction)
+    parts_missing = await missing_by_item(session, user.id)
 
     return [
         ValuedItemOut(
@@ -224,6 +226,7 @@ async def list_items(
             ),
             cagr_pct=v.cagr_pct(),
             categories=ctx.categories_by_item.get(v.item.id, []),
+            missing_parts=parts_missing.get(v.item.id, 0),
         )
         for v in valued
     ]
@@ -246,6 +249,7 @@ async def list_grouped(
         grouped = group_by_catalog([v.item for v in valued])
 
     by_id = {v.item.id: v for v in valued}
+    parts_missing = await missing_by_item(session, user.id)
     rows: list[tuple[Group, GroupedItemOut]] = []
     for key, group in grouped.items():
         owned = [i for i in group if i.status == ItemStatus.OWNED]
@@ -294,6 +298,7 @@ async def list_grouped(
                     # Skupina ako jeden celok (doba držania vážená vkladom), nie priemer.
                     cagr_pct=collection_cagr([by_id[i.id] for i in owned])[0],
                     categories=ctx.categories_by_item.get(group[0].id, []),
+                    missing_parts=sum(parts_missing.get(i.id, 0) for i in owned),
                 ),
             )
         )
@@ -544,6 +549,7 @@ async def delete_item(
     for photo in photos:
         (Path(settings.photos_dir) / photo.filename).unlink(missing_ok=True)
         await session.delete(photo)
+    await delete_checks(session, [item_id])
     await session.delete(item)
     await session.commit()
 

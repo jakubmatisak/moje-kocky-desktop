@@ -627,6 +627,33 @@ set bez `brickset_id` sa najprv raz opýta cez getSets. Prepínač
 z Brickset s „Image(s) courtesy of Brickset.com“; detail pýta galériu až
 po doplnení z Brickset, inak by išli dve getSets naraz.
 
+**Diely a stavby z Rebrickable raz na set.** `GET /catalog/{num}/parts`
+(`/sets/{num}/parts/?page_size=1000`, aj ďalšie stránky cez `next`, len na
+adresu Rebrickable, inak by kľúč odišiel inam) a `/catalog/{num}/alternates`
+(`/sets/{num}/alternates/`) ťahajú len karty v detaile setu po rozbalení
+(`SetPartsCard.vue`, `SetAlternatesCard.vue`), nikdy pri otvorení stránky
+ani Obnoviť stránku. Schopnosti `rebrickable.parts` a `rebrickable.alternates`.
+Pamäť je spoločná pre katalóg (`set_parts`, `set_alternates`: zoznam v JSON
+a `fetched_at`), obnova najskôr po 90 dňoch (`services/set_parts.py::load`);
+prázdny zoznam (404, žiadne stavby) sa pamätá, výpadok
+(`provider.last_answered` je False) nie: starý zoznam ostane, bez neho 502
+a karta ukáže `LoadFailed`. Vidí ich len účet s vlastným kľúčom
+(`visibility.current().rebrickable`), rozhranie cez `auth.can(...)`. Len sety
+(`set_parts.applies_to`: nie figúrky zo sérií, séria ani minifigúrka; podľa
+`base_*`, lebo viditeľné `parent_num` bez kľúča chýba). Počty do nadpisov dáva
+`/catalog/{num}/parts-summary` z pamäte, von nevolá. Kontrola úplnosti je
+údaj účtu: `item_part_checks` (kus, číslo, farba, náhradný, `missing`), len
+nenulové odchýlky, dielik a počet sa overia proti uloženému zoznamu. Štítok
+„chýbajú N“ (`missing_parts` v `/items` aj `/items/grouped`) ráta len
+bežné dieliky, chýbajúci náhradný set neúplným nerobí. Maže sa so
+zmazaným kusom (`delete_checks` v `DELETE /items` aj vo vrátení importu),
+je v `_OWNED` aj v exporte účtu. PUT kontroly počty v ponuke neobnovuje
+(`COLLECTION_CHANGES` ju vynecháva ako fotky). Zoznam chýbajúcich je CSV
+s BOM cez klienta a blob (`/items/{id}/missing-parts.csv`), uloží sa cez
+`utils/saveBlob.ts` (v desktope dialóg „Uložiť ako“, odkaz okno nestiahne).
+Odkaz na stavbu a na Rebrickable má `target="_blank"`, desktop ho otvorí
+v predvolenom prehliadači (`OPEN_EXTERNAL_LINKS_IN_BROWSER`).
+
 **Témy a vlny sú z Brickset.** `getThemes` a `getYears` sa do limitu
 nerátajú, vlna (téma + rok) je jedno `getSets` a ukladá sa do `theme_waves`
 a `theme_wave_sets`; čerstvé roky sa po 30 dňoch stiahnu znova. Kolekcie

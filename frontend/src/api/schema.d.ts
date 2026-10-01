@@ -652,6 +652,109 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/catalog/{num}/parts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Set Parts
+         * @description Dieliky setu zoskupiteľné podľa farby, náhradné označené.
+         */
+        get: operations["get_set_parts_api_v1_catalog__num__parts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/{num}/alternates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Set Alternates
+         * @description Čo ešte sa dá postaviť z dielikov setu (MOC na Rebrickable).
+         */
+        get: operations["get_set_alternates_api_v1_catalog__num__alternates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/{num}/parts-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Parts Summary
+         * @description Počty do nadpisov kariet z uložených zoznamov; von nevolá.
+         */
+        get: operations["get_parts_summary_api_v1_catalog__num__parts_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/items/{item_id}/part-checks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Part Checks */
+        get: operations["get_part_checks_api_v1_items__item_id__part_checks_get"];
+        /**
+         * Put Part Check
+         * @description Koľko jedného dielika kusu chýba. Ukladajú sa len odchýlky, nula záznam zmaže.
+         */
+        put: operations["put_part_check_api_v1_items__item_id__part_checks_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/items/{item_id}/missing-parts.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Missing Parts Csv
+         * @description Zoznam chýbajúcich dielikov kusu, napríklad na objednávku náhradných.
+         *
+         *     Názov a farba sú z Rebrickable, bez vlastného kľúča ostanú prázdne.
+         */
+        get: operations["missing_parts_csv_api_v1_items__item_id__missing_parts_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/items/{item_id}/photos": {
         parameters: {
             query?: never;
@@ -2290,6 +2393,11 @@ export interface components {
             cagr_pct?: number | null;
             /** Categories */
             categories?: number[];
+            /**
+             * Missing Parts
+             * @default 0
+             */
+            missing_parts: number;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -2743,6 +2851,40 @@ export interface components {
             /** Last Purchase Date */
             last_purchase_date: string | null;
         };
+        /** PartCheckIn */
+        PartCheckIn: {
+            /** Part Num */
+            part_num: string;
+            /** Color Id */
+            color_id: number;
+            /**
+             * Is Spare
+             * @default false
+             */
+            is_spare: boolean;
+            /** Missing */
+            missing: number;
+        };
+        /** PartCheckOut */
+        PartCheckOut: {
+            /** Part Num */
+            part_num: string;
+            /** Color Id */
+            color_id: number;
+            /** Is Spare */
+            is_spare: boolean;
+            /** Missing */
+            missing: number;
+        };
+        /** PartChecksOut */
+        PartChecksOut: {
+            /** Item Id */
+            item_id: number;
+            /** Missing Total */
+            missing_total: number;
+            /** Checks */
+            checks?: components["schemas"]["PartCheckOut"][];
+        };
         /** PhotoOut */
         PhotoOut: {
             /** Id */
@@ -3169,6 +3311,32 @@ export interface components {
             /** Missing */
             missing: components["schemas"]["SeriesMissingOut"][];
         };
+        /** SetAlternateOut */
+        SetAlternateOut: {
+            /** Set Num */
+            set_num: string;
+            /** Name */
+            name: string;
+            /** Year */
+            year?: number | null;
+            /** Num Parts */
+            num_parts?: number | null;
+            /** Image Url */
+            image_url?: string | null;
+            /** Url */
+            url?: string | null;
+            /** Designer Name */
+            designer_name?: string | null;
+        };
+        /** SetAlternatesOut */
+        SetAlternatesOut: {
+            /** Enabled */
+            enabled: boolean;
+            /** Fetched At */
+            fetched_at?: string | null;
+            /** Alternates */
+            alternates?: components["schemas"]["SetAlternateOut"][];
+        };
         /** SetImageOut */
         SetImageOut: {
             /** Thumbnail Url */
@@ -3185,6 +3353,60 @@ export interface components {
             enabled: boolean;
             /** Images */
             images?: components["schemas"]["SetImageOut"][];
+        };
+        /** SetPartOut */
+        SetPartOut: {
+            /** Part Num */
+            part_num: string;
+            /** Name */
+            name: string;
+            /** Color Id */
+            color_id: number;
+            /** Color Name */
+            color_name: string;
+            /** Color Rgb */
+            color_rgb?: string | null;
+            /**
+             * Is Trans
+             * @default false
+             */
+            is_trans: boolean;
+            /** Quantity */
+            quantity: number;
+            /**
+             * Is Spare
+             * @default false
+             */
+            is_spare: boolean;
+            /** Image Url */
+            image_url?: string | null;
+            /** Element Id */
+            element_id?: string | null;
+        };
+        /**
+         * SetPartsOut
+         * @description ``enabled`` = účet vidí údaje Rebrickable (vlastný kľúč).
+         *
+         *     ``fetched_at`` prázdne = zoznam ešte nikto nestiahol; prázdny zoznam
+         *     s dátumom = Rebrickable diely setu nepozná.
+         */
+        SetPartsOut: {
+            /** Enabled */
+            enabled: boolean;
+            /** Fetched At */
+            fetched_at?: string | null;
+            /** Parts */
+            parts?: components["schemas"]["SetPartOut"][];
+        };
+        /**
+         * SetPartsSummaryOut
+         * @description Počty z uložených zoznamov, bez volania von. None = ešte nestiahnuté.
+         */
+        SetPartsSummaryOut: {
+            /** Parts */
+            parts?: number | null;
+            /** Alternates */
+            alternates?: number | null;
         };
         /** ShareCreateRequest */
         ShareCreateRequest: {
@@ -3660,6 +3882,11 @@ export interface components {
             cagr_pct?: number | null;
             /** Categories */
             categories?: number[];
+            /**
+             * Missing Parts
+             * @default 0
+             */
+            missing_parts: number;
         };
         /** WishlistCreateRequest */
         WishlistCreateRequest: {
@@ -5017,6 +5244,196 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_set_parts_api_v1_catalog__num__parts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                num: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetPartsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_set_alternates_api_v1_catalog__num__alternates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                num: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetAlternatesOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_parts_summary_api_v1_catalog__num__parts_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                num: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetPartsSummaryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_part_checks_api_v1_items__item_id__part_checks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartChecksOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_part_check_api_v1_items__item_id__part_checks_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PartCheckIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartChecksOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    missing_parts_csv_api_v1_items__item_id__missing_parts_csv_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

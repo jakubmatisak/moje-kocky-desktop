@@ -25,8 +25,10 @@
   import PriceHistoryChart from '@/components/PriceHistoryChart.vue'
   import PurchaseDialog from '@/components/PurchaseDialog.vue'
   import SellDialog from '@/components/SellDialog.vue'
+  import SetAlternatesCard from '@/components/SetAlternatesCard.vue'
   import SetGallery from '@/components/SetGallery.vue'
   import SetImage from '@/components/SetImage.vue'
+  import SetPartsCard from '@/components/SetPartsCard.vue'
   import { usePageLoad } from '@/composables/usePageLoad'
   import { createSelection } from '@/composables/useSelection'
   import { useAuthStore } from '@/stores/auth'
@@ -373,6 +375,25 @@
    * Zbierka ju neukazuje, takže štítok odtiaľto do Zbierky neodkazuje.
    */
   const inFigures = computed(() => Boolean(catalog.value?.parent_num) || isSeriesPage.value)
+
+  /**
+   * Diely a alternatívne stavby z Rebrickable: len pri setoch (nie figúrky
+   * zo sérií ani séria) a len s vlastným kľúčom. Karty si dáta stiahnu samy
+   * až po rozbalení.
+   */
+  const isPlainSet = computed(() => catalog.value?.kind === 'set' && !inFigures.value)
+  const showParts = computed(() => isPlainSet.value && auth.can('rebrickable.parts'))
+  const showAlternates = computed(() => isPlainSet.value && auth.can('rebrickable.alternates'))
+  /** Kusy, ktoré sa dajú skontrolovať na úplnosť: tento set, nie predaný. */
+  const checkablePieces = computed(() =>
+    pieces.value.filter(p => p.catalog_num === num.value && p.status !== 'sold'),
+  )
+  const partsCard = ref<InstanceType<typeof SetPartsCard> | null>(null)
+
+  /** Uložená kontrola zmenila počet chýbajúcich: štítok pri kuse hneď sedí. */
+  function onPartsChecked (itemId: number, missing: number): void {
+    pieces.value = pieces.value.map(p => (p.id === itemId ? { ...p, missing_parts: missing } : p))
+  }
 
   /** Hromadná úprava vlastnených kusov série; rozsah pre server je séria. */
   const selection = createSelection({ items: () => owned.value.map(p => p.id) })
@@ -799,6 +820,18 @@
                         size="small"
                         variant="tonal"
                       >{{ t('detail.unidentified') }}</v-chip>
+
+                      <!-- Z kontroly úplnosti; klik otvorí diely v režime kontroly tohto kusu. -->
+                      <v-chip
+                        v-if="item.missing_parts > 0"
+                        color="warning"
+                        data-test="piece-missing-parts"
+                        label
+                        prepend-icon="mdi-puzzle-remove-outline"
+                        size="small"
+                        variant="tonal"
+                        @click="partsCard?.startCheck(item.id)"
+                      >{{ t('parts.missingPlural', item.missing_parts, { named: { count: item.missing_parts } }) }}</v-chip>
                     </div>
 
                     <div class="d-flex flex-wrap ga-1">
@@ -1176,6 +1209,22 @@
             </div>
           </template>
         </v-card>
+      </v-col>
+
+      <!-- Diely a stavby z Rebrickable; stiahnu sa až po rozbalení karty. -->
+      <v-col v-if="showParts" cols="12">
+        <SetPartsCard
+          :key="catalog.catalog_num"
+          ref="partsCard"
+          :num="catalog.catalog_num"
+          :num-parts="catalog.num_parts"
+          :pieces="checkablePieces"
+          @checked="onPartsChecked"
+        />
+      </v-col>
+
+      <v-col v-if="showAlternates" cols="12">
+        <SetAlternatesCard :key="catalog.catalog_num" :num="catalog.catalog_num" />
       </v-col>
     </v-row>
 

@@ -40,8 +40,8 @@ describe('zásady: zálohy pred aktualizáciou', () => {
     expect(body).toContain('5 posledných záloh')
     expect(body).toContain('zmazaného účtu')
     // Zálohy nemajú ostať natrvalo, ani keď nová verzia dlho nevyjde.
-    expect(body).toContain('staršiu než 90 dní')
-    expect(body).toContain('najdlhšie do prvého štartu Mojich kociek po 90 dňoch')
+    expect(body).toContain('staršia než 90 dní')
+    expect(body).toContain('najdlhšie do prvého štartu po 90 dňoch')
   })
 
   it('anglický text povie to isté', async () => {

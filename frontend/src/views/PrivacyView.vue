@@ -48,7 +48,7 @@
       body: [
         'Údaje účtu a zbierky, kým účet nezmažeš. Záznam volaní 30 dní.',
         'Prihlásenie do zatvorenia prehliadača, na serveri najviac 12 hodín bez použitia. Keď pri prihlásení zaškrtneš Zapamätať si prihlásenie, 30 dní od posledného použitia. Odhlásenie ho zruší hneď.',
-        'Pred každou aktualizáciou na inú verziu sa celá databáza zálohuje na server do priečinka backups. Uchováva sa 5 posledných záloh, staršie sa mažú, a zálohu staršiu než 90 dní zmaže najbližší štart. Rovnako sa maže aj databáza, ktorú správca pri návrate zálohy odloží do toho istého priečinka. Údaje zmazaného účtu v nich môžu ostať, kým sa zálohy neprestriedajú, najdlhšie do prvého štartu Mojich kociek po 90 dňoch.',
+        'Pred každou aktualizáciou na inú verziu sa celá databáza zálohuje na server do priečinka backups. Uchováva sa 5 posledných záloh, staršie sa mažú, a záloha staršia než 90 dní sa zmaže pri najbližšom štarte. Rovnako sa maže aj databáza, ktorú správca pri návrate zálohy odloží do toho istého priečinka. Údaje zmazaného účtu v nich môžu ostať, kým sa zálohy neprestriedajú, najdlhšie do prvého štartu po 90 dňoch.',
       ],
     },
     {
@@ -61,7 +61,7 @@
         'Pri inej mene zobrazenia než euro alebo pri sume v cudzej mene stiahne server kurzy z Európskej centrálnej banky (ECB). Sťahujú sa len verejné kurzy, o tebe neodchádza nič.',
         isDesktop
           ? 'Fotky setov sa načítavajú priamo z Rebrickable a Brickset, tie vidia IP adresu tohto počítača.'
-          : 'Fotky setov sa načítavajú cez server tejto inštancie, takže Rebrickable ani Brickset nevidia tvoju IP adresu.',
+          : 'Fotky setov sa načítavajú cez tento server, takže Rebrickable ani Brickset nevidia tvoju IP adresu.',
       ],
     },
     {
@@ -69,7 +69,7 @@
       body: [
         'Prístup a prenosnosť: v Nastaveniach → Účet si stiahneš všetky svoje údaje aj fotky (ZIP).',
         'Oprava: údaje zmeníš priamo v Mojich kockách.',
-        'Vymazanie: v Nastaveniach → Účet zmažeš účet so všetkým, čo k nemu patrí. V zálohách pred aktualizáciou ostane, kým sa neprestriedajú, najdlhšie do prvého štartu Mojich kociek po 90 dňoch (pozri Ako dlho).',
+        'Vymazanie: v Nastaveniach → Účet zmažeš účet so všetkým, čo k nemu patrí. V zálohách pred aktualizáciou ostane, kým sa neprestriedajú, najdlhšie do prvého štartu po 90 dňoch (pozri Ako dlho).',
         'Námietka a obmedzenie spracúvania: napíš prevádzkovateľovi.',
         'Sťažnosť: Úrad na ochranu osobných údajov Slovenskej republiky, dataprotection.gov.sk.',
       ],
@@ -145,7 +145,7 @@
         'Fotky kusov, zmenšené a bez údajov fotoaparátu vrátane polohy GPS.',
         'Kľúče k službám zašifrované súborom secret.key a záznam volaní služieb za posledných 30 dní.',
         String.raw`Keď pri prihlásení zaškrtneš Zapamätať si prihlásenie, prihlasovací token v súbore %APPDATA%\MojeKocky\session.bin, zašifrovaný súborom secret.key. Platí 30 dní od posledného použitia a zmaže ho odhlásenie aj zmazanie účtu. Zmena hesla ho vymení za nový a ostatné prihlásenia účtu zruší. Bez zaškrtnutia je prihlásenie len v pamäti, kým je okno otvorené, najviac 12 hodín bez použitia.`,
-        String.raw`Pred každou aktualizáciou na inú verziu kópiu celej databázy v priečinku %APPDATA%\MojeKocky\backups. Uchováva sa 5 posledných záloh, staršie sa mažú, a zálohu staršiu než 90 dní zmaže najbližší štart. Údaje zmazaného účtu v nich môžu ostať, kým sa zálohy neprestriedajú, najdlhšie do prvého štartu Mojich kociek po 90 dňoch.`,
+        String.raw`Pred každou aktualizáciou na inú verziu kópiu celej databázy v priečinku %APPDATA%\MojeKocky\backups. Uchováva sa 5 posledných záloh, staršie sa mažú, a záloha staršia než 90 dní sa zmaže pri najbližšom štarte. Údaje zmazaného účtu v nich môžu ostať, kým sa zálohy neprestriedajú, najdlhšie do prvého štartu po 90 dňoch.`,
       ],
     },
     {
@@ -160,7 +160,7 @@
     {
       title: 'Tvoja kontrola',
       body: [
-        'V Nastaveniach → Účet si stiahneš všetky svoje údaje (ZIP) alebo zmažeš účet so všetkým, čo k nemu patrí. V zálohách pred aktualizáciou ostane, kým sa neprestriedajú, najdlhšie do prvého štartu Mojich kociek po 90 dňoch.',
+        'V Nastaveniach → Účet si stiahneš všetky svoje údaje (ZIP) alebo zmažeš účet so všetkým, čo k nemu patrí. V zálohách pred aktualizáciou ostane, kým sa neprestriedajú, najdlhšie do prvého štartu po 90 dňoch.',
         String.raw`Odinštalovanie sa opýta, či zmazať aj priečinok s údajmi účtu Windows, pod ktorým odinštalovanie beží. Keď na bežnom účte zadáš heslo iného účtu správcu, nezmaže nič a svoj priečinok %APPDATA%\MojeKocky zmažeš sám. Záloha je kópia tohto priečinka.`,
       ],
     },

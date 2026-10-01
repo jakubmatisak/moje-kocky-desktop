@@ -705,6 +705,15 @@ v oznámení (Späť) drží store podľa `data-notice`, lebo vlastnosti správy
 idú rovno do `v-snackbar` a funkcia by skončila ako atribút v HTML.
 Chyba poľa formulára ostáva pri poli.
 
+**Čísla v ponuke obnovuje klient, nie obrazovka.** Úspešná zmena kusov,
+Chcem alebo potvrdený či vrátený import (`api/client.ts::changesMiddleware`,
+`COLLECTION_CHANGES`) zavolá odberateľov `onCollectionChanged`; store
+zbierky po 250 ms načíta `/stats/summary` (`loadSummary`). Obrazovka, ktorá
+medzitým zavolá `refreshAll`/`loadDashboard`, plánované načítanie zruší,
+takže súhrn nejde dvakrát. Kedysi to musela robiť každá obrazovka sama a Mám
+ju či srdiečko na chýbajúcej figúrke ponuku neobnovili. Nová cesta, ktorá
+mení počty, = riadok v `COLLECTION_CHANGES`, nie volanie v komponente.
+
 **Pamäť formulára je pri účte.** `preferences.form` (`remember`, `last`),
 `composables/useFormMemory.ts`. Zapisujú sa všetky polia po každom
 uložení, predvypĺňajú len zapnuté. Nový formulár na pridávanie kusov

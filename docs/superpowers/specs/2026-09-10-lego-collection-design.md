@@ -752,6 +752,11 @@ Podrobnosti:
   - **Témy:** moje a sledované témy;
   - **Chcem:** položky.
 
+  Obnovujú sa samé po každej úspešnej zmene kusov, Chcem či importu, nech
+  ju spravila ktorákoľvek obrazovka: middleware klienta
+  (`api/client.ts::onCollectionChanged`) a `collection.loadSummary` s
+  odkladom 250 ms, ktorý zruší obrazovka načítavajúca súhrn sama.
+
 **Prehľad** (`/`):
 
 - **Rozsah** nad dlaždicami: celá zbierka, uložený pohľad, kategória,

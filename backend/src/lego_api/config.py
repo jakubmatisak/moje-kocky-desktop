@@ -37,8 +37,9 @@ class Settings(BaseSettings):
     # Každý používateľ má svoje vlastné, uložené zašifrované pri účte,
     # a teda aj vlastnú dennú kvótu volaní. Pozri services/keys.py.
 
-    #: Denná kvóta kľúča je 100 volaní. Zvyšok necháva priestor na ručnú obnovu.
-    brickeconomy_daily_limit: int = 90
+    #: Denná kvóta kľúča BrickEconomy je 100 volaní; appka ju využije celú.
+    #: Po odpovedi 429 sa dávka zastaví, takže prekročenie nič nepokazí.
+    brickeconomy_daily_limit: int = 100
 
     # Obnova cien pri prihlásení
     #: Hromadná obnova ťahá len ceny staršie než týždeň. Zdroj mení hodnoty

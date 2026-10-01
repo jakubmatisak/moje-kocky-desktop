@@ -153,7 +153,7 @@ docs/superpowers/specs/  tieto dokumenty
 | `REFRESH_GRACE_SECONDS` | 60 | ochranná lehota po výmene obnovovacieho tokenu |
 | `COOKIE_SECURE`, `COOKIE_DOMAIN` | false / – | cookie obnovovacieho tokenu |
 | `ALLOW_REGISTRATION` | true | východisko, kým ho správca v appke nezmení |
-| `BRICKECONOMY_DAILY_LIMIT` | 90 | vlastný strop pod oficiálnych 100 |
+| `BRICKECONOMY_DAILY_LIMIT` | 100 | denný strop volaní (oficiálna kvóta je 100), dá sa znížiť |
 | `PRICE_MAX_AGE_HOURS` | 168 | vek snímky, po ktorom sa cena obnoví |
 | `PRICE_REFRESH_BUDGET` | 40 | strop položiek na jednu dávku |
 | `PRICE_REFRESH_DELAY_SECONDS` | 1.0 | pauza medzi volaniami |
@@ -257,7 +257,7 @@ deaktivovať a meniť rolu) a nastavenia appky.
 | zdroj | na čo | limit | kľúč |
 |---|---|---|---|
 | **Rebrickable** | metadáta setu, fotka, téma, dieliky, figúrky, zberateľské série | ~1 volanie/s, 429 pri prekročení | používateľa |
-| **BrickEconomy** | trhová cena novej aj použitej položky, história cien, RRP v eurách, retired, číslo figúrky, EAN, odhad o 2 a 5 rokov, rast za 12 mesiacov | 100/deň na kľúč, appka si dáva strop 90 | používateľa (členstvo Premium) |
+| **BrickEconomy** | trhová cena novej aj použitej položky, história cien, RRP v eurách, retired, číslo figúrky, EAN, odhad o 2 a 5 rokov, rast za 12 mesiacov | 100/deň na kľúč, appka ich využije všetky | používateľa (členstvo Premium) |
 | **Brickset** | EAN, popis, štítky, hodnotenie, obľúbenosť, témy, roky, vlny | `getSets` 100/deň; `getThemes`, `getYears` a štatistika sa nerátajú | používateľa, len na súkromné použitie |
 | **UPCitemdb** | posledná možnosť pri čiarovom kóde | ~100/deň na IP adresu servera | bez kľúča |
 | **Eurostat** | HICP Slovenska, mesačný index | bez limitu | bez kľúča |
@@ -521,7 +521,7 @@ plánovač a nespúšťa to ani prihlásenie. Tlačidlo najprv otvorí dialóg
 použité X z 90, ostáva Y“. Čísla sú tie isté ako na karte limitov:
 `RefreshStatusOut.calls_used` a `calls_limit` ráta
 `routers/usage.py::brickeconomy_used` aj pre `/usage`. Limit appky je
-`brickeconomy_daily_limit` (90 zo 100 služby, 10 je rezerva). Zvolený počet
+`brickeconomy_daily_limit` (100, celá kvóta služby). Zvolený počet
 ide ako `?limit=` (1 až 1000, kontrola v tele funkcie). Obnova jedného setu
 z detailu dialóg nemá.
 

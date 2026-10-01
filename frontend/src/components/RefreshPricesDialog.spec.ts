@@ -50,7 +50,6 @@ describe('dialóg obnovy cien', () => {
 
     expect(wrapper.text()).toContain('Chcete obnoviť ceny?')
     expect(wrapper.find('[data-test="refresh-usage"]').text()).toBe('Dnes použité 32 z 90, ostáva 58')
-    expect(wrapper.text()).toContain('Služba dáva 100 volaní denne, 10 si appka necháva ako rezervu.')
     const field = wrapper.find('[data-test="refresh-count"]')
     expect(field.attributes('modelvalue')).toBe('50')
     expect(field.attributes('max')).toBe('58')

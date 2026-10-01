@@ -459,7 +459,6 @@
       "order": "Najprv ceny, ktoré ešte chýbajú, potom tie obnovené najdávnejšie. Každá cena je jedno volanie.",
       "range": "Zadajte číslo od 1 do {max}",
       "usage": "Dnes použité {used} z {limit}, ostáva {left}",
-      "reserve": "Služba dáva {service} volaní denne, {reserve} si appka necháva ako rezervu.",
       "confirm": "Obnoviť"
     }
   },

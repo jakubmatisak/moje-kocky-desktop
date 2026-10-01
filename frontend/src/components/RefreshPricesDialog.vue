@@ -15,7 +15,6 @@
   /** Predvolený počet cien na jedno kliknutie. */
   const DEFAULT_COUNT = 50
   /** Koľko volaní denne dáva služba; appka si z nich nechá rezervu. */
-  const SERVICE_LIMIT = 100
 
   const open = defineModel<boolean>({ required: true })
   const emit = defineEmits<{ confirm: [count: number] }>()
@@ -29,7 +28,6 @@
   const left = computed(() =>
     Math.max(0, Math.min(prices.callsLeft, prices.callsLimit - prices.callsUsed)),
   )
-  const reserve = computed(() => Math.max(0, SERVICE_LIMIT - prices.callsLimit))
 
   const parsed = computed(() => {
     const value = Number(count.value)
@@ -80,9 +78,6 @@
           {{ t('prices.dialog.usage', { used: prices.callsUsed, limit: prices.callsLimit, left }) }}
         </div>
 
-        <div v-if="reserve > 0" class="text-body-small text-medium-emphasis mt-n2">
-          {{ t('prices.dialog.reserve', { service: SERVICE_LIMIT, reserve }) }}
-        </div>
       </v-card-text>
 
       <v-card-actions>

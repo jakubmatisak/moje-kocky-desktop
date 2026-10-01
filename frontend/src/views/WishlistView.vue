@@ -22,6 +22,7 @@
   import { useAuthStore } from '@/stores/auth'
   import { useCollectionStore } from '@/stores/collection'
   import { useNotifyStore } from '@/stores/notify'
+  import { useProfileStore } from '@/stores/preferences'
   import { count, exactMoney, percent, toNumber } from '@/utils/format'
   import { imageSrc } from '@/utils/imageSrc'
   import { priceValue } from '@/utils/priceEdit'
@@ -57,12 +58,34 @@
     noPrice: false,
     themes: [] as string[],
   })
+  /** Karty alebo tabuľka, ako v Zbierke; voľba sa pamätá pri účte (`preferences.wishlist`). */
+  const profile = useProfileStore()
+  const tableView = ref(false)
+  function setView (table: boolean): void {
+    tableView.value = table
+    profile.save('wishlist', table ? { view: 'table' } : {})
+  }
+  profile.load().then(() => {
+    tableView.value = profile.get('wishlist')?.view === 'table'
+  }).catch(() => {
+    // Bez nastavení ostanú karty.
+  })
+
   /** Voľby filtra Séria s počtom setov podľa ostatných filtrov (server). */
   const themeOptions = ref<Array<{ value: string, count: number }>>([])
-  const themeItems = computed(() => themeOptions.value.map(option => ({
-    value: option.value,
-    title: `${option.value === '__none__' ? t('wishlist.noTheme') : option.value} (${option.count})`,
-  })))
+  const themeName = (value: string): string => value === '__none__' ? t('wishlist.noTheme') : value
+  /** Čip Séria: bez výberu len „Séria“, s jednou „Séria: Marvel“, s viacerými počet. */
+  const themeLabel = computed(() => {
+    if (view.themes.length === 0) return t('wishlist.filterTheme')
+    if (view.themes.length === 1) return `${t('wishlist.filterTheme')}: ${themeName(view.themes[0]!)}`
+    return `${t('wishlist.filterTheme')} · ${view.themes.length}`
+  })
+
+  function toggleTheme (value: string): void {
+    view.themes = view.themes.includes(value)
+      ? view.themes.filter(theme => theme !== value)
+      : [...view.themes, value]
+  }
   const effectiveDir = (): 'asc' | 'desc' => view.dir ?? DEFAULT_DIR[view.sort]
 
   function flipDir (): void {
@@ -159,8 +182,12 @@
    * (server kúpený set z Chcem vždy vyradí). Len bez súhrnu, keď watch
    * zmenu nespozná, sa zoznam načíta tu.
    */
-  function afterPurchase (): void {
-    if (!collection.summary) void page.run()
+  /**
+   * Po kúpe: keď set ostal v Chcem, počet sa nezmenil a zoznam by sa sám
+   * nenačítal; karta má hneď ukázať „V zbierke“. Inak ho načíta zmena počtu.
+   */
+  function afterPurchase (keptInWishlist?: boolean): void {
+    if (keptInWishlist || !collection.summary) void page.run()
   }
 
   const filtered = (): boolean => hasWishFilter(view)
@@ -227,6 +254,17 @@
         variant="outlined"
       />
 
+      <v-btn-toggle
+        density="comfortable"
+        mandatory
+        :model-value="tableView ? 'table' : 'cards'"
+        variant="outlined"
+        @update:model-value="value => setView(value === 'table')"
+      >
+        <v-btn icon="mdi-view-grid-outline" :title="t('collection.viewCards')" value="cards" />
+        <v-btn data-test="wish-table" icon="mdi-table" :title="t('collection.viewTable')" value="table" />
+      </v-btn-toggle>
+
       <v-btn
         :icon="effectiveDir() === 'asc' ? 'mdi-sort-ascending' : 'mdi-sort-descending'"
         :title="t(effectiveDir() === 'asc' ? 'collection.sortAsc' : 'collection.sortDesc')"
@@ -263,18 +301,43 @@
         @click="view.noPrice = !view.noPrice"
       >{{ t('wishlist.filterNoPrice') }}</v-chip>
 
-      <v-select
-        v-model="view.themes"
-        chips
-        class="wish-theme"
-        clearable
-        closable-chips
-        density="compact"
-        hide-details
-        :items="themeItems"
-        :label="t('wishlist.filterTheme')"
-        multiple
-      />
+      <!-- Séria ako ostatné čipy; zoznam sérií s počtom setov podľa ostatných filtrov. -->
+      <v-menu :close-on-content-click="false" location="bottom start">
+        <template #activator="{ props: menuProps }">
+          <v-chip
+            v-bind="menuProps"
+            append-icon="mdi-menu-down"
+            :color="view.themes.length > 0 ? 'primary' : undefined"
+            data-test="theme-filter"
+            :prepend-icon="view.themes.length > 0 ? 'mdi-check' : undefined"
+            :variant="view.themes.length > 0 ? 'tonal' : 'outlined'"
+          >{{ themeLabel }}</v-chip>
+        </template>
+
+        <v-list density="compact" max-height="360" min-width="240">
+          <v-list-item
+            v-if="view.themes.length > 0"
+            prepend-icon="mdi-close"
+            :title="t('wishlist.themeClear')"
+            @click="view.themes = []"
+          />
+
+          <v-list-item
+            v-for="option in themeOptions"
+            :key="option.value"
+            :title="themeName(option.value)"
+            @click="toggleTheme(option.value)"
+          >
+            <template #prepend>
+              <v-checkbox-btn :model-value="view.themes.includes(option.value)" tabindex="-1" />
+            </template>
+
+            <template #append>
+              <span class="text-body-small text-medium-emphasis">{{ option.count }}</span>
+            </template>
+          </v-list-item>
+        </v-list>
+      </v-menu>
     </div>
 
     <v-alert
@@ -304,6 +367,109 @@
       :text="t('wishlist.emptyHint')"
       :title="t('wishlist.empty')"
     />
+
+    <v-card v-else-if="tableView" border class="wish-table" flat>
+      <v-table density="comfortable" hover>
+        <thead>
+          <tr>
+            <th class="wish-table__photo" />
+            <th>{{ t('wishlist.colSet') }}</th>
+            <th>{{ t('wishlist.filterTheme') }}</th>
+            <th class="text-end">{{ t('wishlist.marketNow') }}</th>
+            <th class="text-end">{{ t('wishlist.target') }}</th>
+            <th class="text-end">{{ t('wishlist.distance') }}</th>
+            <th />
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr v-for="item in items" :key="item.id">
+            <td class="wish-table__photo">
+              <SetImage :alt="item.catalog.name" rounded="sm" :size="44" :src="imageSrc(item.catalog.image_url) ?? undefined" />
+            </td>
+
+            <td>
+              <RouterLink class="wish-table__name" :to="{ name: 'set-detail', params: { num: item.catalog_num } }">
+                {{ item.catalog.name }}
+              </RouterLink>
+
+              <div class="d-flex align-center flex-wrap ga-2 text-body-small text-medium-emphasis">
+                {{ item.catalog.catalog_num }}
+                <v-chip
+                  v-if="item.target_reached"
+                  color="positive"
+                  label
+                  size="x-small"
+                  variant="flat"
+                >{{ t('wishlist.reached') }}</v-chip>
+
+                <v-chip
+                  v-if="item.owned_count > 0"
+                  color="primary"
+                  label
+                  size="x-small"
+                  variant="tonal"
+                >{{ t('wishlist.owned', { count: t('collection.pieces', { count: item.owned_count }) }) }}</v-chip>
+              </div>
+            </td>
+
+            <td class="text-body-medium">{{ item.catalog.theme || '—' }}</td>
+
+            <td class="text-end text-no-wrap" :class="{ 'text-positive': item.target_reached }">
+              {{ item.market_price ? exactMoney(item.market_price) : '—' }}
+            </td>
+
+            <td class="text-end text-no-wrap">
+              <template v-if="item.target_price_eur">{{ exactMoney(item.target_price_eur) }}</template>
+
+              <v-btn
+                v-else
+                class="px-0"
+                size="small"
+                variant="text"
+                @click="openEdit(item)"
+              >{{ t('wishlist.setTarget') }}</v-btn>
+            </td>
+
+            <td class="text-end text-no-wrap">
+              <span
+                v-if="item.distance_pct !== null && item.distance_pct !== undefined"
+                class="font-weight-bold"
+                :class="item.distance_pct <= 0 ? 'text-positive' : 'text-negative'"
+              >{{ percent(item.distance_pct, { decimals: 0 }) }}</span>
+
+              <template v-else>—</template>
+            </td>
+
+            <td class="text-end text-no-wrap">
+              <v-btn
+                color="primary"
+                prepend-icon="mdi-cart-check"
+                size="small"
+                variant="flat"
+                @click="openBuy(item)"
+              >{{ t('purchase.bought') }}</v-btn>
+
+              <v-btn
+                icon="mdi-pencil-outline"
+                size="small"
+                :title="t('wishlist.edit')"
+                variant="text"
+                @click="openEdit(item)"
+              />
+
+              <v-btn
+                color="negative"
+                icon="mdi-delete-outline"
+                size="small"
+                variant="text"
+                @click="remove(item)"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </v-table>
+    </v-card>
 
     <CardGrid v-else>
       <v-card
@@ -505,8 +671,22 @@
   color: rgb(var(--v-theme-warning));
 }
 
-.wish-theme {
-  flex: 0 1 280px;
-  min-width: 200px;
+/* Tabuľka Chcem: na telefóne sa posúva do strany, stránka nie. */
+.wish-table {
+  overflow-x: auto;
+}
+
+.wish-table__photo {
+  width: 64px;
+}
+
+.wish-table__name {
+  color: inherit;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.wish-table__name:hover {
+  text-decoration: underline;
 }
 </style>

@@ -68,12 +68,6 @@ describe('Kúpil som: Chcem vyraďuje server', () => {
 
     await wrapper.find('v-btn[prepend-icon="mdi-check"]').trigger('click')
     await flushPromises()
-    if (wishlistId) {
-      // Kúpa z Chcem sa najprv opýta; bez odpovede nič neodíde.
-      expect(calls).not.toContain('POST /items')
-      wrapper.findComponent({ name: 'KeepWishlistDialog' }).vm.$emit('choose', false)
-      await flushPromises()
-    }
 
     expect(calls.filter(c => c === 'POST /items')).toHaveLength(1)
     expect(calls.filter(c => c.startsWith('DELETE'))).toEqual([])
@@ -84,7 +78,7 @@ describe('Kúpil som: Chcem vyraďuje server', () => {
     expect(lastBody?.keep_wishlist).toBe(false)
   })
 
-  it('kúpa z Chcem s odpoveďou Nechať v Chcem pošle keep_wishlist', async () => {
+  it('kúpa z Chcem tlačidlom Pridať a nechať v Chcem pošle keep_wishlist', async () => {
     const wrapper = shallowMount(PurchaseDialog, {
       props: { 'modelValue': false, 'catalog': CATALOG, 'wishlistId': 12, 'onUpdate:modelValue': () => {} },
       ...mountOptions,
@@ -92,9 +86,7 @@ describe('Kúpil som: Chcem vyraďuje server', () => {
     await wrapper.setProps({ modelValue: true })
     await flushPromises()
 
-    await wrapper.find('v-btn[prepend-icon="mdi-check"]').trigger('click')
-    await flushPromises()
-    wrapper.findComponent({ name: 'KeepWishlistDialog' }).vm.$emit('choose', true)
+    await wrapper.find('v-btn[prepend-icon="mdi-heart-outline"]').trigger('click')
     await flushPromises()
 
     expect(calls.filter(c => c === 'POST /items')).toHaveLength(1)

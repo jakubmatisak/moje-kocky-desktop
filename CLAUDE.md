@@ -373,10 +373,12 @@ ostatných filtrov, `__none__` = bez série) berie tému z katalógu, nič sa
 nevypĺňa ani nesťahuje. `WishlistOut.owned_count` dáva štítok „V zbierke“.
 Dialóg Pridať do zoznamu upozorní pod číslom na set v zbierke či v Chcem
 (`composables/useOwnedHint.ts`, len `GET /catalog/{num}/ownership`), riadok
-má miesto vždy, dialóg neposkočí. Kúpa z Chcem („Kúpil som“) a ručné Uložiť
-v Pridať set pri sete z Chcem sa najprv opýtajú „Odstrániť z Chcem?“
-(`KeepWishlistDialog.vue`); „Nechať v Chcem“ pošle `keep_wishlist` a server
-set nevyradí. Automatické uloženie po skene sa nepýta (vyradí, Späť ostáva).
+má miesto vždy, dialóg neposkočí. Kúpa z Chcem („Kúpil som“) a Pridať set
+pri sete z Chcem majú dve tlačidlá: „Pridať a odstrániť z Chcem“ a „Pridať
+a nechať v Chcem“ (pošle `keep_wishlist`, server set nevyradí; Chcem potom
+karty načíta, aby bol hneď vidieť štítok). Automatické uloženie po skene set
+vyradí ako doteraz, Späť ostáva. Filter Séria je čip s ponukou, ako ostatné
+čipy. Chcem má karty aj tabuľku, voľba v `preferences.wishlist`.
 
 **„Kúpil som“ je jeden dialóg pre všetko, z Chcem vyraďuje server.**
 `components/PurchaseDialog.vue` pridá do zbierky vec, ktorú katalóg už

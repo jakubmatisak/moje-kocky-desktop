@@ -133,6 +133,16 @@ describe('Chcem: odznak v ponuke a jedno načítanie zoznamu po zmene', () => {
     expect((vm.items as unknown[]).length).toBe(1)
   })
 
+  it('kúpa s Pridať a nechať v Chcem načíta karty hneď, aj keď sa počet nezmenil', async () => {
+    const { wrapper } = await mountWishlist()
+    wishlistLoads.mockClear()
+
+    wrapper.findComponent(PurchaseDialog).vm.$emit('saved', true)
+    await settle()
+
+    expect(wishlistLoads).toHaveBeenCalledTimes(1)
+  })
+
   it('kúpa ešte bez súhrnu načíta zoznam sama, raz', async () => {
     const wrapper = shallowMount(WishlistView, {
       global: {

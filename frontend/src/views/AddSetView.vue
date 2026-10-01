@@ -36,7 +36,6 @@
    * Pri automatickom uložení je to jedno oznámenie a jedno Späť: vráti kusy
    * aj Chcem, stav pred skenom.
    */
-  import KeepWishlistDialog from '@/components/KeepWishlistDialog.vue'
   import KeyHint from '@/components/KeyHint.vue'
   import PlaceFields from '@/components/PlaceFields.vue'
   import SetImage from '@/components/SetImage.vue'
@@ -174,22 +173,8 @@
   }
 
   /** Nájdený set (číslom aj kódom) sa ďalej spracuje rovnako. */
-  /** Nájdený set je v Chcem: tlačidlo Uložiť sa opýta, či ho odtiaľ odstrániť. */
+  /** Nájdený set je v Chcem: namiesto Pridať dve tlačidlá, odstrániť alebo nechať v Chcem. */
   const inWishlist = ref(false)
-  const askOpen = ref(false)
-  let answer: ((keep: boolean | null) => void) | null = null
-
-  function askKeep (): Promise<boolean | null> {
-    askOpen.value = true
-    return new Promise(resolve => {
-      answer = resolve
-    })
-  }
-
-  function answered (keep: boolean | null): void {
-    answer?.(keep)
-    answer = null
-  }
 
   async function checkWishlist (num: string): Promise<void> {
     const { data } = await api.GET('/wishlist', { params: { query: { q: num } as never } })
@@ -500,22 +485,16 @@
     collection.refreshAll()
   }
 
-  function submit (): Promise<void> {
+  function submit (keepWishlist = false): Promise<void> {
     return enqueue(async () => {
       if (!found.value) return
       const name = found.value.name
       const pieces = totalPieces.value
       // Figúrky zo sérií Zbierka neukazuje, po uložení sa ide za nimi do Figúrok.
       const next = afterSaveRoute(found.value, isSeries.value)
-      // Set z Chcem uložený tlačidlom: opýta sa, či ho odtiaľ odstrániť.
-      // Pri automatickom uložení po skene nie, to by rýchle skenovanie
-      // zastavilo; tam set vypadne a oznámenie má Späť.
-      let keep = false
-      if (inWishlist.value && !(isSeries.value && !sealedBag.value)) {
-        const chosen = await askKeep()
-        if (chosen === null) return
-        keep = chosen
-      }
+      // Set z Chcem: rozhodlo tlačidlo (odstrániť alebo nechať v Chcem).
+      // Automatické uloženie po skene ide inou cestou a set vyradí, Späť ostáva.
+      const keep = keepWishlist && inWishlist.value
       saving.value = true
       error.value = null
       try {
@@ -990,23 +969,37 @@
       <v-spacer />
       <v-btn variant="text" @click="$router.back()">{{ t('add.cancel') }}</v-btn>
 
+      <!-- Set je v Chcem (nie výber figúrok zo série): vyberie sa, čo s ním. -->
+      <template v-if="inWishlist && !(isSeries && !sealedBag)">
+        <v-btn
+          :disabled="!canSubmit || saving"
+          prepend-icon="mdi-heart-outline"
+          size="large"
+          variant="tonal"
+          @click="submit(true)"
+        >{{ t('wishlist.addAndKeep') }}</v-btn>
+
+        <v-btn
+          color="primary"
+          :disabled="!canSubmit"
+          :loading="saving"
+          prepend-icon="mdi-plus"
+          size="large"
+          @click="submit(false)"
+        >{{ t('wishlist.addAndRemove') }}</v-btn>
+      </template>
+
       <v-btn
+        v-else
         color="primary"
         :disabled="!canSubmit"
         :loading="saving"
         prepend-icon="mdi-plus"
         size="large"
-        @click="submit"
+        @click="submit(false)"
       >{{ t('add.submit') }}</v-btn>
     </div>
 
     <BarcodeScanner v-model="scanOpen" @detected="onScanned" />
-
-    <KeepWishlistDialog
-      v-model="askOpen"
-      :name="found?.name ?? ''"
-      @cancel="answered(null)"
-      @choose="answered"
-    />
   </div>
 </template>

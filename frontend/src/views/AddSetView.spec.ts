@@ -197,32 +197,14 @@ describe('Pridať set: kúpený set vypadne z Chcem a dá sa vrátiť', () => {
   it.each([
     ['Nechať v Chcem', true],
     ['Odstrániť z Chcem', false],
-  ])('set z Chcem uložený tlačidlom sa najprv opýta: %s', async (_answer, keep) => {
+  ])('set z Chcem má dve tlačidlá: %s', async (_answer, keep) => {
     wished = [{ catalog_num: '10294-1' }]
     query = { code: '10294-1' }
     const wrapper = await mountAdd()
 
-    await wrapper.find('v-btn[prepend-icon="mdi-plus"]').trigger('click')
-    await flushPromises()
-    expect(post).not.toHaveBeenCalledWith('/items', expect.anything())
-
-    wrapper.findComponent({ name: 'KeepWishlistDialog' }).vm.$emit('choose', keep)
+    await wrapper.find(keep ? 'v-btn[prepend-icon="mdi-heart-outline"]' : 'v-btn[prepend-icon="mdi-plus"]').trigger('click')
     await flushPromises()
 
     expect(post).toHaveBeenCalledWith('/items', { body: expect.objectContaining({ keep_wishlist: keep }) })
-  })
-
-  it('zavretie otázky bez odpovede nič neuloží', async () => {
-    wished = [{ catalog_num: '10294-1' }]
-    query = { code: '10294-1' }
-    const wrapper = await mountAdd()
-
-    await wrapper.find('v-btn[prepend-icon="mdi-plus"]').trigger('click')
-    await flushPromises()
-    wrapper.findComponent({ name: 'KeepWishlistDialog' }).vm.$emit('cancel')
-    await flushPromises()
-
-    expect(post).not.toHaveBeenCalledWith('/items', expect.anything())
-    expect(wrapper.text()).toContain('Titanic')
   })
 })

@@ -282,10 +282,10 @@
     "costsHint": "Deducted from the profit so it is net."
   },
   "wishlist": {
-    "keepTitle": "Remove from the wishlist?",
-    "keepText": "{name} is on your wishlist. Now that you bought it you can remove it from the list, or keep it there, for example when you want another one.",
-    "keepYes": "Keep on wishlist",
-    "keepNo": "Remove from wishlist",
+    "colSet": "Set",
+    "themeClear": "All themes",
+    "addAndRemove": "Add and remove from wishlist",
+    "addAndKeep": "Add and keep on wishlist",
     "owned": "In collection · {count}",
     "filterTheme": "Theme",
     "noTheme": "No theme",
@@ -721,7 +721,7 @@
     "save": "Add to collection",
     "failed": "Could not add it",
     "hint": "Flags, notes and photos can be added in the detail.",
-    "hintWishlist": "After saving you are asked whether to remove it from the wishlist. The rest can be added in the detail.",
+    "hintWishlist": "Below you choose whether to remove it from the wishlist or keep it there. The rest can be added in the detail.",
     "haveAll": "I have them all",
     "haveAllAgain": "Add the whole series again",
     "wholeSeriesTitle": "I have the whole series",

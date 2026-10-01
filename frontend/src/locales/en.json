@@ -20,7 +20,8 @@
     "expand": "Expand menu",
     "hidePrices": "Hide prices",
     "showPrices": "Show prices",
-    "priceCheck": "Check price"
+    "priceCheck": "Check price",
+    "reload": "Reload page"
   },
   "auth": {
     "loginTitle": "Sign in",
@@ -470,6 +471,8 @@
     "loading": "Loading…",
     "error": "Something went wrong",
     "retry": "Try again",
+    "loadFailed": "Could not load",
+    "loadFailedHint": "The server did not answer or something went wrong. Nothing was deleted, it just did not load.",
     "back": "Back",
     "yes": "Yes",
     "no": "No",

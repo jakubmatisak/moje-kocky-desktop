@@ -20,7 +20,8 @@
     "expand": "Rozbaliť menu",
     "hidePrices": "Skryť ceny",
     "showPrices": "Ukázať ceny",
-    "priceCheck": "Overiť cenu"
+    "priceCheck": "Overiť cenu",
+    "reload": "Obnoviť stránku"
   },
   "auth": {
     "loginTitle": "Prihlásenie",
@@ -470,6 +471,8 @@
     "loading": "Načítavam…",
     "error": "Nastala chyba",
     "retry": "Skúsiť znova",
+    "loadFailed": "Nepodarilo sa načítať",
+    "loadFailedHint": "Server neodpovedal alebo nastala chyba. Nič sa nezmazalo, len sa to nenačítalo.",
     "back": "Späť",
     "yes": "Áno",
     "no": "Nie",

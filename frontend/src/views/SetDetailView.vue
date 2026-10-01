@@ -18,6 +18,8 @@
   import ConditionChips from '@/components/ConditionChips.vue'
   import KeyHint from '@/components/KeyHint.vue'
   import ListingDialog from '@/components/ListingDialog.vue'
+  import LoadFailed from '@/components/LoadFailed.vue'
+  import PageSkeleton from '@/components/PageSkeleton.vue'
   import PhotosDialog from '@/components/PhotosDialog.vue'
   import PieceDialog from '@/components/PieceDialog.vue'
   import PriceHistoryChart from '@/components/PriceHistoryChart.vue'
@@ -25,6 +27,7 @@
   import SellDialog from '@/components/SellDialog.vue'
   import SetGallery from '@/components/SetGallery.vue'
   import SetImage from '@/components/SetImage.vue'
+  import { usePageLoad } from '@/composables/usePageLoad'
   import { createSelection } from '@/composables/useSelection'
   import { useAuthStore } from '@/stores/auth'
   import { useCollectionStore } from '@/stores/collection'
@@ -66,7 +69,7 @@
   const providerEnabled = computed(() =>
     Boolean(pricesN.value?.provider_enabled || pricesU.value?.provider_enabled),
   )
-  const loading = ref(true)
+  /** Text chyby načítania (napríklad „Set sa nenašiel“), pre LoadFailed. */
   const error = ref<string | null>(null)
 
   const priceCondition = ref<'N' | 'U'>('N')
@@ -309,24 +312,34 @@
     return rating ? rating.toLocaleString(locale.value === 'sk' ? 'sk-SK' : 'en-GB', { maximumFractionDigits: 1 }) : ''
   })
 
-  async function load (): Promise<void> {
-    loading.value = true
-    error.value = null
-    try {
-      const catalogRes = await api.GET('/catalog/{num}', { params: { path: { num: num.value } } })
-      if (catalogRes.error || !catalogRes.data) {
-        error.value = errorMessage(catalogRes.error, 'Set sa nenašiel')
-        return
-      }
-      catalog.value = catalogRes.data
-      await Promise.all([loadPrices(), loadPieces()])
-      galleryReady.value = false
-      fillFromBrickset().finally(() => {
-        galleryReady.value = true
-      })
-    } finally {
-      loading.value = false
+  /**
+   * Set, ceny a kusy z vlastného servera. Toto volá aj tlačidlo Obnoviť
+   * stránku, preto sem nepatrí doplnenie z Brickset (cudzia služba).
+   */
+  async function fetchDetail (): Promise<boolean> {
+    const catalogRes = await api.GET('/catalog/{num}', { params: { path: { num: num.value } } })
+    if (catalogRes.error || !catalogRes.data) {
+      error.value = errorMessage(catalogRes.error, 'Set sa nenašiel')
+      return false
     }
+    error.value = null
+    catalog.value = catalogRes.data
+    await Promise.all([loadPrices(), loadPieces()])
+    return true
+  }
+
+  /** Prvé načítanie kostra, Obnoviť stránku nad starými údajmi (usePageLoad). */
+  const page = usePageLoad(fetchDetail)
+
+  /** Otvorenie setu (aj iného z tej istej stránky): kostra, potom Brickset raz. */
+  async function load (): Promise<void> {
+    page.reset()
+    error.value = null
+    if (!(await page.run())) return
+    galleryReady.value = false
+    fillFromBrickset().finally(() => {
+      galleryReady.value = true
+    })
   }
 
   /** Obidva stavy z vlastného servera. Na zdroj cien sa tu nesiaha. */
@@ -455,11 +468,10 @@
 </script>
 
 <template>
-  <div v-if="loading" class="d-flex justify-center pa-12">
-    <v-progress-circular color="primary" indeterminate />
-  </div>
+  <!-- Kostra v tvare detailu, kým server neodpovedal (usePageLoad). -->
+  <PageSkeleton v-if="page.initial" kind="detail" />
 
-  <v-alert v-else-if="error" type="error" variant="tonal">{{ error }}</v-alert>
+  <LoadFailed v-else-if="page.error" :loading="page.loading" :message="error" @retry="page.run()" />
 
   <div v-else-if="catalog" class="d-flex flex-column ga-4">
     <v-btn

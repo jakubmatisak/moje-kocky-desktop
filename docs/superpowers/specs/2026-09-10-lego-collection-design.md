@@ -742,6 +742,11 @@ Podrobnosti:
   - prepínač „V dnešných peniazoch“, ktorý pri zapnutí ukazuje štítok
     s mesiacom indexu;
   - limity API;
+  - Obnoviť stránku (`mdi-refresh`, na telefóne v menu účtu): znova
+    načíta dáta otvorenej stránky a súhrn za číslami v ponuke, bez
+    načítania celej stránky (filtre, posunutie a rozpísaný formulár
+    ostanú). Ide len na vlastný server, ceny ani Brickset nevolá; ikona
+    sa pri tom točí;
   - tlačidlo obnovy cien;
   - svetlý a tmavý režim;
   - jazyk;
@@ -1084,6 +1089,21 @@ Pravidlá API:
   ako Späť). Fronta `v-snackbar-queue` je raz v `AppLayout`. Chyba, ktorá
   patrí k poľu formulára, ostáva pri poli; komponenty nemajú vlastné
   snackbary.
+- **Načítavanie nie je prázdny stav.** Každá stránka rozlišuje tri stavy
+  (`composables/usePageLoad.ts`):
+  - **načítava sa** (prvé načítanie, nič ešte neprišlo): kostra
+    `v-skeleton-loader` v tvare toho, čo príde (`PageSkeleton.vue`:
+    dlaždice, graf a karty Prehľadu; karty, riadky alebo tabuľka Zbierky
+    podľa zobrazenia; fotka, údaje a kusy detailu; riadky zoznamov);
+  - **prázdne**: doterajší prázdny stav, až keď server odpovedal;
+  - **chyba**: „Nepodarilo sa načítať“ so Skúsiť znova (`LoadFailed.vue`),
+    nie prázdny stav. Verejný odkaz rozlišuje neplatný odkaz (404) od
+    výpadku.
+
+  Opakované načítanie (filter, rozsah, Obnoviť stránku) nechá staré dáta
+  na obrazovke a svieti len tenký pruh pod hornou lištou; chyba vtedy ide
+  do oznámenia. Iný set, séria či rok na tej istej trase začína znova
+  kostrou. Čísla v ponuke bez súhrnu nie sú 0, ale žiadne.
 - **index.html sa nekešuje** (`cache-control: no-cache`). Súbory s
   otlačkom v názve sa kešujú na rok. Inak by si prehliadač držal starú
   appku.

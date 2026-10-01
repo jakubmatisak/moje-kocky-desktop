@@ -705,6 +705,25 @@ v oznámení (Späť) drží store podľa `data-notice`, lebo vlastnosti správy
 idú rovno do `v-snackbar` a funkcia by skončila ako atribút v HTML.
 Chyba poľa formulára ostáva pri poli.
 
+**Načítavanie nie je prázdny stav.** Kým server neodpovedal, stránka ukáže
+kostru (`components/PageSkeleton.vue`: dlaždice a grafy Prehľadu, karty,
+riadky, tabuľka, detail setu), nie „Zatiaľ žiadne sety“ ani nuly, inak to
+vyzerá, že zbierka zmizla. Prázdny stav až po odpovedi, chyba prvého
+načítania je `LoadFailed.vue` („Nepodarilo sa načítať“ so Skúsiť znova).
+Stav drží `composables/usePageLoad.ts`: načítanie vráti `false` (alebo
+vyhodí), keď zlyhalo, `{ data }` bez kontroly `error` by chybu zmenilo na
+prázdny zoznam. Opakované načítanie (filter, rozsah, Obnoviť stránku) nechá
+staré dáta a rozsvieti len pruh pod hornou lištou (`pageBusy`); chyba vtedy
+ide do oznámenia. Iný obsah na tej istej trase (iný set, séria, rok)
+začína `reset()`, teda znova kostrou. Počty v ponuke bez súhrnu nie sú 0,
+ale nič (`undefined`). Tlačidlo Obnoviť stránku v hornej lište (na telefóne
+v menu účtu) volá `reloadPage`: každý `usePageLoad` sa prihlási sám, karta
+s vlastným načítaním cez `onPageReload(load)`, a súhrn za ponukou sa
+dotiahne, keď ho nenačíta stránka (Prehľad má `summary: true`). Prihlasujú
+sa len GET na vlastný server; doplnenie z Brickset, obnova cien ani iné
+volanie von do neho nepatria. Kosti `v-skeleton-loader` farbí
+`styles/settings.scss` (téma má `border-opacity` 1, kosti by boli čierne).
+
 **Čísla v ponuke obnovuje klient, nie obrazovka.** Úspešná zmena kusov,
 Chcem alebo potvrdený či vrátený import (`api/client.ts::changesMiddleware`,
 `COLLECTION_CHANGES`) zavolá odberateľov `onCollectionChanged`; store

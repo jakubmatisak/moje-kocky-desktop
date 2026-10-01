@@ -14,9 +14,12 @@
   import ExportCsvButton from '@/components/ExportCsvButton.vue'
   import FormMemoryCard from '@/components/FormMemoryCard.vue'
   import ImportPanel from '@/components/ImportPanel.vue'
+  import LoadFailed from '@/components/LoadFailed.vue'
+  import PageSkeleton from '@/components/PageSkeleton.vue'
   import ShareDialog from '@/components/ShareDialog.vue'
   import SourcesPanel from '@/components/SourcesPanel.vue'
   import { useDisplayPrefs } from '@/composables/useDisplayPrefs'
+  import { onPageReload, usePageLoad } from '@/composables/usePageLoad'
   import { isDesktop } from '@/desktop/bridge'
   import { useAuthStore } from '@/stores/auth'
   import { useNotifyStore } from '@/stores/notify'
@@ -50,16 +53,27 @@
     return `${window.location.origin}/z/${token}`
   }
 
-  async function loadLinks (): Promise<void> {
-    const { data } = await api.GET('/share', {})
-    links.value = data ?? []
+  async function loadLinks (): Promise<boolean> {
+    const { data, error } = await api.GET('/share', {})
+    if (error || !data) return false
+    links.value = data
+    return true
   }
 
-  async function loadUsers (): Promise<void> {
-    if (!auth.isAdmin) return
-    const { data } = await api.GET('/admin/users', {})
-    users.value = data ?? []
+  async function loadUsers (): Promise<boolean> {
+    if (!auth.isAdmin) return true
+    const { data, error } = await api.GET('/admin/users', {})
+    if (error || !data) return false
+    users.value = data
+    return true
   }
+
+  /*
+   * Zoznamy odkazov a používateľov: kým server neodpovedal, kostra riadkov,
+   * nie „Zatiaľ žiadny odkaz“ (usePageLoad). Obnoviť stránku ich načíta znova.
+   */
+  const linksPage = usePageLoad(loadLinks)
+  const usersPage = usePageLoad(loadUsers)
 
   // --- nastavenia appky (len správca) ---------------------------------------
 
@@ -190,9 +204,12 @@
     await loadUsers()
   }
 
+  // Nastavenia appky (správca) aj pri Obnoviť stránku.
+  onPageReload(loadAppSettings)
+
   onMounted(() => {
-    loadLinks()
-    loadUsers()
+    linksPage.run()
+    usersPage.run()
     loadAppSettings()
     prices.fetchStatus()
   })
@@ -280,8 +297,12 @@
             </v-menu>
           </div>
 
+          <PageSkeleton v-if="linksPage.initial" :count="2" kind="rows" />
+
+          <LoadFailed v-else-if="linksPage.error" :loading="linksPage.loading" @retry="linksPage.run()" />
+
           <v-empty-state
-            v-if="links.length === 0"
+            v-else-if="links.length === 0"
             icon="mdi-share-variant-outline"
             :title="t('settings.shareEmpty')"
           />
@@ -451,7 +472,11 @@
       </v-window-item>
 
       <v-window-item v-if="auth.isAdmin" class="settings-narrow" value="users">
-        <v-card border flat>
+        <PageSkeleton v-if="usersPage.initial" :count="3" kind="rows" />
+
+        <LoadFailed v-else-if="usersPage.error" :loading="usersPage.loading" @retry="usersPage.run()" />
+
+        <v-card v-else border flat>
           <v-list lines="two">
             <v-list-item v-for="user in users" :key="user.id" :subtitle="user.email">
               <v-list-item-title>

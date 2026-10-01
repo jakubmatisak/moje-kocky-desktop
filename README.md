@@ -92,6 +92,10 @@ zálohuje.
   bez diakritiky, desať spôsobov zoradenia, uložené pohľady, karty alebo
   tabuľka, hromadná úprava vybraných kusov.
 - Prehľad sa dá zúžiť na sériu, kategóriu, zoznam alebo uložený pohľad.
+- Kým sa stránka načítava, ukáže kostru v tvare obsahu, nie prázdny zoznam;
+  keď sa načítať nepodarí, povie to a ponúkne Skúsiť znova. Tlačidlo
+  **Obnoviť stránku** v hornej lište načíta údaje znova, filtre aj rozpísaný
+  formulár ostanú.
 
 **Ostatné**
 
@@ -547,6 +551,10 @@ The app's interface is available in Slovak and English.*
   ignores diacritics, ten sort orders, saved views, cards or a table, bulk
   editing of selected copies.
 - The Overview can be narrowed to a theme, a category, a list or a saved view.
+- While a page loads it shows a skeleton shaped like its content, not an
+  empty list; when loading fails it says so and offers Try again. The
+  **Reload page** button in the top bar loads the data again and keeps the
+  filters and any half-filled form.
 
 **Other**
 

@@ -326,6 +326,7 @@ export const useCollectionStore = defineStore('collection', () => {
     loadGrouped,
     loadLocations,
     loadDashboard,
+    loadSummary,
     loadMovers,
     refreshAll,
     sellItem,

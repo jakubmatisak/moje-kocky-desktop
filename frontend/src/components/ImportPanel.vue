@@ -12,6 +12,7 @@
   import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { api, errorMessage } from '@/api/client'
+  import { onPageReload } from '@/composables/usePageLoad'
   import { useCollectionStore } from '@/stores/collection'
   import { useNotifyStore } from '@/stores/notify'
   import { dateTime, exactMoney, shortDate } from '@/utils/format'
@@ -229,6 +230,8 @@
   }
 
   onMounted(loadHistory)
+  // Tlačidlo Obnoviť stránku v hornej lište: len história, rozpracovaný import ostane.
+  onPageReload(loadHistory)
   onBeforeUnmount(stopPolling)
 </script>
 

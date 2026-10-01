@@ -468,8 +468,15 @@
           mandatory
           variant="outlined"
         >
-          <v-btn value="set">{{ t('collection.groupBy.set') }}</v-btn>
-          <v-btn value="item">{{ t('collection.groupBy.item') }}</v-btn>
+          <v-btn value="set">
+            {{ t('collection.groupBy.set') }}
+            <v-tooltip activator="parent" location="bottom" :text="t('collection.groupBy.setHint')" />
+          </v-btn>
+
+          <v-btn value="item">
+            {{ t('collection.groupBy.item') }}
+            <v-tooltip activator="parent" location="bottom" :text="t('collection.groupBy.itemHint')" />
+          </v-btn>
         </v-btn-toggle>
       </div>
 

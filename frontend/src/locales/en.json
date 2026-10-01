@@ -103,8 +103,10 @@
       "recent": "Recently added"
     },
     "groupBy": {
-      "set": "By set",
-      "item": "Each piece"
+      "set": "Sets combined",
+      "item": "Single copies",
+      "setHint": "One row per set, copies combined: count and summed prices, value and profit",
+      "itemHint": "One row per copy, each with its own condition, price, date and location"
     },
     "status": {
       "all": "Everything",

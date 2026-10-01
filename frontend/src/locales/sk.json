@@ -103,8 +103,10 @@
       "recent": "Naposledy pridané"
     },
     "groupBy": {
-      "set": "Podľa setu",
-      "item": "Každý kus"
+      "set": "Sety spolu",
+      "item": "Jednotlivé kusy",
+      "setHint": "Jeden riadok na každý set, kusy spolu: počet, súčet cien, hodnoty a zisku",
+      "itemHint": "Jeden riadok na každý kus zvlášť, s vlastným stavom, cenou, dátumom a miestom"
     },
     "status": {
       "all": "Všetko",

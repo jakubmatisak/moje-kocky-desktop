@@ -149,3 +149,10 @@ async def test_theme_options_count_with_the_other_filters(wishes: AsyncClient) -
     params = {"retired": True, "theme": "Icons"}
     retired = (await wishes.get("/wishlist/themes", params=params)).json()
     assert retired == [{"value": "Ideas", "count": 1}, {"value": "Star Wars", "count": 1}]
+
+
+async def test_wish_carries_when_its_price_was_downloaded(wishes: AsyncClient) -> None:
+    rows = {r["catalog_num"]: r for r in (await wishes.get("/wishlist")).json()}
+
+    assert rows["10294-1"]["price_at"] is not None
+    assert rows["21318-1"]["price_at"] is None

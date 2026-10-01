@@ -40,7 +40,7 @@
   import { defaultDir, groupingFrom, SORT_KEYS, useCollectionStore } from '@/stores/collection'
   import { hasStaleKeys, useFilterStore } from '@/stores/filters'
   import { useProfileStore } from '@/stores/preferences'
-  import { exactMoney, money } from '@/utils/format'
+  import { exactMoney, money, shortDate } from '@/utils/format'
   import { placeLabel } from '@/utils/place'
   import { figuresRoute } from '@/utils/series'
 
@@ -568,6 +568,10 @@
 
                   <div class="text-body-small" :class="pieceProfitClass(item)">
                     {{ pieceProfit(item) }}
+                  </div>
+
+                  <div v-if="item.status !== 'sold' && item.price_at" class="text-body-small text-medium-emphasis">
+                    {{ t('collection.priceAt', { date: shortDate(item.price_at) }) }}
                   </div>
                 </div>
               </template>

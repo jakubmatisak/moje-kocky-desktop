@@ -387,6 +387,8 @@ class ValuedItemOut(ItemOut):
     categories: list[int] = Field(default_factory=list)
     #: Koľko dielikov kusu chýba podľa kontroly úplnosti (bez náhradných).
     missing_parts: int = 0
+    #: Kedy bola stiahnutá cena, z ktorej je hodnota (ručná a chýbajúca nič).
+    price_at: datetime | None = None
 
 
 class GroupedItemOut(BaseModel):
@@ -412,6 +414,8 @@ class GroupedItemOut(BaseModel):
     categories: list[int] = Field(default_factory=list)
     #: Chýbajúce dieliky vlastnených kusov podľa kontroly úplnosti (bez náhradných).
     missing_parts: int = 0
+    #: Najnovšia stiahnutá cena vlastnených kusov (ručná a chýbajúca sa nerátajú).
+    price_at: datetime | None = None
 
 
 # --- ceny -------------------------------------------------------------------
@@ -669,6 +673,8 @@ class WishlistOut(ORMModel):
     distance_pct: float | None = None
     #: Koľko kusov tohto setu účet vlastní (štítok „V zbierke“).
     owned_count: int = 0
+    #: Kedy bola stiahnutá trhová cena (``market_price``).
+    price_at: datetime | None = None
 
 
 class WishThemeOut(BaseModel):

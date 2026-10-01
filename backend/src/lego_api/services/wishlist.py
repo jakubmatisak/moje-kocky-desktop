@@ -51,8 +51,14 @@ async def wishlist_prices(session: AsyncSession, user_id: int) -> list[WishlistO
 
     rows: list[WishlistOut] = []
     for wish in items:
-        found = index.value_at_any(PriceTarget(wish.catalog_num, PriceKind.SET, PriceCondition.NEW))
+        target = PriceTarget(wish.catalog_num, PriceKind.SET, PriceCondition.NEW)
+        found = index.value_at_any(target)
         price = found[0] if found is not None else None
+        # Čas tej istej ceny: nová, alebo použitá, keď sa vzala tá (``value_at_any``).
+        price_at = None
+        if found is not None:
+            exact_or_other = target if found[1] else replace(target, condition=PriceCondition.USED)
+            price_at = index.latest_time(exact_or_other)
         reached = (
             wish.target_price_eur is not None
             and price is not None
@@ -67,12 +73,19 @@ async def wishlist_prices(session: AsyncSession, user_id: int) -> list[WishlistO
         rows.append(
             WishlistOut(
                 **WishlistOut.model_validate(wish).model_dump(
-                    exclude={"market_price", "target_reached", "distance_pct", "owned_count"}
+                    exclude={
+                        "market_price",
+                        "target_reached",
+                        "distance_pct",
+                        "owned_count",
+                        "price_at",
+                    }
                 ),
                 market_price=price,
                 target_reached=reached,
                 distance_pct=distance,
                 owned_count=owned.get(wish.catalog_num, 0),
+                price_at=price_at,
             )
         )
     return rows

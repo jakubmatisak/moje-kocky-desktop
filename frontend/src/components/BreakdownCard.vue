@@ -75,7 +75,7 @@
     </v-card-item>
 
     <div class="breakdown-scroll">
-      <v-table density="comfortable">
+      <v-table density="comfortable" fixed-header>
         <thead>
           <tr>
             <th />
@@ -133,5 +133,11 @@
 /* Na telefóne sa tabuľka posúva do strany, stránka nie. */
 .breakdown-scroll {
   overflow-x: auto;
+}
+
+/* Najviac asi 12 riadkov (hlavička a 12 × 44 px), ďalej sa tabuľka posúva vnútri. */
+.breakdown-scroll :deep(.v-table__wrapper) {
+  max-height: 580px;
+  overflow-y: auto;
 }
 </style>

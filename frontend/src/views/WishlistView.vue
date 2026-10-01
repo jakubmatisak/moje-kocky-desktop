@@ -23,7 +23,7 @@
   import { useCollectionStore } from '@/stores/collection'
   import { useNotifyStore } from '@/stores/notify'
   import { useProfileStore } from '@/stores/preferences'
-  import { count, exactMoney, percent, toNumber } from '@/utils/format'
+  import { count, exactMoney, percent, shortDate, toNumber } from '@/utils/format'
   import { imageSrc } from '@/utils/imageSrc'
   import { priceValue } from '@/utils/priceEdit'
   import { hasWishFilter, wishlistQuery } from '@/utils/wishlistQuery'
@@ -417,6 +417,9 @@
 
             <td class="text-end text-no-wrap" :class="{ 'text-positive': item.target_reached }">
               {{ item.market_price ? exactMoney(item.market_price) : '—' }}
+              <div v-if="item.market_price && item.price_at" class="text-body-small text-medium-emphasis">
+                {{ t('collection.priceAt', { date: shortDate(item.price_at) }) }}
+              </div>
             </td>
 
             <td class="text-end text-no-wrap">
@@ -531,6 +534,10 @@
                 class="text-body-medium font-weight-medium"
                 :class="{ 'text-positive': item.target_reached }"
               >{{ exactMoney(item.market_price) }}</div>
+
+              <div v-if="item.price_at" class="text-body-small text-medium-emphasis text-no-wrap">
+                {{ t('collection.priceAt', { date: shortDate(item.price_at) }) }}
+              </div>
             </div>
 
             <div v-if="item.target_price_eur">

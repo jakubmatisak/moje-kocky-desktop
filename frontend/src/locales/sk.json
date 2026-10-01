@@ -87,6 +87,7 @@
     "donutSetsPlural": "set | sety | setov"
   },
   "collection": {
+    "priceAt": "cena z {date}",
     "title": "Zbierka",
     "search": "Hľadať podľa názvu, čísla alebo umiestnenia…",
     "sortBy": "Zoradiť",
@@ -1227,6 +1228,7 @@
     }
   },
   "table": {
+    "priceAt": "Cena z",
     "image": "",
     "number": "Číslo",
     "name": "Názov",

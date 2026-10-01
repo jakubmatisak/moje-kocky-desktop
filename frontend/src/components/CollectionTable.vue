@@ -151,6 +151,7 @@
           <td>{{ slot.item.location }}</td>
           <td class="text-end text-no-wrap">{{ slot.item.purchase }}</td>
           <td class="text-end text-no-wrap">{{ slot.item.value }}</td>
+          <td class="text-end text-no-wrap text-medium-emphasis">{{ slot.item.priceAt }}</td>
 
           <td
             class="text-end text-no-wrap"
@@ -185,7 +186,7 @@
    */
   .collection-table :deep(table) {
     table-layout: fixed;
-    min-width: 1504px;
+    min-width: 1608px;
   }
 
   /* Hlavička sa nesmie lámať („Kus / y“), šírky sú na to dosť veľké. */

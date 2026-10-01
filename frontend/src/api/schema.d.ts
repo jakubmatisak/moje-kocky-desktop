@@ -2484,6 +2484,8 @@ export interface components {
              * @default 0
              */
             missing_parts: number;
+            /** Price At */
+            price_at?: string | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -4070,6 +4072,8 @@ export interface components {
              * @default 0
              */
             missing_parts: number;
+            /** Price At */
+            price_at?: string | null;
         };
         /**
          * WishThemeOut
@@ -4122,6 +4126,8 @@ export interface components {
              * @default 0
              */
             owned_count: number;
+            /** Price At */
+            price_at?: string | null;
         };
         /**
          * WishlistUpdateRequest

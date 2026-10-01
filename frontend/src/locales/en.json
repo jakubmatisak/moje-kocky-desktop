@@ -87,6 +87,7 @@
     "donutSetsPlural": "set | sets"
   },
   "collection": {
+    "priceAt": "price from {date}",
     "title": "Collection",
     "search": "Search by name, number or location…",
     "sortBy": "Sort",
@@ -1227,6 +1228,7 @@
     }
   },
   "table": {
+    "priceAt": "Price from",
     "image": "",
     "number": "Number",
     "name": "Name",

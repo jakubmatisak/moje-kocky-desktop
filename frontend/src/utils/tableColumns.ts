@@ -9,7 +9,7 @@
 import type { GroupedItem, ValuedItem } from '@/api/types'
 import type { SortDir, SortKey } from '@/stores/collection'
 import { defaultDir } from '@/stores/collection'
-import { exactMoney, money, percent, toNumber } from '@/utils/format'
+import { exactMoney, money, percent, shortDate, toNumber } from '@/utils/format'
 import { placeLabel } from '@/utils/place'
 
 export interface Column {
@@ -35,6 +35,7 @@ export const COLUMNS: Column[] = [
   { key: 'location', sort: null, width: 170 },
   { key: 'purchase', sort: 'purchase', align: 'end', width: 100 },
   { key: 'value', sort: 'value', align: 'end', width: 110 },
+  { key: 'priceAt', sort: null, align: 'end', width: 104 },
   { key: 'profit', sort: 'profit', align: 'end', width: 110 },
   { key: 'profitPct', sort: 'profit_pct', align: 'end', width: 76 },
   { key: 'cagr', sort: 'cagr', align: 'end', width: 90 },
@@ -78,6 +79,8 @@ export interface TableRow {
   profitPct: string
   profitSign: number
   cagr: string
+  /** Kedy bola stiahnutá cena (pri predanom, ručnej či chýbajúcej cene pomlčka). */
+  priceAt: string
 }
 
 function pct (part: number | null, whole: number | null): number | null {
@@ -106,6 +109,7 @@ export function rowFromGroup (row: GroupedItem, sold: boolean): TableRow {
     profitPct: missing || sold ? '—' : percent(row.unrealized_pct ?? null, { decimals: 0 }),
     profitSign: missing ? 0 : Math.sign(gain ?? 0),
     cagr: percent(row.cagr_pct ?? null),
+    priceAt: sold || !row.price_at ? '—' : shortDate(row.price_at),
   }
 }
 
@@ -134,5 +138,6 @@ export function rowFromItem (item: ValuedItem): TableRow {
     profitPct: missing ? '—' : percent(pct(gain, paid), { decimals: 0 }),
     profitSign: missing ? 0 : Math.sign(gain ?? 0),
     cagr: percent(item.cagr_pct ?? null),
+    priceAt: sold || !item.price_at ? '—' : shortDate(item.price_at),
   }
 }

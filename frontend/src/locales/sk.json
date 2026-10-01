@@ -101,7 +101,13 @@
       "year": "Rok vydania",
       "parts": "Dieliky",
       "name": "Názov",
-      "recent": "Naposledy pridané"
+      "recent": "Naposledy pridané",
+      "number": "Číslo setu",
+      "theme": "Séria",
+      "quantity": "Počet kusov",
+      "condition": "Stav",
+      "location": "Umiestnenie",
+      "price_at": "Dátum ceny"
     },
     "groupBy": {
       "set": "Sety spolu",
@@ -526,7 +532,8 @@
     "colCosts": "Náklady",
     "colRealized": "Čistý zisk",
     "colRoi": "Výnos",
-    "inventoryLink": "Súpis pre poistku"
+    "inventoryLink": "Súpis pre poistku",
+    "colChannel": "Kanál"
   },
   "photos": {
     "title": "Fotky kusu",
@@ -710,7 +717,13 @@
       "yearDesc": "Rok: najnovšie",
       "yearAsc": "Rok: najstaršie",
       "nameAsc": "Abecedne A–Z",
-      "nameDesc": "Abecedne Z–A"
+      "nameDesc": "Abecedne Z–A",
+      "ownedDesc": "Mám: najviac",
+      "ownedAsc": "Mám: najmenej",
+      "missingAsc": "Chýba: najmenej",
+      "missingDesc": "Chýba: najviac",
+      "progressDesc": "Kompletnosť: najvyššia",
+      "progressAsc": "Kompletnosť: najnižšia"
     },
     "categoryMinifigs": "Minifigúrky",
     "summaryOther": "Kúskov zo sérií: {figures} · zbierané série: {collecting} · kompletné: {complete}",
@@ -836,7 +849,8 @@
       "key_check": "Kontrola kľúča",
       "other": "Iné",
       "inflation": "Prepočet inflácie"
-    }
+    },
+    "colResult": "Výsledok"
   },
   "inflation": {
     "chip": "V dnešných peniazoch · {month}",

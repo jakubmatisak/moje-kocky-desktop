@@ -476,9 +476,13 @@ minifigúrky.
 
 **Zoradenie je jeden register, `services/sorting.py`.** Desať kľúčov
 (zisk v € a %, ročný výnos, hodnota, kúpna cena, dátum kúpy, rok, dieliky,
-názov, pridané) so smerom `dir`. Zoznam kusov aj zoskupený zoznam idú cez
+názov, pridané) a šesť len z hlavičky tabuľky (číslo prirodzene, téma,
+kusy, stav, umiestnenie, dátum ceny) so smerom `dir`. Zoznam kusov aj zoskupený zoznam idú cez
 neho; router nič neradí sám (zoskupený zoznam kedysi zoradenie ignoroval).
 Prázdna hodnota (bez ceny, bez dátumu) je vždy na konci, v oboch smeroch.
+Každá tabuľka radí klikom na hlavičku (okrem fotky a akcií) cez
+`components/SortHeader.vue` a `utils/tableSort.ts`; kde radí klient,
+`sortRows` dá prázdne tiež na koniec.
 
 **Filtre sa skladajú: v skupine ALEBO, medzi skupinami A.** Počet pri voľbe
 ráta s ostatnými skupinami, nie s vlastnou, inak by po zaškrtnutí jednej

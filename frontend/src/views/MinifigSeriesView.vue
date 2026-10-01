@@ -1,5 +1,7 @@
 <script setup lang="ts">
   import type { CmfMember, CmfSeries } from '@/api/types'
+  import type { MemberSort } from '@/utils/seriesList'
+  import type { SortState } from '@/utils/tableSort'
   /**
    * Jedna zberateľská séria: všetky figúrky, ktoré mám a ktoré nie.
    *
@@ -21,10 +23,12 @@
   import SeriesBar from '@/components/SeriesBar.vue'
   import SeriesPurchaseDialog from '@/components/SeriesPurchaseDialog.vue'
   import SetImage from '@/components/SetImage.vue'
+  import SortHeader from '@/components/SortHeader.vue'
   import { useMinifigsView } from '@/composables/useMinifigsView'
   import { usePageLoad } from '@/composables/usePageLoad'
   import { imageSrc } from '@/utils/imageSrc'
-  import { memberShowFrom } from '@/utils/seriesList'
+  import { memberDefaultDir, memberShowFrom, sortMembers } from '@/utils/seriesList'
+  import { headerDir, nextSort } from '@/utils/tableSort'
 
   const { t } = useI18n()
   const route = useRoute()
@@ -61,8 +65,24 @@
   const ownedCount = computed(() => members.value.filter(m => m.owned > 0).length)
   const missingCount = computed(() => members.value.length - ownedCount.value)
 
-  const shown = computed(() => members.value.filter(m =>
-    show.value === 'all' || (show.value === 'owned' ? m.owned > 0 : m.owned === 0),
+  /**
+   * Zoradenie klikom na hlavičku tabuľky, platí aj pre karty. Pamätá sa
+   * len kým je stránka otvorená; predvolene podľa čísla, ako zo servera.
+   */
+  const order = ref<SortState<MemberSort>>({ sort: 'number', dir: null })
+  const COLUMNS: Array<{ key: MemberSort, title: string, class?: string }> = [
+    { key: 'number', title: 'minifigs.colNumber' },
+    { key: 'name', title: 'minifigs.colFigure' },
+    { key: 'state', title: 'minifigs.colState' },
+    { key: 'wanted', title: 'minifigs.colWish', class: 'text-center' },
+  ]
+
+  const shown = computed(() => sortMembers(
+    members.value.filter(m =>
+      show.value === 'all' || (show.value === 'owned' ? m.owned > 0 : m.owned === 0),
+    ),
+    order.value.sort,
+    order.value.dir ?? memberDefaultDir(order.value.sort),
   ))
 
   // Iná séria: staré karty k nej nepatria, znova kostra.
@@ -204,10 +224,15 @@
           <thead>
             <tr>
               <th class="minifigs-table__photo" />
-              <th>{{ t('minifigs.colNumber') }}</th>
-              <th>{{ t('minifigs.colFigure') }}</th>
-              <th>{{ t('minifigs.colState') }}</th>
-              <th class="text-center">{{ t('minifigs.colWish') }}</th>
+
+              <th v-for="column in COLUMNS" :key="column.key" :class="column.class">
+                <SortHeader
+                  :dir="headerDir(column.key, order, memberDefaultDir)"
+                  :title="t(column.title)"
+                  @sort="order = nextSort(column.key, order, memberDefaultDir)"
+                />
+              </th>
+
               <th />
             </tr>
           </thead>

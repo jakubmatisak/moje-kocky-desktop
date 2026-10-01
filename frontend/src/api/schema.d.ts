@@ -4879,7 +4879,7 @@ export interface operations {
     list_items_api_v1_items_get: {
         parameters: {
             query?: {
-                sort?: "profit" | "profit_pct" | "cagr" | "value" | "purchase" | "purchased" | "year" | "parts" | "name" | "recent";
+                sort?: "profit" | "profit_pct" | "cagr" | "value" | "purchase" | "purchased" | "year" | "parts" | "name" | "recent" | "number" | "theme" | "quantity" | "condition" | "location" | "price_at";
                 /** @description Smer zoradenia; bez neho predvolený smer kľúča. */
                 dir?: ("asc" | "desc") | null;
                 status?: "owned" | "sold" | "all";
@@ -4984,7 +4984,7 @@ export interface operations {
         parameters: {
             query?: {
                 by?: "set" | "series";
-                sort?: "profit" | "profit_pct" | "cagr" | "value" | "purchase" | "purchased" | "year" | "parts" | "name" | "recent";
+                sort?: "profit" | "profit_pct" | "cagr" | "value" | "purchase" | "purchased" | "year" | "parts" | "name" | "recent" | "number" | "theme" | "quantity" | "condition" | "location" | "price_at";
                 /** @description Smer zoradenia; bez neho predvolený smer kľúča. */
                 dir?: ("asc" | "desc") | null;
                 status?: "owned" | "sold" | "all";

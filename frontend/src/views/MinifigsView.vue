@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import type { CmfSeries, CmfSync } from '@/api/types'
-  import type { SeriesSort, StateFilter } from '@/utils/seriesList'
+  import type { SeriesColumn, SeriesSort, StateFilter } from '@/utils/seriesList'
   /**
    * Figúrky: všetky zberateľské série a koľko z každej mám.
    *
@@ -25,10 +25,19 @@
   import PageSkeleton from '@/components/PageSkeleton.vue'
   import SeriesBar from '@/components/SeriesBar.vue'
   import SetImage from '@/components/SetImage.vue'
+  import SortHeader from '@/components/SortHeader.vue'
   import { useMinifigsView } from '@/composables/useMinifigsView'
   import { usePageLoad } from '@/composables/usePageLoad'
   import { imageSrc } from '@/utils/imageSrc'
-  import { compareSeries, matchesState, seriesState } from '@/utils/seriesList'
+  import {
+    compareSeries,
+    matchesState,
+    MENU_SERIES_SORTS,
+    SERIES_SORTS,
+    seriesHeaderDir,
+    seriesSortFromHeader,
+    seriesState,
+  } from '@/utils/seriesList'
 
   type Filter = StateFilter
   type Kind = 'all' | 'numbered' | 'themed'
@@ -38,7 +47,15 @@
   const MINIFIGS = 'minifigs'
   const FILTERS: Set<Filter> = new Set(['all', 'collecting', 'almost', 'complete', 'untouched'])
   const KINDS: Kind[] = ['all', 'numbered', 'themed']
-  const SORTS: Sort[] = ['leastMissing', 'yearDesc', 'yearAsc', 'nameAsc', 'nameDesc']
+  const SORTS: readonly Sort[] = SERIES_SORTS
+  /** Stĺpce tabuľky, ktoré radia; fotka nie. */
+  const COLUMNS: Array<{ key: SeriesColumn, title: string, class?: string }> = [
+    { key: 'name', title: 'minifigs.colSeries' },
+    { key: 'year', title: 'minifigs.colYear' },
+    { key: 'owned', title: 'minifigs.colOwned', class: 'text-end' },
+    { key: 'missing', title: 'minifigs.colMissing', class: 'text-end' },
+    { key: 'progress', title: 'minifigs.colProgress', class: 'minifigs-table__progress' },
+  ]
   /** Číslovaná séria („Series 28 Minifigures“), ostatné sú tematické (Disney, Marvel…). */
   const NUMBERED = /^series \d+/i
 
@@ -122,7 +139,15 @@
   const inCategory = computed(() => series.value.filter(row => row.category === category.value))
 
   const kindItems = computed(() => KINDS.map(value => ({ value, title: t(`minifigs.kind.${value}`) })))
-  const sortItems = computed(() => SORTS.map(value => ({ value, title: t(`minifigs.sort.${value}`) })))
+  /**
+   * Výber nad kartami má len hlavné zoradenia. Kľúč z hlavičky tabuľky
+   * (mám, chýba, kompletnosť) sa doň pridá, len kým platí.
+   */
+  const sortItems = computed(() => {
+    const keys: Sort[] = [...MENU_SERIES_SORTS]
+    if (!keys.includes(sort.value)) keys.push(sort.value)
+    return keys.map(value => ({ value, title: t(`minifigs.sort.${value}`) }))
+  })
 
   /** Séria prejde hľadaním, typom a rokom. Stav (zbieram, kompletné) sa rieši zvlášť. */
   const matching = computed(() => {
@@ -411,11 +436,14 @@
         <thead>
           <tr>
             <th class="minifigs-table__photo" />
-            <th>{{ t('minifigs.colSeries') }}</th>
-            <th>{{ t('minifigs.colYear') }}</th>
-            <th class="text-end">{{ t('minifigs.colOwned') }}</th>
-            <th class="text-end">{{ t('minifigs.colMissing') }}</th>
-            <th class="minifigs-table__progress">{{ t('minifigs.colProgress') }}</th>
+
+            <th v-for="column in COLUMNS" :key="column.key" :class="column.class">
+              <SortHeader
+                :dir="seriesHeaderDir(column.key, sort)"
+                :title="t(column.title)"
+                @sort="sort = seriesSortFromHeader(column.key, sort)"
+              />
+            </th>
           </tr>
         </thead>
 

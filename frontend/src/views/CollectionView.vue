@@ -37,7 +37,7 @@
   import { usePageLoad } from '@/composables/usePageLoad'
   import { createSelection } from '@/composables/useSelection'
   import { useAuthStore } from '@/stores/auth'
-  import { defaultDir, groupingFrom, SORT_KEYS, useCollectionStore } from '@/stores/collection'
+  import { defaultDir, groupingFrom, MENU_SORT_KEYS, SORT_KEYS, useCollectionStore } from '@/stores/collection'
   import { hasStaleKeys, useFilterStore } from '@/stores/filters'
   import { useProfileStore } from '@/stores/preferences'
   import { exactMoney, money, shortDate } from '@/utils/format'
@@ -63,7 +63,16 @@
   const panelOpen = ref(true)
   const managerOpen = ref(false)
 
-  const sortOptions = computed(() => SORT_KEYS.map(value => ({ value, title: t(`collection.sort.${value}`) })))
+  /**
+   * Výber nad kartami má len hlavné zoradenia. Kľúč z hlavičky tabuľky
+   * (číslo, téma, stav…) sa doň pridá, len kým platí, nech výber ukáže,
+   * podľa čoho sa radí.
+   */
+  const sortOptions = computed(() => {
+    const keys: SortKey[] = [...MENU_SORT_KEYS]
+    if (!keys.includes(collection.sort)) keys.push(collection.sort)
+    return keys.map(value => ({ value, title: t(`collection.sort.${value}`) }))
+  })
 
   /** Smer, ktorý práve platí: otočený, alebo predvolený pre kľúč. */
   const effectiveDir = computed(() => collection.sortDir ?? defaultDir(collection.sort))

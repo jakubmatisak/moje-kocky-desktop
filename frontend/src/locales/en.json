@@ -101,7 +101,13 @@
       "year": "Release year",
       "parts": "Pieces",
       "name": "Name",
-      "recent": "Recently added"
+      "recent": "Recently added",
+      "number": "Set number",
+      "theme": "Series",
+      "quantity": "Quantity",
+      "condition": "Condition",
+      "location": "Location",
+      "price_at": "Price date"
     },
     "groupBy": {
       "set": "Sets combined",
@@ -526,7 +532,8 @@
     "colCosts": "Costs",
     "colRealized": "Net profit",
     "colRoi": "Return",
-    "inventoryLink": "Insurance inventory"
+    "inventoryLink": "Insurance inventory",
+    "colChannel": "Channel"
   },
   "photos": {
     "title": "Piece photos",
@@ -710,7 +717,13 @@
       "yearDesc": "Year: newest",
       "yearAsc": "Year: oldest",
       "nameAsc": "Name A–Z",
-      "nameDesc": "Name Z–A"
+      "nameDesc": "Name Z–A",
+      "ownedDesc": "Owned: most",
+      "ownedAsc": "Owned: fewest",
+      "missingAsc": "Missing: fewest",
+      "missingDesc": "Missing: most",
+      "progressDesc": "Completeness: highest",
+      "progressAsc": "Completeness: lowest"
     },
     "categoryMinifigs": "Minifigures",
     "summaryOther": "Pieces from series: {figures} · collecting: {collecting} · complete: {complete}",
@@ -836,7 +849,8 @@
       "key_check": "Key check",
       "other": "Other",
       "inflation": "Inflation adjustment"
-    }
+    },
+    "colResult": "Result"
   },
   "inflation": {
     "chip": "In today's money · {month}",

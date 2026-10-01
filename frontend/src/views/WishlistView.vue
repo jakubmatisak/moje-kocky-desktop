@@ -17,6 +17,7 @@
   import PhotoZoom from '@/components/PhotoZoom.vue'
   import PurchaseDialog from '@/components/PurchaseDialog.vue'
   import SetImage from '@/components/SetImage.vue'
+  import SortHeader from '@/components/SortHeader.vue'
   import { useOwnedHint } from '@/composables/useOwnedHint'
   import { usePageLoad } from '@/composables/usePageLoad'
   import { useAuthStore } from '@/stores/auth'
@@ -26,6 +27,7 @@
   import { count, exactMoney, percent, shortDate, toNumber } from '@/utils/format'
   import { imageSrc } from '@/utils/imageSrc'
   import { priceValue } from '@/utils/priceEdit'
+  import { headerDir, nextSort } from '@/utils/tableSort'
   import { hasWishFilter, wishlistQuery } from '@/utils/wishlistQuery'
 
   const { t } = useI18n()
@@ -87,6 +89,24 @@
       : [...view.themes, value]
   }
   const effectiveDir = (): 'asc' | 'desc' => view.dir ?? DEFAULT_DIR[view.sort]
+
+  /** Stĺpce tabuľky a ich zoradenie; fotka a akcie neradia. */
+  const COLUMNS: Array<{ sort: WishSort, title: string, end?: boolean }> = [
+    { sort: 'name', title: 'wishlist.colSet' },
+    { sort: 'theme', title: 'wishlist.filterTheme' },
+    { sort: 'market', title: 'wishlist.marketNow', end: true },
+    { sort: 'target', title: 'wishlist.target', end: true },
+    { sort: 'distance', title: 'wishlist.distance', end: true },
+  ]
+  const defaultDir = (key: WishSort): 'asc' | 'desc' => DEFAULT_DIR[key]
+
+  /** Klik na hlavičku mení to isté zoradenie ako výber nad kartami. */
+  function sortBy (key: WishSort): void {
+    const next = nextSort(key, { sort: view.sort, dir: view.dir }, defaultDir)
+    // Kľúč najprv: watch pri zmene kľúča smer vynuluje.
+    view.sort = next.sort
+    view.dir = next.dir
+  }
 
   function flipDir (): void {
     const next = effectiveDir() === 'asc' ? 'desc' : 'asc'
@@ -373,11 +393,15 @@
         <thead>
           <tr>
             <th class="wish-table__photo" />
-            <th>{{ t('wishlist.colSet') }}</th>
-            <th>{{ t('wishlist.filterTheme') }}</th>
-            <th class="text-end">{{ t('wishlist.marketNow') }}</th>
-            <th class="text-end">{{ t('wishlist.target') }}</th>
-            <th class="text-end">{{ t('wishlist.distance') }}</th>
+
+            <th v-for="column in COLUMNS" :key="column.sort" :class="{ 'text-end': column.end }">
+              <SortHeader
+                :dir="headerDir(column.sort, { sort: view.sort, dir: view.dir }, defaultDir)"
+                :title="t(column.title)"
+                @sort="sortBy(column.sort)"
+              />
+            </th>
+
             <th />
           </tr>
         </thead>

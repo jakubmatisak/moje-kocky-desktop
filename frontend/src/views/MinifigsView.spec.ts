@@ -5,6 +5,7 @@ import { createPinia, type Pinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import CardGrid from '@/components/CardGrid.vue'
 import GhostActions from '@/components/GhostActions.vue'
+import SortHeader from '@/components/SortHeader.vue'
 import i18n from '@/plugins/i18n'
 import { useAuthStore } from '@/stores/auth'
 import MinifigSeriesView from './MinifigSeriesView.vue'
@@ -218,5 +219,57 @@ describe('Figúrky: jedna séria ako tabuľka', () => {
       params: { path: { key: 'minifigs' } },
       body: { list: 'table', series: 'table' },
     })
+  })
+})
+
+describe('Figúrky: tabuľky radia klikom na hlavičku', () => {
+  it('zoznam sérií: každý stĺpec okrem fotky, druhý klik otočí smer', async () => {
+    preferences = { minifigs: { list: 'table' } }
+    const { wrapper, vm } = await mount(MinifigsView)
+    const headers = () => wrapper.findAllComponents(SortHeader)
+    const names = () => wrapper.findAll('.minifigs-table__name').map(n => n.text())
+
+    expect(headers().map(h => h.props('title'))).toEqual(['Séria', 'Rok', 'Mám', 'Chýba', 'Kompletnosť'])
+    // Najmenej chýba je len vo výbere, šípka nesvieti nikde.
+    expect(headers().map(h => h.props('dir'))).toEqual([null, null, null, null, null])
+
+    headers()[2]!.vm.$emit('sort')
+    await flushPromises()
+    expect(vm.sort).toBe('ownedDesc')
+    expect(names()).toEqual(['Space', 'Series 25'])
+    expect(headers()[2]!.props('dir')).toBe('desc')
+
+    headers()[2]!.vm.$emit('sort')
+    await flushPromises()
+    expect(vm.sort).toBe('ownedAsc')
+    expect(names()).toEqual(['Series 25', 'Space'])
+    expect(headers()[2]!.props('dir')).toBe('asc')
+  })
+
+  it('jedna séria: číslo, figúrka, stav a Chcem radia, akcie nie', async () => {
+    preferences = { minifigs: { series: 'table' } }
+    const { wrapper } = await mount(MinifigSeriesView)
+    const headers = () => wrapper.findAllComponents(SortHeader)
+    const first = () => wrapper.findAll('.minifigs-table tbody tr')[0]!.text()
+
+    expect(headers().map(h => h.props('title'))).toEqual(['Číslo', 'Figúrka', 'Stav', 'Chcem'])
+    expect(headers().map(h => h.props('dir'))).toEqual(['asc', null, null, null])
+
+    headers()[2]!.vm.$emit('sort')
+    await flushPromises()
+    expect(headers()[2]!.props('dir')).toBe('desc')
+    expect(first()).toContain('Astronaut')
+
+    headers()[2]!.vm.$emit('sort')
+    await flushPromises()
+    expect(headers()[2]!.props('dir')).toBe('asc')
+    expect(first()).toContain('Alien')
+
+    headers()[3]!.vm.$emit('sort')
+    await flushPromises()
+    expect(first()).toContain('Alien')
+    headers()[0]!.vm.$emit('sort')
+    await flushPromises()
+    expect(first()).toContain('Astronaut')
   })
 })

@@ -2,8 +2,8 @@
  * Stĺpce tabuľky v Zbierke a zoradenie klikom na hlavičku.
  *
  * Radí server (register `services/sorting.py`), tabuľka len mení kľúč
- * a smer v store, rovnako ako výber zoradenia nad kartami. Stĺpec bez
- * kľúča sa zoradiť nedá.
+ * a smer v store, rovnako ako výber zoradenia nad kartami. Radí každý
+ * stĺpec okrem fotky.
  */
 
 import type { GroupedItem, ValuedItem } from '@/api/types'
@@ -11,6 +11,7 @@ import type { SortDir, SortKey } from '@/stores/collection'
 import { defaultDir } from '@/stores/collection'
 import { exactMoney, money, percent, shortDate, toNumber } from '@/utils/format'
 import { placeLabel } from '@/utils/place'
+import { nextSort } from '@/utils/tableSort'
 
 export interface Column {
   key: string
@@ -26,16 +27,16 @@ export interface Column {
 
 export const COLUMNS: Column[] = [
   { key: 'image', sort: null, width: 104 },
-  { key: 'number', sort: null, width: 96 },
+  { key: 'number', sort: 'number', width: 96 },
   { key: 'name', sort: 'name' },
-  { key: 'theme', sort: null, width: 150 },
+  { key: 'theme', sort: 'theme', width: 150 },
   { key: 'year', sort: 'year', align: 'end', width: 72 },
-  { key: 'quantity', sort: null, align: 'end', width: 72 },
-  { key: 'condition', sort: null, width: 150 },
-  { key: 'location', sort: null, width: 170 },
+  { key: 'quantity', sort: 'quantity', align: 'end', width: 72 },
+  { key: 'condition', sort: 'condition', width: 150 },
+  { key: 'location', sort: 'location', width: 170 },
   { key: 'purchase', sort: 'purchase', align: 'end', width: 100 },
   { key: 'value', sort: 'value', align: 'end', width: 110 },
-  { key: 'priceAt', sort: null, align: 'end', width: 104 },
+  { key: 'priceAt', sort: 'price_at', align: 'end', width: 104 },
   { key: 'profit', sort: 'profit', align: 'end', width: 110 },
   { key: 'profitPct', sort: 'profit_pct', align: 'end', width: 76 },
   { key: 'cagr', sort: 'cagr', align: 'end', width: 90 },
@@ -49,15 +50,7 @@ export interface SortState {
 
 /** Nové zoradenie po kliku na hlavičku, alebo null, keď sa stĺpec radiť nedá. */
 export function sortFromHeader (column: Column, current: SortState): SortState | null {
-  if (!column.sort) {
-    return null
-  }
-  if (column.sort !== current.sort) {
-    return { sort: column.sort, dir: null }
-  }
-  const effective = current.dir ?? defaultDir(current.sort)
-  const next: SortDir = effective === 'asc' ? 'desc' : 'asc'
-  return { sort: column.sort, dir: next === defaultDir(column.sort) ? null : next }
+  return column.sort ? nextSort(column.sort, current, defaultDir) : null
 }
 
 /** Riadok tabuľky: už naformátované texty, rovnaké pravidlá ako karta setu. */

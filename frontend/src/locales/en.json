@@ -147,6 +147,7 @@
     "sortAsc": "Ascending (click to flip)",
     "sortDesc": "Descending (click to flip)",
     "viewCards": "Cards",
+    "viewList": "List",
     "viewTable": "Table",
     "partsPlural": "{count} part | {count} parts"
   },

@@ -147,6 +147,7 @@
     "sortAsc": "Vzostupne (klikni na otočenie)",
     "sortDesc": "Zostupne (klikni na otočenie)",
     "viewCards": "Karty",
+    "viewList": "Zoznam",
     "viewTable": "Tabuľka",
     "partsPlural": "{count} dielik | {count} dieliky | {count} dielikov"
   },

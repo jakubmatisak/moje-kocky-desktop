@@ -467,8 +467,14 @@
           variant="outlined"
           @update:model-value="value => setView(value === 'table')"
         >
-          <v-btn icon="mdi-view-grid-outline" :title="t('collection.viewCards')" value="cards" />
-          <v-btn icon="mdi-table" :title="t('collection.viewTable')" value="table" />
+          <!-- Pri jednotlivých kusoch sú „karty“ zoznam pod sebou, ikona to musí povedať. -->
+          <v-btn
+            :icon="collection.grouping === 'item' ? 'mdi-view-list-outline' : 'mdi-view-module-outline'"
+            :title="t(collection.grouping === 'item' ? 'collection.viewList' : 'collection.viewCards')"
+            value="cards"
+          />
+
+          <v-btn icon="mdi-table-large" :title="t('collection.viewTable')" value="table" />
         </v-btn-toggle>
 
         <v-btn-toggle

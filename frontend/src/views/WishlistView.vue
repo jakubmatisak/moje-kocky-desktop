@@ -281,8 +281,8 @@
         variant="outlined"
         @update:model-value="value => setView(value === 'table')"
       >
-        <v-btn icon="mdi-view-grid-outline" :title="t('collection.viewCards')" value="cards" />
-        <v-btn data-test="wish-table" icon="mdi-table" :title="t('collection.viewTable')" value="table" />
+        <v-btn icon="mdi-view-module-outline" :title="t('collection.viewCards')" value="cards" />
+        <v-btn data-test="wish-table" icon="mdi-table-large" :title="t('collection.viewTable')" value="table" />
       </v-btn-toggle>
 
       <v-btn

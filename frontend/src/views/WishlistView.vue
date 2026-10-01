@@ -17,6 +17,7 @@
   import PhotoZoom from '@/components/PhotoZoom.vue'
   import PurchaseDialog from '@/components/PurchaseDialog.vue'
   import SetImage from '@/components/SetImage.vue'
+  import { useOwnedHint } from '@/composables/useOwnedHint'
   import { usePageLoad } from '@/composables/usePageLoad'
   import { useAuthStore } from '@/stores/auth'
   import { useCollectionStore } from '@/stores/collection'
@@ -37,6 +38,8 @@
   const newNumber = ref('')
   const targetPrice = ref('')
   const saving = ref(false)
+  /** Set z hlavy, ktorý už mám v zbierke alebo v Chcem: pod číslom to povie. */
+  const { hint: ownedHint } = useOwnedHint(newNumber, () => items.value.map(item => item.catalog_num))
   const buying = ref<WishlistItem | null>(null)
   const buyOpen = ref(false)
 
@@ -415,7 +418,20 @@
         <v-card-title>{{ t('wishlist.add') }}</v-card-title>
 
         <v-card-text class="d-flex flex-column ga-3">
-          <v-text-field v-model="newNumber" autofocus :label="t('add.setNumber')" />
+          <!-- Riadok pod poľom má miesto vždy (details), upozornenie dialóg neposunie. -->
+          <v-text-field
+            v-model="newNumber"
+            autofocus
+            :label="t('add.setNumber')"
+            :messages="ownedHint ? [ownedHint] : []"
+          >
+            <template #message="{ message }">
+              <span class="owned-hint d-inline-flex align-center ga-1">
+                <v-icon icon="mdi-alert-circle-outline" size="small" />{{ message }}
+              </span>
+            </template>
+          </v-text-field>
+
           <v-text-field v-model="targetPrice" :label="t('wishlist.targetPrice')" prefix="€" type="number" />
         </v-card-text>
 
@@ -444,5 +460,9 @@
   left: 8px;
   position: absolute;
   top: 8px;
+}
+
+.owned-hint {
+  color: rgb(var(--v-theme-warning));
 }
 </style>

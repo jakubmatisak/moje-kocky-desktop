@@ -282,6 +282,8 @@
     "costsHint": "Deducted from the profit so it is net."
   },
   "wishlist": {
+    "alreadyOwned": "You already have this set in your collection ({count}).",
+    "alreadyWished": "This set is already on your wishlist.",
     "title": "Wishlist",
     "add": "Add to wishlist",
     "targetPrice": "Target price",

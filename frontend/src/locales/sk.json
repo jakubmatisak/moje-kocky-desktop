@@ -282,6 +282,8 @@
     "costsHint": "Odpočítajú sa zo zisku, aby bol čistý."
   },
   "wishlist": {
+    "alreadyOwned": "Tento set už máš v zbierke ({count}).",
+    "alreadyWished": "Tento set už je v Chcem.",
     "title": "Chcem",
     "add": "Pridať do zoznamu",
     "targetPrice": "Cieľová cena",

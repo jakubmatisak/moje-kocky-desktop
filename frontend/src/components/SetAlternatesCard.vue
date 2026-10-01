@@ -12,6 +12,7 @@
   import CardGrid from '@/components/CardGrid.vue'
   import LoadFailed from '@/components/LoadFailed.vue'
   import SetImage from '@/components/SetImage.vue'
+  import SourceCredit from '@/components/SourceCredit.vue'
   import { count } from '@/utils/format'
   import { imageSrc } from '@/utils/imageSrc'
 
@@ -63,7 +64,7 @@
 
 <template>
   <v-expansion-panels v-model="panel" flat>
-    <v-expansion-panel class="border" value="alternates">
+    <v-expansion-panel class="border" rounded="lg" value="alternates">
       <v-expansion-panel-title>
         <span class="text-title-large font-weight-medium">{{ title }}</span>
       </v-expansion-panel-title>
@@ -113,9 +114,7 @@
             </v-card>
           </CardGrid>
 
-          <div class="text-body-small text-medium-emphasis">
-            <a href="https://rebrickable.com" rel="noopener" target="_blank">{{ t('alternates.credit') }}</a>
-          </div>
+          <SourceCredit href="https://rebrickable.com" :text="t('alternates.credit')" />
         </div>
       </v-expansion-panel-text>
     </v-expansion-panel>

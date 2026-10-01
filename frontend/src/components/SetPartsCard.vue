@@ -17,6 +17,7 @@
   import { useI18n } from 'vue-i18n'
   import { api, errorMessage } from '@/api/client'
   import LoadFailed from '@/components/LoadFailed.vue'
+  import SourceCredit from '@/components/SourceCredit.vue'
   import { useNotifyStore } from '@/stores/notify'
   import { count, isoDate, shortDate } from '@/utils/format'
   import { imageSrc } from '@/utils/imageSrc'
@@ -215,7 +216,7 @@
 <template>
   <div ref="root">
     <v-expansion-panels v-model="panel" class="parts-card" flat>
-      <v-expansion-panel class="border" value="parts">
+      <v-expansion-panel class="border" rounded="lg" value="parts">
         <v-expansion-panel-title>
           <span class="text-title-large font-weight-medium">{{ title }}</span>
 
@@ -365,9 +366,7 @@
               </section>
             </template>
 
-            <div class="text-body-small text-medium-emphasis">
-              <a href="https://rebrickable.com" rel="noopener" target="_blank">{{ t('parts.credit') }}</a>
-            </div>
+            <SourceCredit href="https://rebrickable.com" :text="t('parts.credit')" />
           </div>
         </v-expansion-panel-text>
       </v-expansion-panel>

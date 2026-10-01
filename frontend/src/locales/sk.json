@@ -705,7 +705,6 @@
     },
     "yearLabel": "Rok vydania",
     "sort": {
-      "progress": "Rozbehnuté prvé",
       "leastMissing": "Najmenej chýba",
       "yearDesc": "Rok: najnovšie",
       "yearAsc": "Rok: najstaršie",

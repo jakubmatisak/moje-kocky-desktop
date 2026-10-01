@@ -705,7 +705,6 @@
     },
     "yearLabel": "Release year",
     "sort": {
-      "progress": "In progress first",
       "leastMissing": "Fewest missing",
       "yearDesc": "Year: newest",
       "yearAsc": "Year: oldest",

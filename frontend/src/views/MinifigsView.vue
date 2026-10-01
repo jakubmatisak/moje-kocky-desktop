@@ -37,7 +37,7 @@
   const MINIFIGS = 'minifigs'
   const FILTERS: Set<Filter> = new Set(['all', 'collecting', 'almost', 'complete', 'untouched'])
   const KINDS: Kind[] = ['all', 'numbered', 'themed']
-  const SORTS: Sort[] = ['progress', 'leastMissing', 'yearDesc', 'yearAsc', 'nameAsc', 'nameDesc']
+  const SORTS: Sort[] = ['leastMissing', 'yearDesc', 'yearAsc', 'nameAsc', 'nameDesc']
   /** Číslovaná séria („Series 28 Minifigures“), ostatné sú tematické (Disney, Marvel…). */
   const NUMBERED = /^series \d+/i
 
@@ -55,7 +55,7 @@
   /** Kategória: `minifigs`, alebo názov radu (napríklad „Technic – Mighty Machines“). */
   const category = ref(MINIFIGS)
   const years = ref<number[]>([])
-  const sort = ref<Sort>('progress')
+  const sort = ref<Sort>('leastMissing')
   let poll: ReturnType<typeof setTimeout> | null = null
 
   async function load (): Promise<boolean> {
@@ -178,7 +178,7 @@
     const f = first(q.state)
     filter.value = FILTERS.has(f as Filter) ? f as Filter : 'all'
     const so = first(q.sort)
-    sort.value = SORTS.includes(so as Sort) ? so as Sort : 'progress'
+    sort.value = SORTS.includes(so as Sort) ? so as Sort : 'leastMissing'
     category.value = first(q.cat) ?? MINIFIGS
     const rawYears = Array.isArray(q.year) ? q.year : (q.year ? [q.year] : [])
     years.value = rawYears.map(Number).filter(n => Number.isInteger(n))
@@ -200,7 +200,7 @@
         ...(search.value.trim() ? { q: search.value.trim() } : {}),
         ...(kind.value === 'all' ? {} : { kind: kind.value }),
         ...(filter.value === 'all' ? {} : { state: filter.value }),
-        ...(sort.value === 'progress' ? {} : { sort: sort.value }),
+        ...(sort.value === 'leastMissing' ? {} : { sort: sort.value }),
         ...(years.value.length > 0 ? { year: years.value.map(String) } : {}),
       },
     })

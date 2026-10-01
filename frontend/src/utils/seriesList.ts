@@ -7,7 +7,7 @@ import type { CmfSeries } from '@/api/types'
 
 export type SeriesState = 'collecting' | 'complete' | 'untouched'
 export type StateFilter = 'all' | SeriesState | 'almost'
-export type SeriesSort = 'progress' | 'leastMissing' | 'yearDesc' | 'yearAsc' | 'nameAsc' | 'nameDesc'
+export type SeriesSort = 'leastMissing' | 'yearDesc' | 'yearAsc' | 'nameAsc' | 'nameDesc'
 
 type Row = Pick<CmfSeries, 'name' | 'owned' | 'total' | 'year'>
 
@@ -54,13 +54,9 @@ export function compareSeries (a: Row, b: Row, sort: SeriesSort, collator: Intl.
     case 'yearAsc': { return byYear || byName }
     case 'nameAsc': { return byName }
     case 'nameDesc': { return -byName }
-    case 'leastMissing': {
-      // Rozbehnuté podľa toho, koľko chýba; kompletné za nimi, nezačaté na konci.
-      return order[seriesState(a)] - order[seriesState(b)] || missingOf(a) - missingOf(b) || -byYear || byName
-    }
     default: {
-      // Rozbehnuté prvé: to je to, čo sa zbiera práve teraz. V skupine od najnovšej.
-      return order[seriesState(a)] - order[seriesState(b)] || -byYear || byName
+      // Najmenej chýba: rozbehnuté podľa toho, koľko chýba; kompletné za nimi, nezačaté na konci.
+      return order[seriesState(a)] - order[seriesState(b)] || missingOf(a) - missingOf(b) || -byYear || byName
     }
   }
 }

@@ -413,7 +413,8 @@ async def create_items(
         )
         session.add(item)
         created.append(item)
-    dropped = await drop_bought(session, user.id, created)
+    # „Nechať v Chcem“ potvrdil používateľ v otázke po kúpe; inak sa kúpené vyradí.
+    dropped = [] if payload.keep_wishlist else await drop_bought(session, user.id, created)
     await session.commit()
     for item in created:
         await session.refresh(item, ["catalog"])

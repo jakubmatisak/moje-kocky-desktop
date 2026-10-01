@@ -7,7 +7,7 @@
    */
   import type { WishlistItem } from '@/api/types'
   import { useDebounceFn } from '@vueuse/core'
-  import { onMounted, reactive, ref, watch } from 'vue'
+  import { computed, onMounted, reactive, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { api, errorMessage } from '@/api/client'
   import CardGrid from '@/components/CardGrid.vue'
@@ -55,7 +55,14 @@
     reached: false,
     retired: false,
     noPrice: false,
+    themes: [] as string[],
   })
+  /** Voľby filtra Séria s počtom setov podľa ostatných filtrov (server). */
+  const themeOptions = ref<Array<{ value: string, count: number }>>([])
+  const themeItems = computed(() => themeOptions.value.map(option => ({
+    value: option.value,
+    title: `${option.value === '__none__' ? t('wishlist.noTheme') : option.value} (${option.count})`,
+  })))
   const effectiveDir = (): 'asc' | 'desc' => view.dir ?? DEFAULT_DIR[view.sort]
 
   function flipDir (): void {
@@ -105,9 +112,14 @@
   }
 
   async function load (): Promise<boolean> {
-    const { data, error: err } = await api.GET('/wishlist', { params: { query: wishlistQuery(view) as never } })
-    if (err || !data) return false
-    items.value = data
+    const query = wishlistQuery(view) as never
+    const [list, themes] = await Promise.all([
+      api.GET('/wishlist', { params: { query } }),
+      api.GET('/wishlist/themes', { params: { query } }),
+    ])
+    if (list.error || !list.data) return false
+    items.value = list.data
+    themeOptions.value = themes.data ?? []
     return true
   }
 
@@ -250,6 +262,19 @@
         :variant="view.noPrice ? 'tonal' : 'outlined'"
         @click="view.noPrice = !view.noPrice"
       >{{ t('wishlist.filterNoPrice') }}</v-chip>
+
+      <v-select
+        v-model="view.themes"
+        chips
+        class="wish-theme"
+        clearable
+        closable-chips
+        density="compact"
+        hide-details
+        :items="themeItems"
+        :label="t('wishlist.filterTheme')"
+        multiple
+      />
     </div>
 
     <v-alert
@@ -315,8 +340,22 @@
 
           <div class="text-body-small text-medium-emphasis">
             {{ item.catalog.catalog_num }}
-            <span v-if="item.catalog.num_parts"> · {{ count(item.catalog.num_parts) }} dielikov</span>
+            <span v-if="item.catalog.theme"> · {{ item.catalog.theme }}</span>
+
+            <span v-if="item.catalog.num_parts">
+              · {{ t('collection.partsPlural', item.catalog.num_parts, { named: { count: count(item.catalog.num_parts) } }) }}
+            </span>
           </div>
+
+          <v-chip
+            v-if="item.owned_count > 0"
+            class="align-self-start"
+            color="primary"
+            label
+            prepend-icon="mdi-check-circle-outline"
+            size="small"
+            variant="tonal"
+          >{{ t('wishlist.owned', { count: t('collection.pieces', { count: item.owned_count }) }) }}</v-chip>
 
           <div class="d-flex ga-4 mt-1">
             <div v-if="item.market_price">
@@ -464,5 +503,10 @@
 
 .owned-hint {
   color: rgb(var(--v-theme-warning));
+}
+
+.wish-theme {
+  flex: 0 1 280px;
+  min-width: 200px;
 }
 </style>

@@ -282,6 +282,13 @@
     "costsHint": "Odpočítajú sa zo zisku, aby bol čistý."
   },
   "wishlist": {
+    "keepTitle": "Odstrániť z Chcem?",
+    "keepText": "{name} je v Chcem. Po kúpe ho môžeš zo zoznamu odstrániť, alebo tam nechať, napríklad keď chceš ďalší kus.",
+    "keepYes": "Nechať v Chcem",
+    "keepNo": "Odstrániť z Chcem",
+    "owned": "V zbierke · {count}",
+    "filterTheme": "Séria",
+    "noTheme": "Bez série",
     "alreadyOwned": "Tento set už máš v zbierke ({count}).",
     "alreadyWished": "Tento set už je v Chcem.",
     "title": "Chcem",
@@ -714,7 +721,7 @@
     "save": "Pridať do zbierky",
     "failed": "Pridanie sa nepodarilo",
     "hint": "Ostatné (príznaky, poznámku, fotky) doplníš v detaile.",
-    "hintWishlist": "Po uložení zmizne z Chcem. Ostatné doplníš v detaile.",
+    "hintWishlist": "Po uložení sa opýtam, či set odstrániť z Chcem. Ostatné doplníš v detaile.",
     "haveAll": "Mám všetky",
     "haveAllAgain": "Pridať celú sériu znova",
     "wholeSeriesTitle": "Mám celú sériu",

@@ -1626,6 +1626,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/wishlist/themes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Wishlist Themes
+         * @description Voľby filtra Séria: série z katalógu s počtom setov podľa ostatných filtrov.
+         *
+         *     Len vlastná databáza, nič sa nesťahuje. ``theme`` sa berie, aby klient
+         *     poslal ten istý dotaz ako zoznamu, ale do počtov sa neráta.
+         */
+        get: operations["list_wishlist_themes_api_v1_wishlist_themes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/wishlist/{item_id}": {
         parameters: {
             query?: never;
@@ -2661,6 +2684,11 @@ export interface components {
             manual_market_price_eur?: number | string | null;
             /** Note */
             note?: string | null;
+            /**
+             * Keep Wishlist
+             * @default false
+             */
+            keep_wishlist: boolean;
         };
         /** ItemCreatedOut */
         ItemCreatedOut: {
@@ -3983,6 +4011,16 @@ export interface components {
              */
             missing_parts: number;
         };
+        /**
+         * WishThemeOut
+         * @description Séria vo filtri Chcem a koľko setov v nej je.
+         */
+        WishThemeOut: {
+            /** Value */
+            value: string;
+            /** Count */
+            count: number;
+        };
         /** WishlistCreateRequest */
         WishlistCreateRequest: {
             /** Catalog Num */
@@ -4019,6 +4057,11 @@ export interface components {
             target_reached: boolean;
             /** Distance Pct */
             distance_pct?: number | null;
+            /**
+             * Owned Count
+             * @default 0
+             */
+            owned_count: number;
         };
         /**
          * WishlistUpdateRequest
@@ -7307,6 +7350,7 @@ export interface operations {
                 reached?: boolean;
                 retired?: boolean;
                 no_price?: boolean;
+                theme?: string[] | null;
             };
             header?: never;
             path?: never;
@@ -7364,6 +7408,41 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_wishlist_themes_api_v1_wishlist_themes_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                reached?: boolean;
+                retired?: boolean;
+                no_price?: boolean;
+                theme?: string[] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WishThemeOut"][];
+                };
             };
             /** @description Validation Error */
             422: {

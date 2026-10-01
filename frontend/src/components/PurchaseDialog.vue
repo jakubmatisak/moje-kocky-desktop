@@ -15,6 +15,7 @@
   import { CONDITIONS } from '@/api/types'
   import CurrencySelect from '@/components/CurrencySelect.vue'
   import DateField from '@/components/DateField.vue'
+  import KeepWishlistDialog from '@/components/KeepWishlistDialog.vue'
   import PlaceFields from '@/components/PlaceFields.vue'
   import SetImage from '@/components/SetImage.vue'
   import { useEuroPreview } from '@/composables/useDisplayCurrency'
@@ -71,8 +72,20 @@
     if (collection.locations.length === 0) collection.loadLocations()
   })
 
-  async function save (): Promise<void> {
+  /** Kúpa z Chcem: najprv otázka, či set zo zoznamu odstrániť. */
+  const askOpen = ref(false)
+
+  function save (): void {
     if (!props.catalog || quantity.value < 1) return
+    if (props.wishlistId) {
+      askOpen.value = true
+      return
+    }
+    store(false)
+  }
+
+  async function store (keepWishlist: boolean): Promise<void> {
+    if (!props.catalog) return
     saving.value = true
     error.value = null
     const unit = toNumber(price.value)
@@ -93,6 +106,7 @@
         purchase_place: (place.value ?? '').trim() || null,
         location: (location.value ?? '').trim() || null,
         box: (box.value ?? '').trim() || null,
+        keep_wishlist: keepWishlist,
       },
     })
     if (err) {
@@ -203,4 +217,6 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+
+  <KeepWishlistDialog v-model="askOpen" :name="catalog?.name ?? ''" @choose="store" />
 </template>

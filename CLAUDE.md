@@ -367,6 +367,17 @@ názvu, nielen podľa nula dielikov: kompletná sada má niekedy dieliky všetk�
 kusov. Ukladajú sa do `blind_series` s kategóriou; členovia sú `kind=set`,
 cenia sa ako sety. Minifigúrky ostávajú v `cmf_series`, oddelene.
 
+**Chcem: séria z katalógu, štítok V zbierke a upozornenie pri pridaní.**
+Filter Séria (`WishFilter.themes`, `GET /wishlist/themes` s počtami podľa
+ostatných filtrov, `__none__` = bez série) berie tému z katalógu, nič sa
+nevypĺňa ani nesťahuje. `WishlistOut.owned_count` dáva štítok „V zbierke“.
+Dialóg Pridať do zoznamu upozorní pod číslom na set v zbierke či v Chcem
+(`composables/useOwnedHint.ts`, len `GET /catalog/{num}/ownership`), riadok
+má miesto vždy, dialóg neposkočí. Kúpa z Chcem („Kúpil som“) a ručné Uložiť
+v Pridať set pri sete z Chcem sa najprv opýtajú „Odstrániť z Chcem?“
+(`KeepWishlistDialog.vue`); „Nechať v Chcem“ pošle `keep_wishlist` a server
+set nevyradí. Automatické uloženie po skene sa nepýta (vyradí, Späť ostáva).
+
 **„Kúpil som“ je jeden dialóg pre všetko, z Chcem vyraďuje server.**
 `components/PurchaseDialog.vue` pridá do zbierky vec, ktorú katalóg už
 pozná, z Chcem aj z chýbajúcej figúrky; Chcem sám nemaže. Kúpené vyradí

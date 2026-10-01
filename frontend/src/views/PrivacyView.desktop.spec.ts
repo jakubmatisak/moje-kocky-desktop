@@ -198,3 +198,31 @@ describe('zásady desktopu: cookies a úložisko', () => {
     ])
   })
 })
+
+describe('zásady desktopu: kurzy ECB', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  afterEach(() => {
+    i18n.global.locale.value = 'sk'
+  })
+
+  it('slovenský text povie, že z ECB sa sťahujú len kurzy a kedy', async () => {
+    i18n.global.locale.value = 'sk'
+    const body = await text()
+
+    expect(body).toContain('Kurzy z Európskej centrálnej banky (ECB), keď zvolíš inú menu zobrazenia než euro')
+    expect(body).toContain('o tebe neodchádza nič')
+    // Desktop nemá server, kurzy sťahuje appka na tomto počítači.
+    expect(body).not.toContain('stiahne server kurzy')
+  })
+
+  it('anglický text povie to isté', async () => {
+    i18n.global.locale.value = 'en'
+    const body = await text()
+
+    expect(body).toContain('Exchange rates from the European Central Bank (ECB) when you pick a display currency')
+    expect(body).not.toContain('the server downloads exchange rates')
+  })
+})

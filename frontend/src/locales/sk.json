@@ -981,10 +981,44 @@
         "Reálny zisk po inflácii v Zbierke"
       ]
     },
+    "ecb": {
+      "name": "ECB",
+      "about": "Referenčné kurzy eura od Európskej centrálnej banky. Bez kľúča a bez limitu, sťahujú sa najviac raz denne a len pri inej mene než euro.",
+      "keyUrl": "",
+      "unlocks": [
+        "Mena zobrazenia iná než euro",
+        "Kúpa a predaj zadané v inej mene"
+      ]
+    },
     "autoPurchase": "Doplniť kúpnu cenu z odporúčanej",
     "autoPurchaseHint": "Kus bez kúpnej ceny dostane pri obnove cien odporúčanú cenu (z BrickEconomy, inak z Brickset). Volania to nestojí. Takú cenu označí ikona, ručná úprava ceny označenie zruší. Platí aj pre staršie kusy pri ďalšej obnove.",
     "ownDataOnly": "Údaje z tejto služby vidíš len pri setoch, na ktoré sa tvoj kľúč sám pýtal. Iné účty ich nevidia a na verejných odkazoch nie sú.",
     "personalLicense": "Licencia BrickEconomy je osobná: rovnaký kľúč v dvoch účtoch znamená, že ju zdieľaš."
+  },
+  "currency": {
+    "label": "Mena zobrazenia",
+    "names": {
+      "EUR": "Euro (€)",
+      "CZK": "Česká koruna (Kč)",
+      "USD": "Americký dolár ($)",
+      "GBP": "Britská libra (£)",
+      "PLN": "Poľský zlotý (zł)",
+      "HUF": "Maďarský forint (Ft)",
+      "CHF": "Švajčiarsky frank (CHF)"
+    },
+    "rate": "{rate} · ECB, {day}",
+    "euroHint": "Appka ukladá všetko v eurách. Iná mena sa len prepočíta dnešným kurzom ECB.",
+    "loading": "Zisťujem kurz ECB…",
+    "rateFailed": "Kurz ECB sa teraz nepodarilo zistiť, sumy ostávajú v eurách.",
+    "note": "Sumy sú prepočítané dnešným kurzom ECB ({rate}, {day}). Uložené ostávajú v eurách.",
+    "blocked": "Kurzy ECB sú vypnuté v Nastaveniach → Dáta, sumy sa ukazujú v eurách.",
+    "foreignEntry": "Kúpu a predaj zadávať aj v inej mene",
+    "foreignEntryHint": "Pri cene vo formulári kusu a v dialógu predaja pribudne výber meny. Na eurá sa suma prepočíta kurzom ECB zo dňa kúpy alebo predaja, bez dátumu dnešným.",
+    "field": "Mena",
+    "inEuro": "≈ {amount} kurzom {rate} z {day}",
+    "inEuroFailed": "Kurz ECB sa nepodarilo zistiť, ulož cenu v eurách.",
+    "original": "{amount}, kurzom {rate} z {day}",
+    "originalNoDay": "{amount}, kurzom {rate}"
   },
   "capabilities": {
     "rebrickable": {
@@ -1062,6 +1096,12 @@
       "inflation": {
         "title": "Index inflácie",
         "hint": "Raz za týždeň. Vypnuté: prepínač V dnešných peniazoch nič neprepočíta."
+      }
+    },
+    "ecb": {
+      "rates": {
+        "title": "Kurzy mien",
+        "hint": "Raz denne, len keď máš inú menu zobrazenia alebo zadávaš sumu v cudzej mene. Vypnuté: sumy ostanú v eurách."
       }
     }
   },

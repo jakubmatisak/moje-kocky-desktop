@@ -58,6 +58,7 @@
           ? String.raw`Nikto: desktopová appka má všetky údaje len na tomto počítači, v priečinku %APPDATA%\MojeKocky.`
           : 'Poskytovateľ hostingu, na ktorom appka beží.',
         'Služby, ktoré si pripojíš vlastným kľúčom, dostanú len čísla setov a čiarové kódy, na ktoré sa pýtaš, nie tvoje osobné údaje. Eurostat nedostane nič, čo by sa ťa týkalo.',
+        'Pri inej mene zobrazenia než euro alebo pri sume v cudzej mene stiahne server kurzy z Európskej centrálnej banky (ECB). Sťahujú sa len verejné kurzy, o tebe neodchádza nič.',
         isDesktop
           ? 'Fotky setov sa načítavajú priamo z Rebrickable a Brickset, tie vidia IP adresu tohto počítača.'
           : 'Fotky setov sa načítavajú cez server appky, takže Rebrickable ani Brickset nevidia tvoju IP adresu.',
@@ -109,6 +110,7 @@
           ? String.raw`Nobody: the desktop app keeps all data on this computer only, in %APPDATA%\MojeKocky.`
           : 'The hosting provider the app runs on.',
         'Services you connect with your own key receive only the set numbers and barcodes you ask about, not your personal data. Eurostat receives nothing about you.',
+        'With a display currency other than the euro, or an amount in a foreign currency, the server downloads exchange rates from the European Central Bank (ECB). Only the public rates are downloaded, nothing about you is sent.',
         isDesktop
           ? 'Set pictures are loaded directly from Rebrickable and Brickset, which see this computer’s IP address.'
           : 'Set pictures are loaded through the app’s server, so Rebrickable and Brickset do not see your IP address.',
@@ -151,6 +153,7 @@
       body: [
         'Len otázky na služby, ktoré si sám pripojíš (Rebrickable, Brickset, BrickEconomy, UPCitemdb): čísla setov a čiarové kódy pod tvojím vlastným kľúčom. Osobné údaje nie.',
         'Index inflácie z Eurostatu, keď prepočet do dnešných peňazí zapneš. Eurostat nedostane nič o tebe.',
+        'Kurzy z Európskej centrálnej banky (ECB), keď zvolíš inú menu zobrazenia než euro alebo zadáš sumu v cudzej mene. Sťahujú sa len verejné kurzy, o tebe neodchádza nič.',
         'Obrázky setov sa načítavajú priamo z Rebrickable a Brickset, tie vidia IP adresu tohto počítača.',
       ],
     },
@@ -187,6 +190,7 @@
       body: [
         'Only questions to services you connect yourself (Rebrickable, Brickset, BrickEconomy, UPCitemdb): set numbers and barcodes under your own key. No personal data.',
         'The Eurostat inflation index when you switch on today’s-money figures. Eurostat receives nothing about you.',
+        'Exchange rates from the European Central Bank (ECB) when you pick a display currency other than the euro or enter an amount in a foreign currency. Only the public rates are downloaded, nothing about you is sent.',
         'Set pictures are loaded directly from Rebrickable and Brickset, which see this computer’s IP address.',
       ],
     },

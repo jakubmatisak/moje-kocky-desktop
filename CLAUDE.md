@@ -860,6 +860,28 @@ Riadok súčtov nad kartami Zbierky (`FacetsOut.totals`) ukazuje reálny zisk
 len pri zapnutom prepínači inflácie. Testy majú `inflation_enabled`
 vypnuté, aby nešli na sieť; `test_inflation.py` si ho zapína.
 
+**Mena je len zobrazenie.** Ukladá sa všetko v eurách. Menu zobrazenia
+(`preferences.display.currency`, EUR, CZK, USD, GBP, PLN, HUF, CHF) prepočíta
+len `utils/format.ts`: `money`/`exactMoney` násobia dnešným kurzom
+(`displayCurrency`, nastaví `composables/useDisplayCurrency.ts` z
+`GET /rates/{mena}`), aj históriu a grafy, takže percentá sa nemenia.
+`amount` formátuje sumu, ktorá už v mene je (os grafu, pôvodná cena); grafy
+majú body cez `toDisplay` a menu v možnostiach ako `pricesHidden`. Kurzy sú
+z ECB priamo (`services/currency.py`): prvýkrát `eurofxref-hist.zip`, potom
+raz denne `eurofxref-daily.xml` (diera nad týždeň = znova celý rad), do
+`exchange_rates`, len keď ich niekto potrebuje; schopnosť `ecb.rates`, po
+chybe hodinu pokoj, víkend berie posledný kurz pred ním. Kúpa či predaj v
+cudzej mene (voľba „Kúpu a predaj zadávať aj v inej mene“, `CurrencySelect`)
+pošle `purchase_currency` + `purchase_price_original` (`sale_*`), eurá
+prepočíta server kurzom zo dňa kúpy (bez dátumu najnovším) do
+`purchase_price_eur`; zmena dátumu prepočíta znova, suma v eurách menu zruší.
+Inflácia počíta v eurách, výsledok sa len prepočíta. Export ostáva v eurách,
+import, šablóna aj export majú `mena_kupy` a `kupna_cena_v_mene`; verejný
+odkaz nesie `currency` a `rate` majiteľa, pri vypnutých sumách nič
+(desktop zdieľanie odkazom nemá, server to len nesie zo spoločného kódu).
+Zásady desktopu majú vetu o ECB vo vlastných sekciách (`SK_DESKTOP`,
+`EN_DESKTOP`, Čo odchádza z počítača): kurzy sťahuje appka, nie server.
+
 **Import nepýta ceny ani Brickset.** `services/importer.py` dohľadáva
 neznáme čísla cez `CatalogService` s vypnutým Brickset: bežné `resolve` volá
 aj `getSets` a stovky setov by minuli jeho denný limit. Nič sa neuloží, kým

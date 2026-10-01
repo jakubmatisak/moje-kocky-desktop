@@ -6,6 +6,7 @@ import type {
   TimelinePoint,
   ValuedItem,
 } from '@/api/types'
+import type { CurrencyCode } from '@/utils/format'
 import type { BoxSuggestion } from '@/utils/place'
 import type { Scope } from '@/utils/scope'
 import { defineStore } from 'pinia'
@@ -236,7 +237,9 @@ export const useCollectionStore = defineStore('collection', () => {
   async function sellItem (
     id: number,
     payload: {
-      sold_price_eur: string
+      sold_price_eur: string | null
+      sale_currency?: CurrencyCode | null
+      sale_price_original?: string | null
       sold_date: string
       sold_via?: string | null
       sold_fees_eur?: string | null

@@ -1274,6 +1274,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/rates/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Rate
+         * @description Kurz v daný deň (víkend = posledný pracovný deň pred ním), bez dňa najnovší.
+         *
+         *     Frontend sa pýta, len keď má účet inú menu než euro alebo zadáva sumu
+         *     v cudzej mene; až vtedy sa kurzy sťahujú z ECB.
+         */
+        get: operations["get_rate_api_v1_rates__code__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/minifigs/series": {
         parameters: {
             query?: never;
@@ -2510,6 +2533,10 @@ export interface components {
             unidentified: boolean;
             /** Purchase Price */
             purchase_price: string | null;
+            /** Purchase Currency */
+            purchase_currency?: string | null;
+            /** Purchase Price Original */
+            purchase_price_original?: string | null;
             /** Purchase Date */
             purchase_date: string | null;
             /** Purchase Place */
@@ -2575,6 +2602,10 @@ export interface components {
             flags?: string[];
             /** Purchase Price Eur */
             purchase_price_eur?: number | string | null;
+            /** Purchase Currency */
+            purchase_currency?: ("EUR" | "CZK" | "USD" | "GBP" | "PLN" | "HUF" | "CHF") | null;
+            /** Purchase Price Original */
+            purchase_price_original?: number | string | null;
             /** Purchase Total Eur */
             purchase_total_eur?: number | string | null;
             /** Purchase Date */
@@ -2613,6 +2644,10 @@ export interface components {
             flags?: string[];
             /** Purchase Price Eur */
             purchase_price_eur?: number | string | null;
+            /** Purchase Currency */
+            purchase_currency?: ("EUR" | "CZK" | "USD" | "GBP" | "PLN" | "HUF" | "CHF") | null;
+            /** Purchase Price Original */
+            purchase_price_original?: number | string | null;
             /** Purchase Date */
             purchase_date?: string | null;
             /** Purchase Place */
@@ -2647,12 +2682,20 @@ export interface components {
              * @default false
              */
             purchase_price_auto: boolean;
+            /** Purchase Currency */
+            purchase_currency?: string | null;
+            /** Purchase Price Original */
+            purchase_price_original?: string | null;
             /** Purchase Date */
             purchase_date: string | null;
             /** Purchase Place */
             purchase_place: string | null;
             /** Sold Price Eur */
             sold_price_eur: string | null;
+            /** Sale Currency */
+            sale_currency?: string | null;
+            /** Sale Price Original */
+            sale_price_original?: string | null;
             /** Sold Date */
             sold_date: string | null;
             /** Sold Via */
@@ -2698,12 +2741,20 @@ export interface components {
              * @default false
              */
             purchase_price_auto: boolean;
+            /** Purchase Currency */
+            purchase_currency?: string | null;
+            /** Purchase Price Original */
+            purchase_price_original?: string | null;
             /** Purchase Date */
             purchase_date: string | null;
             /** Purchase Place */
             purchase_place: string | null;
             /** Sold Price Eur */
             sold_price_eur: string | null;
+            /** Sale Currency */
+            sale_currency?: string | null;
+            /** Sale Price Original */
+            sale_price_original?: string | null;
             /** Sold Date */
             sold_date: string | null;
             /** Sold Via */
@@ -2747,6 +2798,10 @@ export interface components {
             flags?: string[] | null;
             /** Purchase Price Eur */
             purchase_price_eur?: number | string | null;
+            /** Purchase Currency */
+            purchase_currency?: ("EUR" | "CZK" | "USD" | "GBP" | "PLN" | "HUF" | "CHF") | null;
+            /** Purchase Price Original */
+            purchase_price_original?: number | string | null;
             /** Purchase Date */
             purchase_date?: string | null;
             /** Purchase Place */
@@ -3050,6 +3105,10 @@ export interface components {
             market_value?: string | null;
             /** Price Missing */
             price_missing?: number | null;
+            /** Currency */
+            currency?: ("EUR" | "CZK" | "USD" | "GBP" | "PLN" | "HUF" | "CHF") | null;
+            /** Rate */
+            rate?: string | null;
             /** Items */
             items: components["schemas"]["PublicItemOut"][];
             /** Wishes */
@@ -3103,6 +3162,30 @@ export interface components {
             market_price?: string | null;
             /** Target Price Eur */
             target_price_eur?: string | null;
+        };
+        /**
+         * RateOut
+         * @description Kurz eura od ECB: 1 € = ``rate`` jednotiek meny, zo dňa ``day``.
+         */
+        RateOut: {
+            /**
+             * Currency
+             * @enum {string}
+             */
+            currency: "EUR" | "CZK" | "USD" | "GBP" | "PLN" | "HUF" | "CHF";
+            /** Rate */
+            rate: string;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /**
+             * Source
+             * @default ECB
+             * @constant
+             */
+            source: "ECB";
         };
         /** RefreshStatusOut */
         RefreshStatusOut: {
@@ -3264,7 +3347,11 @@ export interface components {
         /** SellRequest */
         SellRequest: {
             /** Sold Price Eur */
-            sold_price_eur: number | string;
+            sold_price_eur?: number | string | null;
+            /** Sale Currency */
+            sale_currency?: ("EUR" | "CZK" | "USD" | "GBP" | "PLN" | "HUF" | "CHF") | null;
+            /** Sale Price Original */
+            sale_price_original?: number | string | null;
             /**
              * Sold Date
              * Format: date
@@ -3839,12 +3926,20 @@ export interface components {
              * @default false
              */
             purchase_price_auto: boolean;
+            /** Purchase Currency */
+            purchase_currency?: string | null;
+            /** Purchase Price Original */
+            purchase_price_original?: string | null;
             /** Purchase Date */
             purchase_date: string | null;
             /** Purchase Place */
             purchase_place: string | null;
             /** Sold Price Eur */
             sold_price_eur: string | null;
+            /** Sale Currency */
+            sale_currency?: string | null;
+            /** Sale Price Original */
+            sale_price_original?: string | null;
             /** Sold Date */
             sold_date: string | null;
             /** Sold Via */
@@ -6672,6 +6767,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicCollectionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_rate_api_v1_rates__code__get: {
+        parameters: {
+            query?: {
+                day?: string | null;
+            };
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateOut"];
                 };
             };
             /** @description Validation Error */

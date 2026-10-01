@@ -18,13 +18,14 @@
   import PageSkeleton from '@/components/PageSkeleton.vue'
   import ShareDialog from '@/components/ShareDialog.vue'
   import SourcesPanel from '@/components/SourcesPanel.vue'
+  import { currencyApplying, useDisplayCurrency } from '@/composables/useDisplayCurrency'
   import { useDisplayPrefs } from '@/composables/useDisplayPrefs'
   import { onPageReload, usePageLoad } from '@/composables/usePageLoad'
   import { isDesktop } from '@/desktop/bridge'
   import { useAuthStore } from '@/stores/auth'
   import { useNotifyStore } from '@/stores/notify'
   import { usePriceStore } from '@/stores/prices'
-  import { dateTime } from '@/utils/format'
+  import { CURRENCIES, type CurrencyCode, dateTime, displayCurrency, rateText, shortDate } from '@/utils/format'
 
   const { t, locale } = useI18n()
   const notify = useNotifyStore()
@@ -47,6 +48,41 @@
     get: () => theme.global.name.value === 'dark',
     // Pri účte, nie len v prehliadači: platí aj na telefóne.
     set: (value: boolean) => display.setTheme(value ? 'dark' : 'light'),
+  })
+
+  // --- mena zobrazenia ---------------------------------------------------
+
+  /*
+   * Ukladá sa všetko v eurách, mena je len prepočet dnešným kurzom ECB
+   * (`utils/format.ts`). Bez schopnosti ecb.rates ostáva euro.
+   */
+  const currencyPrefs = useDisplayCurrency()
+  const currencyCode = computed(() => display.current().currency)
+  const currencyItems = computed(() => CURRENCIES.map(code => ({ value: code, title: t(`currency.names.${code}`) })))
+  const ratesBlocked = computed(() => auth.keys !== null && !auth.can('ecb.rates'))
+  const currencyLoading = ref(false)
+  const currencyLine = computed(() => {
+    const code = currencyCode.value
+    if (ratesBlocked.value && code !== 'EUR') return t('currency.blocked')
+    if (code === 'EUR') return t('currency.euroHint')
+    if (currencyLoading.value || currencyApplying.value) return t('currency.loading')
+    const shown = displayCurrency.value
+    if (shown.code !== code) return t('currency.rateFailed')
+    return t('currency.rate', { rate: rateText(code, shown.rate), day: shortDate(shown.day) })
+  })
+
+  async function chooseCurrency (code: CurrencyCode): Promise<void> {
+    currencyLoading.value = true
+    try {
+      await currencyPrefs.choose(code)
+    } finally {
+      currencyLoading.value = false
+    }
+  }
+
+  const foreignEntry = computed({
+    get: () => display.current().foreignEntry,
+    set: (value: boolean) => display.setForeignEntry(value),
   })
 
   function publicUrl (token: string): string {
@@ -390,6 +426,31 @@
             :items="[{ value: 'sk', title: 'Slovenčina' }, { value: 'en', title: 'English' }]"
             :label="t('settings.language')"
             @update:model-value="auth.updateProfile({ locale })"
+          />
+
+          <div>
+            <v-select
+              :disabled="ratesBlocked && currencyCode === 'EUR'"
+              hide-details
+              item-title="title"
+              item-value="value"
+              :items="currencyItems"
+              :label="t('currency.label')"
+              :loading="currencyLoading"
+              :model-value="currencyCode"
+              @update:model-value="(code: CurrencyCode) => chooseCurrency(code)"
+            />
+
+            <div class="text-body-medium text-medium-emphasis mt-2" data-test="currency-rate">{{ currencyLine }}</div>
+          </div>
+
+          <v-switch
+            v-model="foreignEntry"
+            color="primary"
+            :disabled="ratesBlocked"
+            :hint="t('currency.foreignEntryHint')"
+            :label="t('currency.foreignEntry')"
+            persistent-hint
           />
 
           <v-switch

@@ -29,13 +29,14 @@
   import SetGallery from '@/components/SetGallery.vue'
   import SetImage from '@/components/SetImage.vue'
   import SetPartsCard from '@/components/SetPartsCard.vue'
+  import { originalPrice } from '@/composables/useDisplayCurrency'
   import { usePageLoad } from '@/composables/usePageLoad'
   import { createSelection } from '@/composables/useSelection'
   import { useAuthStore } from '@/stores/auth'
   import { useCollectionStore } from '@/stores/collection'
   import { useNotifyStore } from '@/stores/notify'
   import { usePriceStore } from '@/stores/prices'
-  import { count, dateTime, exactMoney, money, percent, shortDate, toNumber } from '@/utils/format'
+  import { count, type CurrencyCode, dateTime, exactMoney, money, percent, shortDate, toNumber } from '@/utils/format'
   import { imageSrc } from '@/utils/imageSrc'
   import { placeLabel } from '@/utils/place'
   import { isSeriesPage as isSeriesDetail } from '@/utils/series'
@@ -465,7 +466,9 @@
   }
 
   async function confirmSell (payload: {
-    sold_price_eur: string
+    sold_price_eur: string | null
+    sale_currency: CurrencyCode | null
+    sale_price_original: string | null
     sold_date: string
     sold_via: string | null
     sold_fees_eur: string | null
@@ -883,6 +886,14 @@
                   <div v-if="item.purchase_real_eur" class="text-body-small text-medium-emphasis">
                     {{ t('inflation.paid', { amount: exactMoney(item.purchase_price_eur) }) }}
                   </div>
+
+                  <!-- Kúpa v cudzej mene: pôvodná suma a kurz, ktorým sa prepočítala. -->
+                  <div
+                    v-if="originalPrice(t, item.purchase_price_original, item.purchase_currency, item.purchase_price_eur, item.purchase_date)"
+                    class="text-body-small text-medium-emphasis"
+                  >
+                    {{ originalPrice(t, item.purchase_price_original, item.purchase_currency, item.purchase_price_eur, item.purchase_date) }}
+                  </div>
                 </div>
 
                 <div class="piece-cell piece-cell--value piece-amount">
@@ -891,6 +902,13 @@
                   </div>
 
                   <div class="text-body-large font-weight-medium">{{ pieceValue(item) }}</div>
+
+                  <div
+                    v-if="item.status === 'sold' && originalPrice(t, item.sale_price_original, item.sale_currency, item.sold_price_eur, item.sold_date)"
+                    class="text-body-small text-medium-emphasis"
+                  >
+                    {{ originalPrice(t, item.sale_price_original, item.sale_currency, item.sold_price_eur, item.sold_date) }}
+                  </div>
                 </div>
 
                 <div class="piece-cell piece-cell--profit piece-amount">

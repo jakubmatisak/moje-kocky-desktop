@@ -15,7 +15,7 @@
   import { onPageReload } from '@/composables/usePageLoad'
   import { useCollectionStore } from '@/stores/collection'
   import { useNotifyStore } from '@/stores/notify'
-  import { dateTime, exactMoney, shortDate } from '@/utils/format'
+  import { amount, dateTime, exactMoney, isCurrency, shortDate } from '@/utils/format'
   import { imageSrc } from '@/utils/imageSrc'
   import { saveBlob } from '@/utils/saveBlob'
 
@@ -470,7 +470,15 @@
                   <template v-if="row.ownership === 'wish'">{{ row.target_price ? exactMoney(row.target_price) : '' }}</template>
 
                   <template v-else>
-                    {{ row.purchase_price ? exactMoney(row.purchase_price) : '—' }}
+                    <template v-if="row.purchase_price">{{ exactMoney(row.purchase_price) }}</template>
+
+                    <!-- Len v cudzej mene: eurá prepočíta potvrdenie kurzom zo dňa kúpy. -->
+                    <template v-else-if="row.purchase_price_original && isCurrency(row.purchase_currency)">
+                      {{ amount(row.purchase_price_original, { currency: row.purchase_currency, decimals: 2 }) }}
+                    </template>
+
+                    <template v-else>—</template>
+
                     <div v-if="row.ownership === 'sold'" class="text-body-small text-medium-emphasis">
                       → {{ exactMoney(row.sold_price) }}
                     </div>

@@ -12,6 +12,7 @@
   import { api } from '@/api/client'
   import ApiUsageDialog from '@/components/ApiUsageDialog.vue'
   import RefreshPricesDialog from '@/components/RefreshPricesDialog.vue'
+  import { useDisplayCurrency } from '@/composables/useDisplayCurrency'
   import { useDisplayPrefs } from '@/composables/useDisplayPrefs'
   import { pageBusy, reloadPage } from '@/composables/usePageLoad'
   import { isDesktop } from '@/desktop/bridge'
@@ -139,6 +140,7 @@
 
   /** Tmavý/svetlý režim a zúžené menu sa pamätajú pri účte (preferences.display). */
   const prefs = useDisplayPrefs()
+  const displayCurrency = useDisplayCurrency()
   const rail = ref(false)
 
   function toggleTheme (): void {
@@ -256,6 +258,8 @@
       rail.value = saved.rail
       setPricesHidden(saved.hidePrices)
       if (saved.theme) prefs.applyTheme(saved.theme)
+      // Mena zobrazenia: kurz ECB sa pýta len pri inej mene než euro.
+      if (saved.currency !== 'EUR') displayCurrency.apply(saved.currency)
     })
     if (auth.user?.locale) locale.value = auth.user.locale
 

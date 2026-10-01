@@ -13,7 +13,7 @@
   import PageSkeleton from '@/components/PageSkeleton.vue'
   import SetImage from '@/components/SetImage.vue'
   import { usePageLoad } from '@/composables/usePageLoad'
-  import { count, exactMoney } from '@/utils/format'
+  import { count, exactMoney, isCurrency, setDisplayCurrency } from '@/utils/format'
   import { imageSrc } from '@/utils/imageSrc'
 
   const route = useRoute()
@@ -53,6 +53,9 @@
     }
     if (!response.ok) return false
     data.value = await response.json() as PublicCollection
+    // Sumy v mene majiteľa: server pošle kód a kurz, pri vypnutých sumách nič.
+    const shown = data.value.currency
+    setDisplayCurrency(isCurrency(shown) ? shown : 'EUR', Number(data.value.rate ?? 1), null)
     notFound.value = false
     return true
   }

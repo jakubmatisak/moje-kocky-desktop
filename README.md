@@ -79,6 +79,10 @@ zálohuje.
   a poštovnom). Nikdy sa nesčítajú do jedného čísla.
 - **Ročný výnos** kusu, série, zoznamu aj celej zbierky, od roka držania.
 - **V dnešných peniazoch**: prepočet kúpnych cien infláciou (HICP Slovensko).
+- **Mena zobrazenia**: sumy v eurách, korunách, dolároch, librách, zlotých,
+  forintoch alebo frankoch, prepočítané dnešným kurzom ECB. Ukladá sa ďalej
+  v eurách. Kúpu a predaj sa dá zadať aj v inej mene: na eurá sa prepočíta
+  kurzom zo dňa kúpy a pôvodná suma ostane pri kuse.
 - **Odhad hodnoty** kusov v krabici o 2 a 5 rokov.
 - **Kto sa hýbe**: zmena trhovej ceny za 30, 90 a 365 dní.
 - **Bez ceny pomlčka, nie nula.** Kus bez trhovej ceny ukáže „–“ alebo „cena
@@ -241,6 +245,7 @@ kľúče treba zadať znova.
 | [BrickEconomy](https://www.brickeconomy.com/api-reference) | trhová cena nového a použitého kusu, história, odhady | súčasť Premium, 100 volaní/deň | profil na brickeconomy.com |
 | [UPCitemdb](https://www.upcitemdb.com/) | záložné hľadanie podľa čiarového kódu | zdarma, bez kľúča, ~100 dotazov/deň na IP adresu | netreba, zapína sa v Nastaveniach |
 | [Eurostat](https://ec.europa.eu/eurostat/) | inflácia pre prepočet do dnešných peňazí | zdarma, bez kľúča | netreba, zapína sa v Nastaveniach |
+| [ECB](https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html) | kurzy pre menu zobrazenia a kúpu v cudzej mene | zdarma, bez kľúča, najviac raz denne | netreba, len pri inej mene než euro |
 
 ### Ako sa šetria volania
 
@@ -361,6 +366,9 @@ a zobrazujú sa len na nekomerčné informačné účely v súlade s pravidlami
   Appka z indexu počíta prepočet cien do dnešných peňazí; je to úprava dát,
   za ktorú Eurostat nezodpovedá
   ([podmienky opätovného použitia](https://ec.europa.eu/eurostat/help/copyright-notice)).
+- **Kurzy mien:** Zdroj: ECB, referenčné výmenné kurzy eura
+  ([eurofxref](https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html)).
+  Appka nimi len prepočítava sumy, kurzy nemení.
 
 Kľúče k službám patria jednotlivým používateľom a ich použitie sa riadi
 podmienkami danej služby.
@@ -542,6 +550,11 @@ The app's interface is available in Slovak and English.*
 - **Annualised return** for a single copy, a theme, a list or the whole
   collection, once it has been held for a year.
 - **In today's money**: purchase prices adjusted for inflation (Slovak HICP).
+- **Display currency**: amounts in euros, koruna, dollars, pounds, złoty,
+  forint or francs, converted at today's ECB rate. Everything is still stored
+  in euros. Purchases and sales can be entered in another currency too: they
+  are converted at the rate of the purchase day and the original amount stays
+  with the copy.
 - **Value forecast** for sealed copies, 2 and 5 years out.
 - **Biggest movers**: market price change over 30, 90 and 365 days.
 - **No price means a dash, not zero.** A copy without a market price shows
@@ -717,6 +730,7 @@ just have to enter the keys again.
 | [BrickEconomy](https://www.brickeconomy.com/api-reference) | market price new and used, history, forecasts | part of Premium, 100 calls/day | profile on brickeconomy.com |
 | [UPCitemdb](https://www.upcitemdb.com/) | fallback barcode lookup | free, no key, ~100 lookups/day per IP address | none, switched on in Settings |
 | [Eurostat](https://ec.europa.eu/eurostat/) | inflation for converting to today's money | free, no key | none, switched on in Settings |
+| [ECB](https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html) | rates for the display currency and purchases in another currency | free, no key, at most once a day | none, only for a currency other than the euro |
 
 ### How calls are rationed
 
@@ -842,6 +856,9 @@ guidelines.
   The app uses the index to convert prices into today's money; this is an
   adaptation of the data for which Eurostat bears no responsibility
   ([reuse policy](https://ec.europa.eu/eurostat/help/copyright-notice)).
+- **Exchange rates:** Source: ECB, euro foreign exchange reference rates
+  ([eurofxref](https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html)).
+  The app only converts amounts with them and does not alter the rates.
 
 Service keys belong to the individual users, and their use is governed by
 each service's terms.

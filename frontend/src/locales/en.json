@@ -318,7 +318,7 @@
     "tabs": {
       "account": "Account",
       "sharing": "Sharing",
-      "language": "Language",
+      "language": "Language & currency",
       "data": "Data",
       "users": "Users",
       "app": "Application",
@@ -981,10 +981,44 @@
         "Real profit after inflation in the collection"
       ]
     },
+    "ecb": {
+      "name": "ECB",
+      "about": "Euro reference rates from the European Central Bank. No key, no limit, fetched at most once a day and only for a currency other than the euro.",
+      "keyUrl": "",
+      "unlocks": [
+        "A display currency other than the euro",
+        "Purchases and sales entered in another currency"
+      ]
+    },
     "autoPurchase": "Fill in the purchase price from the retail price",
     "autoPurchaseHint": "A piece without a purchase price gets the retail price at the next price refresh (from BrickEconomy, otherwise Brickset). It costs no calls. An icon marks such a price; editing the price by hand removes the mark. Older pieces get it at their next refresh too.",
     "ownDataOnly": "You see data from this service only for sets your own key asked for. Other accounts do not see it and public links never show it.",
     "personalLicense": "The BrickEconomy licence is personal: the same key in two accounts means sharing it."
+  },
+  "currency": {
+    "label": "Display currency",
+    "names": {
+      "EUR": "Euro (€)",
+      "CZK": "Czech koruna (Kč)",
+      "USD": "US dollar ($)",
+      "GBP": "British pound (£)",
+      "PLN": "Polish złoty (zł)",
+      "HUF": "Hungarian forint (Ft)",
+      "CHF": "Swiss franc (CHF)"
+    },
+    "rate": "{rate} · ECB, {day}",
+    "euroHint": "The app stores everything in euros. Another currency is only converted at today's ECB rate.",
+    "loading": "Getting the ECB rate…",
+    "rateFailed": "The ECB rate could not be fetched right now, amounts stay in euros.",
+    "note": "Amounts are converted at today's ECB rate ({rate}, {day}). They are still stored in euros.",
+    "blocked": "ECB rates are switched off in Settings → Data, amounts are shown in euros.",
+    "foreignEntry": "Enter purchases and sales in other currencies too",
+    "foreignEntryHint": "The price in the piece form and in the sale dialog gets a currency picker. The amount is converted to euros at the ECB rate of the purchase or sale day, without a date at today's rate.",
+    "field": "Currency",
+    "inEuro": "≈ {amount} at {rate} on {day}",
+    "inEuroFailed": "The ECB rate could not be fetched, save the price in euros.",
+    "original": "{amount}, at {rate} on {day}",
+    "originalNoDay": "{amount}, at {rate}"
   },
   "capabilities": {
     "rebrickable": {
@@ -1062,6 +1096,12 @@
       "inflation": {
         "title": "Inflation index",
         "hint": "Once a week. Off: the In today's money switch adjusts nothing."
+      }
+    },
+    "ecb": {
+      "rates": {
+        "title": "Exchange rates",
+        "hint": "Once a day, only when you use another display currency or enter an amount in a foreign currency. Off: amounts stay in euros."
       }
     }
   },

@@ -1,6 +1,6 @@
 [project]
 name = "lego-api"
-version = "1.2.0"
+version = "1.2.1"
 description = "Moje kocky Desktop: evidencia zbierky LEGO® setov pre Windows"
 readme = "README.md"
 requires-python = ">=3.13"

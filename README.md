@@ -4,7 +4,7 @@
 
 ### [Stiahnuť inštalátor pre Windows](https://github.com/jakubmatisak/moje-kocky-desktop/releases/latest)
 
-Verzia 1.2.1 · zadarmo, bez reklám a sledovania · Windows 10 a 11 (64-bit) ·
+Verzia 1.2.2 · zadarmo, bez reklám a sledovania · Windows 10 a 11 (64-bit) ·
 pre všetkých používateľov počítača, inštalátor si vypýta práva správcu ·
 [stránka projektu](https://jakubmatisak.github.io/moje-kocky/) ·
 [webová verzia na vlastný server](https://github.com/jakubmatisak/moje-kocky-webapp)
@@ -470,7 +470,7 @@ a podmienky služieb (k septembru 2026). Zásady sú aj priamo v programe.
 
 ### [Download the Windows installer](https://github.com/jakubmatisak/moje-kocky-desktop/releases/latest)
 
-Version 1.2.1 · free, no ads, no tracking · Windows 10 and 11 (64-bit) ·
+Version 1.2.2 · free, no ads, no tracking · Windows 10 and 11 (64-bit) ·
 for every user of the PC, the installer asks for administrator rights ·
 [project website](https://jakubmatisak.github.io/moje-kocky/) ·
 [web version for your own server](https://github.com/jakubmatisak/moje-kocky-webapp)

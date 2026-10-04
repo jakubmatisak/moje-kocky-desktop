@@ -122,6 +122,11 @@ class _DailyQuota:
             raise QuotaExhausted("Denná kvóta BrickEconomy je vyčerpaná")
         self._used[key_id] = self._used.get(key_id, 0) + 1
 
+    def seed(self, limit: int, key_id: str, used: int) -> None:
+        """Nový proces vie, koľko sa dnes už minulo (zapísané volania), nikdy menej."""
+        self._roll()
+        self._used[key_id] = min(limit, max(self._used.get(key_id, 0), used))
+
     def block(self, key_id: str) -> None:
         """Server povedal 429, zvyšok dňa sa s týmto kľúčom nepokúšame."""
         self._roll()

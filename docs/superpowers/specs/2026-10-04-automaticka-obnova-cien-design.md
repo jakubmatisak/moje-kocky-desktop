@@ -1,6 +1,6 @@
 # Automatická denná obnova cien (desktop)
 
-Stav: návrh na schválenie, 2026-10-04.
+Stav: schválené 2026-10-04 (čas cez komponent Vuetify).
 
 ## Cieľ
 
@@ -23,7 +23,7 @@ Nastavenia → Dáta → karta BrickEconomy, len v desktope (`isDesktop`):
 - **Prepínač** „Obnovovať ceny automaticky každý deň“.
   - Bez schopnosti `brickeconomy.prices` (`auth.can`) je zakázaný, s vysvetlením
     „Treba kľúč BrickEconomy“. Ostatné schopnosti sa riadia rovnako.
-- **Čas:** pole `HH:MM`, predvolene 07:00.
+- **Čas:** `components/TimeField.vue`, predvolene 07:00. Je to obal ako `DateField.vue`: pole na čítanie, ktoré otvorí `v-time-picker` z Vuetify (`format="24hr"`) v `v-menu` a drží text `HH:MM`. Nie `type="time"`.
 - **Počet cien na jeden beh:** predvolene 80, najviac denný limit (100).
   - Beh berie najviac zvyšok dňa (`calls_left`), takže ručné kliknutie v ten
     deň ho môže skrátiť.

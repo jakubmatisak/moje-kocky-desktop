@@ -13,6 +13,7 @@ a čaká rovnako dlho ako cena, inak by bolo navrchu pri každom kliknutí.
 
 import asyncio
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -284,13 +285,15 @@ async def refresh_prices(
     force: bool = False,
     limit: int | None = None,
     claimed: bool = False,
+    should_stop: Callable[[], bool] | None = None,
 ) -> RefreshState:
     """Obnoví ceny pre jedného používateľa. Volá sa z BackgroundTasks.
 
     Bez ``only`` celú zbierku, s ním len jeden set alebo jednu sériu.
     ``limit`` je počet volaní z dialógu obnovy (strop tohto behu popri
     zvyšku kvóty, rezerve a dávke účtu). ``claimed``: stav už zabral
-    ``claim`` v požiadavke, tu sa len uvoľní.
+    ``claim`` v požiadavke, tu sa len uvoľní. ``should_stop`` sa pýta pred
+    každým volaním (automatická obnova ustúpi otvorenej aplikácii).
     """
     api_log.set_user(user_id)
     # Obnova jedného setu z detailu je na požiadanie, celá zbierka je dávka.
@@ -351,6 +354,9 @@ async def refresh_prices(
 
         stopped_at = len(targets)
         for position, target in enumerate(targets):
+            if should_stop is not None and should_stop():
+                stopped_at = position
+                break
             quota_gone = False
             try:
                 data = await _refresh_one(sessionmaker, target, provider, state, cap)

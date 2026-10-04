@@ -223,9 +223,51 @@ def remembered_login(data: DataDir):
     return RememberedLogin(data.session_file, get_settings())
 
 
+def _schedule_from_settings(bridge) -> None:
+    """Úloha v Plánovači úloh Windows ide za nastavením účtov (automatická obnova).
+
+    Len v zabalenom programe: z repa by úloha spúšťala python.exe. Pri štarte
+    sa úloha zladí s databázou (iný počítač, preinštalovanie), potom ju
+    prestaví každé uloženie nastavenia, kľúča či pravidiel sťahovania.
+    """
+    if not getattr(sys, "frozen", False):
+        return
+    from lego_api.config import get_settings
+    from lego_api.db import get_sessionmaker
+    from lego_api.services import auto_refresh
+    from lego_desktop import scheduler
+
+    auto_refresh.on_schedule_change = scheduler.apply
+
+    async def sync() -> None:
+        async with get_sessionmaker()() as session:
+            await auto_refresh.sync_schedule(session, get_settings())
+
+    try:
+        bridge._run(sync())
+    except Exception:  # noqa: BLE001 - bez úlohy aplikácia funguje ďalej
+        logging.exception("Úlohu automatickej obnovy cien sa nepodarilo zladiť")
+
+
 def main() -> None:
     data = DataDir()
+    if "--refresh-prices" in sys.argv[1:]:
+        # Plánovač úloh Windows: obnova cien bez okna (lego_desktop.background).
+        from lego_desktop import background
+
+        _logging(data)
+        os.environ.update(data.environment())
+        try:
+            background.run_headless(data)
+        except Exception:  # noqa: BLE001 - beh bez okna nesmie ukázať chybu
+            logging.exception("Automatická obnova cien bez okna zlyhala")
+        return
     lock = data.lock()
+    if lock is None:
+        # Zámok môže držať automatická obnova bez okna; ustúpi do 30 s.
+        from lego_desktop import background
+
+        lock = background.wait_for_headless(data)
     if lock is None:
         _already_running()
         return
@@ -248,6 +290,8 @@ def main() -> None:
         _fatal(data, exc)
         lock.release()
         return
+
+    _schedule_from_settings(bridge)
 
     index = _web_index()
     if not index.is_file():

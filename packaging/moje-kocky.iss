@@ -73,6 +73,10 @@ Name: "{autodesktop}\Moje kocky"; Filename: "{app}\MojeKocky.exe"; Tasks: deskto
 ; v jeho %APPDATA%.
 Filename: "{app}\MojeKocky.exe"; Description: "{cm:LaunchProgram,Moje kocky}"; Flags: nowait postinstall skipifsilent runasoriginaluser
 
+[UninstallRun]
+; Úloha automatickej obnovy cien (lego_desktop.scheduler); keď nie je, chyba nevadí.
+Filename: "{sys}\schtasks.exe"; Parameters: "/Delete /TN ""Moje kocky\Obnova cien"" /F"; Flags: runhidden; RunOnceId: "DeletePriceRefreshTask"
+
 [Code]
 #include "old-install.iss"
 #include "uninstall-data.iss"

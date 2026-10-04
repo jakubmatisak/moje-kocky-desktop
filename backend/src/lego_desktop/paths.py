@@ -74,6 +74,8 @@ class DataDir:
             "JWT_SECRET": self.secret(),
             # Prvý účet vznikne vždy; ďalší len keď to správca v appke povolí.
             "ALLOW_REGISTRATION": "false",
+            # Automatická obnova cien beží aj v otvorenej aplikácii.
+            "AUTO_REFRESH_SCHEDULER": "true",
         }
 
     def lock(self) -> InstanceLock | None:

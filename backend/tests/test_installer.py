@@ -807,3 +807,19 @@ def test_english_installer_reports_leftovers(harness, tmp_path):
     assert LEFTOVERS_EN in answer
     assert str(profile.program) in answer
     assert LEFTOVERS not in answer
+
+
+def test_uninstall_deletes_the_automatic_price_refresh_task():
+    """Úloha v Plánovači úloh Windows (lego_desktop.scheduler) neostane po programe."""
+    from lego_desktop.scheduler import TASK_NAME
+
+    lines = _sections(_text(ISS)).get("UninstallRun", [])
+
+    assert any(
+        "schtasks.exe" in line
+        and "/Delete" in line
+        and f'""{TASK_NAME}""' in line
+        and "runhidden" in line
+        and "RunOnceId" in line
+        for line in lines
+    )

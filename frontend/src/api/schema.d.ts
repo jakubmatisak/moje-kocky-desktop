@@ -1899,6 +1899,20 @@ export interface components {
             /** Calls */
             calls: components["schemas"]["ApiCallOut"][];
         };
+        /**
+         * AutoRefreshLastOut
+         * @description Posledná automatická obnova cien účtu (desktop).
+         */
+        AutoRefreshLastOut: {
+            /** At */
+            at: string;
+            /** Updated */
+            updated: number;
+            /** Outcome */
+            outcome: string;
+            /** Complete */
+            complete: boolean;
+        };
         /** Body_create_import_api_v1_imports_post */
         Body_create_import_api_v1_imports_post: {
             /** File */
@@ -3301,6 +3315,7 @@ export interface components {
              * @default 0
              */
             calls_used: number;
+            auto_last?: components["schemas"]["AutoRefreshLastOut"] | null;
         };
         /** RegisterRequest */
         RegisterRequest: {

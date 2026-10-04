@@ -955,6 +955,25 @@
     "stale": "Not refreshed 30+ days"
   },
   "sources": {
+    "autoRefresh": {
+      "switch": "Refresh prices automatically every day",
+      "hint": "Even when Moje kocky is not open: the computer only needs to be on and you signed in to Windows. Prices older than a week are refreshed, those without a price first. If the computer was off at that time, the refresh runs once it is on.",
+      "needsKey": "Automatic refresh needs a BrickEconomy key and price refresh switched on.",
+      "time": "Time",
+      "limit": "Prices per run",
+      "limitHint": "At most 100, and never more than is left of the daily limit that day.",
+      "limitInvalid": "Enter a number from 1 to 100.",
+      "today": "today {time}",
+      "last": "Last automatic run: {when}, prices refreshed: {count}",
+      "lastProblem": "Last automatic run: {when}, {problem} (prices refreshed: {count})",
+      "outcome": {
+        "quota": "the daily limit was used up",
+        "reserve": "only the reserve of the limit was left",
+        "disabled": "price refresh is switched off",
+        "stopped": "interrupted by opening Moje kocky, finished there",
+        "error": "it failed"
+      }
+    },
     "intro": "Each service is a card. A switch is one kind of call; below it is what that call brings. A switched-off call is not sent and uses no quota.",
     "free": "free",
     "paid": "paid",
@@ -1363,7 +1382,10 @@
       "untilCleared": "until you clear it",
       "file": "file",
       "rememberedLogin": "Remembered sign-in (only if you tick Remember me), encrypted",
-      "rememberedLoginLasts": "30 days since last use; signing out deletes it"
+      "rememberedLoginLasts": "30 days since last use; signing out deletes it",
+      "task": "task in Windows Task Scheduler",
+      "autoRefresh": "Automatic daily price refresh (only if you switch it on in Settings → Data)",
+      "autoRefreshLasts": "while automatic refresh is on; switching it off or uninstalling deletes it"
     },
     "desktop": "Desktop version: all data (collection, photos, keys) stays on this computer in %APPDATA%\\MojeKocky. Nothing is sent anywhere except the questions to services you connect yourself.",
     "cookiesIntroDesktop": "The window uses no cookies for tracking, analytics or advertising. The table lists everything the window and the app remember: settings you choose yourself (the window keeps them in %APPDATA%\\MojeKocky\\webview) and a remembered sign-in, if you choose it. That is the sign-in cookie, encrypted in the file %APPDATA%\\MojeKocky\\session.bin; it lasts 30 days since last use and signing out deletes it.",

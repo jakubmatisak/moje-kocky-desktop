@@ -10,6 +10,8 @@
   import type { Source } from '@/api/types'
   import { computed, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
+  import AutoRefreshSettings from '@/components/AutoRefreshSettings.vue'
+  import { isDesktop } from '@/desktop/bridge'
   import { useAuthStore } from '@/stores/auth'
   import { useNotifyStore } from '@/stores/notify'
   import { usePriceStore } from '@/stores/prices'
@@ -272,6 +274,9 @@
           @click="prices.refreshEverything()"
         >{{ t('prices.refreshAll') }}</v-btn>
       </div>
+
+      <!-- Automatická denná obnova cien cez Plánovač úloh Windows, len v desktope. -->
+      <AutoRefreshSettings v-if="isDesktop && source.provider === 'brickeconomy'" class="mt-4" />
     </template>
   </v-card>
 </template>

@@ -213,7 +213,11 @@
     // Desktop: okno cookie nemá, prihlasovacie drží most (bridge.py) a zapamätané
     // uloží zašifrované do session.bin v priečinku údajov.
     ...(isDesktop
-      ? [{ name: 'session.bin', kind: t('privacy.storage.file'), purpose: t('privacy.storage.rememberedLogin'), lasts: t('privacy.storage.rememberedLoginLasts') }]
+      ? [
+        { name: 'session.bin', kind: t('privacy.storage.file'), purpose: t('privacy.storage.rememberedLogin'), lasts: t('privacy.storage.rememberedLoginLasts') },
+        // Automatická obnova cien (lego_desktop.scheduler): úloha mimo databázy.
+        { name: String.raw`Moje kocky\Obnova cien`, kind: t('privacy.storage.task'), purpose: t('privacy.storage.autoRefresh'), lasts: t('privacy.storage.autoRefreshLasts') },
+      ]
       : [{ name: 'lego_refresh', kind: 'cookie', purpose: t('privacy.storage.refresh'), lasts: t('privacy.storage.refreshLasts') }]),
     { name: 'lego-theme', kind: 'localStorage', purpose: t('privacy.storage.theme'), lasts: t('privacy.storage.untilCleared') },
     { name: 'lego-hide-prices', kind: 'localStorage', purpose: t('privacy.storage.hidePrices'), lasts: t('privacy.storage.untilCleared') },

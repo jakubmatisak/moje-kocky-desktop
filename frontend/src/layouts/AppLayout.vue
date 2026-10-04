@@ -23,6 +23,7 @@
   import { useProfileStore } from '@/stores/preferences'
   import { usePriceStore } from '@/stores/prices'
   import { useScannerStore } from '@/stores/scanner'
+  import { autoLastLabel } from '@/utils/autoRefresh'
   import { dialogOpen } from '@/utils/dialogOpen'
   import { pricesHidden, setPricesHidden } from '@/utils/format'
   import { sectionRoute } from '@/utils/navigation'
@@ -201,7 +202,10 @@
   const refreshHint = computed(() => {
     if (!auth.hasPriceKey) return t('prices.noKey')
     if (prices.quotaExhausted) return t('settings.quotaSpent')
-    return t('prices.refreshHint', { count: auth.keys?.calls_left ?? 0 })
+    const base = t('prices.refreshHint', { count: auth.keys?.calls_left ?? 0 })
+    // Desktop: aj posledná automatická obnova (Plánovač úloh Windows).
+    const last = isDesktop ? autoLastLabel(prices.status?.auto_last, (key, named) => t(key, named ?? {})) : null
+    return last ? `${base} ${last}` : base
   })
 
   // --- V dnešných peniazoch ---------------------------------------------

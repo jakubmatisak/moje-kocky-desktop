@@ -602,14 +602,40 @@ frontend; `no_sources` = neznámy set a nie je kto ho dohľadať. Overené
 sety sú v `price_checks` pri účte; `/prices/checks` je v routeri pred
 `/prices/{num}`, inak by ho zhltol. Klik na riadok tabuľky nevolá von.
 
-**Obnova cien nemá plánovač a nespúšťa ju prihlásenie.** Spúšťa ju výhradne
-používateľ tlačidlom v hornej lište (`POST /prices/refresh-all`), ďalej to
+**Obnovu cien spúšťa používateľ, nikdy prihlásenie.** Spúšťa ju tlačidlo
+v hornej lište, alebo automatická obnova, ktorú si v desktope sám zapol
+(nižšie). Tlačidlo (`POST /prices/refresh-all`), ďalej to
 beží cez `BackgroundTasks`. Stav „beží“ zaberá už požiadavka
 (`refresh.claim`), úloha ho len uvoľní (`claimed=True`): úloha štartuje až
 po odpovedi a bez toho by 202 aj ďalší `refresh-status` hlásili „nebeží“,
 takže prvé kliknutie akoby nič nespravilo. Frontend berie stav z odpovede.
 Poistky sú v `services/refresh.py`: vek posledného volania, strop na dávku,
 zvyšok dennej kvóty, jedno volanie na položku a zámok proti súbehu. Do stropu idú najprv neznáme ceny.
+
+**Automatická denná obnova je len v desktope a len zapnutá.** Spec
+`2026-10-04-automaticka-obnova-cien-design.md`. Nastavenie je pri účte:
+`preferences.autoRefresh` (`enabled`, `time` `HH:MM` predvolene 07:00,
+`limit` 1 až 100, predvolene 80), kontrola v `auth/router.py::_check_auto_refresh`,
+rozhranie `AutoRefreshSettings.vue` na karte BrickEconomy s časom cez
+`TimeField.vue` (`v-time-picker`, nie `type="time"`). Bez schopnosti
+`brickeconomy.prices` je prepínač zakázaný a `due_users` účet vynechá.
+Beh je `services/auto_refresh.py::run_due`: tá istá `refresh_prices` (vek,
+neznáme prvé, kvóta, rezerva) s `limit` a `should_stop`, počítadlo kvóty
+sa najprv naplní z dnešných `api_calls` (`seed_quota`, nový proces).
+Výsledok je v `app_settings` → `auto_refresh_last` (deň, obnovené, výsledok,
+`complete`); prerušený beh v ten deň dobehne, dokončený nie. Spúšťa ho:
+- Plánovač úloh Windows: `lego_desktop/scheduler.py` (`schtasks /XML`,
+  `InteractiveToken`, `StartWhenAvailable`, čas = najskorší zo zapnutých
+  účtov), `MojeKocky.exe --refresh-prices` (`lego_desktop/background.py`)
+  vezme zámok inštancie, a keď je aplikácia otvorená, hneď skončí. Otvorenie
+  aplikácie počas behu položí `auto-refresh.stop` a čaká na zámok 30 s.
+  Úlohu prestaví každé uloženie nastavenia, kľúča či pravidiel
+  (`auto_refresh.sync_schedule`, háčik `on_schedule_change` len v zabalenom
+  programe) a zladí ju štart; odinštalovanie ju zmaže (`[UninstallRun]`).
+- Otvorená aplikácia: slučka v lifespan raz za minútu
+  (`AUTO_REFRESH_SCHEDULER` z `DataDir.environment`), po zrušení sa na ňu čaká.
+Posledný beh ukazuje `refresh-status.auto_last` (karta aj tooltip v lište).
+Úloha je v tabuľke úložísk na `/sukromie`.
 
 **Registráciu otvára správca v appke, nie `.env`.** Stav je v tabuľke
 `app_settings` (`services/app_settings.py`); `ALLOW_REGISTRATION` platí,
@@ -974,7 +1000,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 835 testov, frontend 389. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má TESTY_BE testov, frontend TESTY_FE. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

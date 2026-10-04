@@ -955,6 +955,25 @@
     "stale": "Neobnovená 30+ dní"
   },
   "sources": {
+    "autoRefresh": {
+      "switch": "Obnovovať ceny automaticky každý deň",
+      "hint": "Aj keď Moje kocky nie sú otvorené: stačí zapnutý počítač a prihlásenie do Windows. Obnovia sa ceny staršie ako týždeň, najprv tie, ktoré cenu ešte nemajú. Keď bol počítač v ten čas vypnutý, obnova dobehne po zapnutí.",
+      "needsKey": "Na automatickú obnovu treba kľúč BrickEconomy a zapnutú obnovu cien.",
+      "time": "Čas",
+      "limit": "Počet cien na jeden beh",
+      "limitHint": "Najviac 100 a nikdy viac, než v ten deň ostáva z denného limitu.",
+      "limitInvalid": "Zadaj číslo od 1 do 100.",
+      "today": "dnes {time}",
+      "last": "Naposledy automaticky: {when}, obnovené ceny: {count}",
+      "lastProblem": "Naposledy automaticky: {when}, {problem} (obnovené ceny: {count})",
+      "outcome": {
+        "quota": "denný limit bol minutý",
+        "reserve": "ostala len rezerva limitu",
+        "disabled": "obnova cien je vypnutá",
+        "stopped": "prerušené otvorením Mojich kociek, dokončí sa v nich",
+        "error": "nepodarilo sa"
+      }
+    },
     "intro": "Každá služba je karta. Prepínač znamená jedno druh volania; pod ním je, čo to volanie prinesie. Vypnuté volanie neodíde a nespotrebuje limit.",
     "free": "zadarmo",
     "paid": "platené",
@@ -1363,7 +1382,10 @@
       "untilCleared": "kým ho nezmažeš",
       "file": "súbor",
       "rememberedLogin": "Zapamätané prihlásenie (len keď zaškrtneš Zapamätať si prihlásenie), zašifrované",
-      "rememberedLoginLasts": "30 dní od posledného použitia; zmaže ho odhlásenie"
+      "rememberedLoginLasts": "30 dní od posledného použitia; zmaže ho odhlásenie",
+      "task": "úloha v Plánovači úloh Windows",
+      "autoRefresh": "Automatická denná obnova cien (len keď ju zapneš v Nastaveniach → Dáta)",
+      "autoRefreshLasts": "kým je automatická obnova zapnutá; vypnutie aj odinštalovanie ju zmaže"
     },
     "desktop": "Desktopová verzia: všetky údaje (zbierka, fotky, kľúče) sú len na tomto počítači v priečinku %APPDATA%\\MojeKocky. Nikam sa neposielajú, okrem otázok na služby, ktoré si sám pripojíš.",
     "cookiesIntroDesktop": "Okno nepoužíva cookies na sledovanie, analytiku ani reklamu. V tabuľke je všetko, čo si Moje kocky pamätajú: nastavenia, ktoré si sám zvolíš (okno ich má v priečinku %APPDATA%\\MojeKocky\\webview), a zapamätané prihlásenie, ak ho zvolíš. To je prihlasovacie cookie, zašifrované v súbore %APPDATA%\\MojeKocky\\session.bin; platí 30 dní od posledného použitia a odhlásenie ho zmaže.",

@@ -186,6 +186,18 @@ describe('zásady desktopu: cookies a úložisko', () => {
     expect(rows.map(row => row[0])).not.toContain('lego_refresh')
   })
 
+  it('tabuľka úložiska má úlohu automatickej obnovy v Plánovači úloh', async () => {
+    i18n.global.locale.value = 'sk'
+    const rows = await storageRows()
+
+    expect(rows.find(row => row[0] === String.raw`Moje kocky\Obnova cien`)).toEqual([
+      String.raw`Moje kocky\Obnova cien`,
+      'úloha v Plánovači úloh Windows',
+      'Automatická denná obnova cien (len keď ju zapneš v Nastaveniach → Dáta)',
+      'kým je automatická obnova zapnutá; vypnutie aj odinštalovanie ju zmaže',
+    ])
+  })
+
   it('anglická tabuľka tiež', async () => {
     i18n.global.locale.value = 'en'
     const rows = await storageRows()

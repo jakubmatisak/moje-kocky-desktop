@@ -11,7 +11,7 @@ import { ref } from 'vue'
 import { api } from '@/api/client'
 import { useAuthStore } from '@/stores/auth'
 
-type PreferenceKey = 'collection' | 'themes' | 'display' | 'form' | 'dashboard' | 'unlock' | 'wishlist' | 'minifigs'
+type PreferenceKey = 'collection' | 'themes' | 'display' | 'form' | 'dashboard' | 'unlock' | 'wishlist' | 'minifigs' | 'autoRefresh'
 type Preference = Record<string, unknown>
 
 const SAVE_DELAY_MS = 800
@@ -59,5 +59,10 @@ export const useProfileStore = defineStore('preferences', () => {
     }, SAVE_DELAY_MS))
   }
 
-  return { load, get, save }
+  /** Hodnota, ktorú už uložil niekto iný (napríklad hneď cez API); bez ďalšieho volania. */
+  function remember (key: PreferenceKey, value: Preference): void {
+    values.value = { ...values.value, [key]: value }
+  }
+
+  return { load, get, save, remember }
 })

@@ -82,8 +82,10 @@ def test_main_with_refresh_prices_runs_without_a_window(monkeypatch, tmp_path) -
     monkeypatch.setattr(desktop_main, "DataDir", lambda: DataDir(tmp_path))
     monkeypatch.setattr(background, "run_headless", lambda data: calls.append(data.root))
     monkeypatch.setattr(desktop_main.sys, "argv", ["MojeKocky.exe", "--refresh-prices"])
-    for key in DataDir(tmp_path).environment():
-        monkeypatch.delenv(key, raising=False)
+    # main() nastaví prostredie desktopu (ALLOW_REGISTRATION=false…) a logovanie
+    # do súboru; ostatné testy ich nesmú zdediť.
+    monkeypatch.setattr(desktop_main.os, "environ", dict(desktop_main.os.environ))
+    monkeypatch.setattr(desktop_main, "_logging", lambda data: None)
 
     desktop_main.main()
 

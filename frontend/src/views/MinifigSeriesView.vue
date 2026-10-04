@@ -8,8 +8,9 @@
    * Vlastnená figúrka vedie do detailu. Chýbajúca je prerušovaná karta,
    * z ktorej ide rovno do Chcem, alebo „Mám ju“, keď ju už kúpil.
    *
-   * Zbierka figúrky zo sérií neukazuje, takže nerozbalené sáčky, predané
-   * figúrky a obnova cien celej série sú v detaile série (`/set/:num`).
+   * Cena mojich figúrok zo série (súčty, graf, obnova) je karta
+   * `SeriesValueCard`. Nerozbalené sáčky a predané figúrky sú v detaile
+   * série (`/set/:num`), Zbierka figúrky zo sérií neukazuje.
    */
   import { computed, onMounted, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
@@ -22,6 +23,7 @@
   import PageSkeleton from '@/components/PageSkeleton.vue'
   import SeriesBar from '@/components/SeriesBar.vue'
   import SeriesPurchaseDialog from '@/components/SeriesPurchaseDialog.vue'
+  import SeriesValueCard from '@/components/SeriesValueCard.vue'
   import SetImage from '@/components/SetImage.vue'
   import SortHeader from '@/components/SortHeader.vue'
   import { useMinifigsView } from '@/composables/useMinifigsView'
@@ -182,6 +184,9 @@
           </div>
         </div>
       </v-card>
+
+      <!-- Cena figúrok, ktoré zo série mám: súčty, graf a obnova, ako pri jednej figúrke. -->
+      <SeriesValueCard :num="series.series_num ?? num" />
 
       <div class="d-flex align-center flex-wrap ga-2">
         <v-btn-toggle

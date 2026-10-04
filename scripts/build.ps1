@@ -1,7 +1,7 @@
 ﻿# Zostavenie Moje kocky Desktop: frontend, PyInstaller a inštalátor (Inno Setup).
-# Použitie:  powershell -ExecutionPolicy Bypass -File scripts\build.ps1 [-Version 1.2.2]
+# Použitie:  powershell -ExecutionPolicy Bypass -File scripts\build.ps1 [-Version 1.3.0]
 # Súbor je v UTF-8 s BOM, inak by Windows PowerShell 5.1 pokazil diakritiku.
-param([string]$Version = "1.2.2")
+param([string]$Version = "1.3.0")
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 

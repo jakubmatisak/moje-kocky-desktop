@@ -673,6 +673,21 @@
     }
   },
   "minifigs": {
+    "seriesValue": {
+      "title": "Cena mojich figúrok",
+      "duplicatesPlural": "Séria obsahuje {count} duplikát, jeho cena sa pripočítava. | Séria obsahuje {count} duplikáty, ich cena sa pripočítava. | Séria obsahuje {count} duplikátov, ich cena sa pripočítava.",
+      "single": "Hodnota jednej série bez duplikátov",
+      "singleHint": "Každá figúrka raz, duplikáty sa nepočítajú.",
+      "singleIncomplete": "Hodnota jednej série ide, len keď máš celú sériu.",
+      "purchased": "Kúpené spolu",
+      "value": "Hodnota spolu",
+      "profit": "Zisk",
+      "pricedOf": "cenu má {priced} z {owned}",
+      "noPrice": "Tvoje figúrky zo série zatiaľ nemajú cenu.",
+      "refresh": "Obnoviť ceny mojich figúrok",
+      "chartValue": "Hodnota",
+      "chartPurchase": "Kúpené spolu"
+    },
     "title": "Figúrky",
     "summary": "Figúrok zo sérií: {figures} · zbierané série: {collecting} · kompletné: {complete}",
     "syncCheck": "Skontrolovať nové série",
@@ -957,7 +972,7 @@
   "sources": {
     "autoRefresh": {
       "switch": "Obnovovať ceny automaticky každý deň",
-      "hint": "Aj keď Moje kocky nie sú otvorené: stačí zapnutý počítač a prihlásenie do Windows. Obnovia sa ceny staršie ako týždeň, najprv tie, ktoré cenu ešte nemajú. Keď bol počítač v ten čas vypnutý, obnova dobehne po zapnutí.",
+      "hint": "Aj keď Moje kocky nie sú otvorené: stačí zapnutý počítač a prihlásenie do Windows. Obnovia sa ceny staršie ako týždeň, najprv tie, ktoré cenu ešte nemajú. Keď bol počítač v ten čas vypnutý, obnova dobehne po zapnutí. Keď ju zapneš po nastavenom čase, prvá obnova prebehne hneď.",
       "needsKey": "Na automatickú obnovu treba kľúč BrickEconomy a zapnutú obnovu cien.",
       "time": "Čas",
       "limit": "Počet cien na jeden beh",
@@ -971,8 +986,10 @@
         "reserve": "ostala len rezerva limitu",
         "disabled": "obnova cien je vypnutá",
         "stopped": "prerušené otvorením Mojich kociek, dokončí sa v nich",
-        "error": "nepodarilo sa"
-      }
+        "error": "nepodarilo sa",
+        "offline": "bez pripojenia na internet, skúsi sa znova o pol hodiny"
+      },
+      "scheduleFailed": "Nastavenie je uložené, ale úlohu v Plánovači úloh Windows sa nepodarilo nastaviť ({error}). Ceny sa obnovia len vtedy, keď sú Moje kocky otvorené."
     },
     "intro": "Každá služba je karta. Prepínač znamená jedno druh volania; pod ním je, čo to volanie prinesie. Vypnuté volanie neodíde a nespotrebuje limit.",
     "free": "zadarmo",
@@ -1384,7 +1401,7 @@
       "rememberedLogin": "Zapamätané prihlásenie (len keď zaškrtneš Zapamätať si prihlásenie), zašifrované",
       "rememberedLoginLasts": "30 dní od posledného použitia; zmaže ho odhlásenie",
       "task": "úloha v Plánovači úloh Windows",
-      "autoRefresh": "Automatická denná obnova cien (len keď ju zapneš v Nastaveniach → Dáta)",
+      "autoRefresh": "Automatická denná obnova cien, jedna úloha na používateľa Windows (len keď ju zapneš v Nastaveniach → Dáta)",
       "autoRefreshLasts": "kým je automatická obnova zapnutá; vypnutie aj odinštalovanie ju zmaže"
     },
     "desktop": "Desktopová verzia: všetky údaje (zbierka, fotky, kľúče) sú len na tomto počítači v priečinku %APPDATA%\\MojeKocky. Nikam sa neposielajú, okrem otázok na služby, ktoré si sám pripojíš.",

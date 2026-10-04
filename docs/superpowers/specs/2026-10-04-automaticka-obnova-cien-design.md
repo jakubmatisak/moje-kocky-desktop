@@ -1,6 +1,9 @@
 # Automatická denná obnova cien (desktop)
 
-Stav: schválené 2026-10-04 (čas cez komponent Vuetify).
+Stav: schválené 2026-10-04 (čas cez komponent Vuetify). Po kontrole: úloha na
+používateľa Windows (`Moje kocky\Obnova cien - <meno>`), chyba Plánovača
+v rozhraní, beh s viditeľnosťou účtu, dobehnutie len zvyšku počtu, zastavenie
+pri výpadku siete s pokusom o 30 minút, čas sa uloží až pri OK.
 
 ## Cieľ
 

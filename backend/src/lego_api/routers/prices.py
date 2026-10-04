@@ -31,6 +31,7 @@ from lego_api.schemas import (
     PriceOverviewOut,
     PricePointOut,
     RefreshStatusOut,
+    SeriesValueOut,
 )
 from lego_api.services import auto_refresh, price_misses
 from lego_api.services.catalog import CatalogService, normalize_num
@@ -47,6 +48,7 @@ from lego_api.services.pricing import (
 )
 from lego_api.services.purchase_fill import fill_purchase_prices
 from lego_api.services.refresh import claim, get_state, refresh_prices
+from lego_api.services.series_value import series_value
 
 router = APIRouter(prefix="/prices", tags=["prices"])
 SettingsDep = Annotated[Settings, Depends(get_settings)]
@@ -85,6 +87,7 @@ async def _status(
         )
         if last
         else None,
+        schedule_error=await auto_refresh.schedule_error(session),
     )
 
 
@@ -325,6 +328,54 @@ async def forget_check(num: str, user: CurrentUser, session: SessionDep) -> None
         delete(PriceCheck).where(PriceCheck.user_id == user.id, PriceCheck.catalog_num == num)
     )
     await session.commit()
+
+
+@router.get("/series/{num}", response_model=SeriesValueOut)
+async def get_series_value(
+    num: str, user: CurrentUser, session: SessionDep, single: bool = False
+) -> SeriesValueOut:
+    """Moje figúrky zo série spolu; pred ``/{num}``, inak by ho cesta zhltla.
+
+    ``single`` (hodnota jednej série) platí len pri kompletnej sérii.
+    """
+    value = await series_value(session, user.id, num)
+    use_single = single and value.complete
+    if use_single:
+        value = await series_value(session, user.id, num, single=True)
+    profit = value.market_total - value.priced_purchase if value.market_total is not None else None
+    pct = (
+        float(profit / value.priced_purchase * 100)
+        if profit is not None and value.priced_purchase > 0
+        else None
+    )
+    return SeriesValueOut(
+        owned_count=value.owned_count,
+        distinct_count=value.distinct_count,
+        duplicates=value.duplicates,
+        series_size=value.series_size,
+        complete=value.complete,
+        single=use_single,
+        priced_count=value.priced_count,
+        purchase_total=value.purchase_total,
+        market_total=value.market_total,
+        profit=profit,
+        profit_pct=pct,
+        approx=value.approx,
+        price_at=value.price_at,
+        history=[
+            PricePointOut(
+                captured_at=when,
+                avg_price=total,
+                min_price=None,
+                max_price=None,
+                qty=None,
+                condition=PriceCondition.NEW.value,
+                price_kind=PriceKind.SET.value,
+                source="series",
+            )
+            for when, total in value.history
+        ],
+    )
 
 
 @router.get("/{num}", response_model=PriceOverviewOut)

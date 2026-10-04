@@ -1,6 +1,6 @@
 """Úloha v Plánovači úloh Windows pre automatickú obnovu cien.
 
-Úloha `Moje kocky\\Obnova cien` spustí denne v nastavený čas
+Úloha `Moje kocky\\Obnova cien - <používateľ>` spustí denne v nastavený čas
 `MojeKocky.exe --refresh-prices` bez okna. Beží len v prihlásenom účte
 (`InteractiveToken`), takže nikde netreba ukladať heslo, a zmeškaný čas
 (vypnutý počítač) dobehne po zapnutí (`StartWhenAvailable`). Vytvára sa
@@ -9,6 +9,7 @@ cez `schtasks /XML` v kontexte používateľa, bez práv správcu.
 
 from __future__ import annotations
 
+import getpass
 import logging
 import subprocess
 import sys
@@ -19,9 +20,18 @@ from xml.sax.saxutils import escape
 
 log = logging.getLogger(__name__)
 
-TASK_NAME = r"Moje kocky\Obnova cien"
+#: Priečinok úloh; inštalácia je pre všetkých, každý používateľ Windows má
+#: vlastnú úlohu (mená v Plánovači sú spoločné pre počítač a cudziu úlohu
+#: bežný používateľ neprepíše). Odinštalovanie zmaže celý priečinok.
+TASK_FOLDER = "Moje kocky"
+#: Na volanie schtasks; dlhšie by zdržalo uloženie nastavenia.
+TIMEOUT_SECONDS = 15
 #: Bez okna konzoly pri volaní schtasks z aplikácie bez konzoly.
 _NO_WINDOW = 0x08000000
+
+
+def task_name() -> str:
+    return f"{TASK_FOLDER}\\Obnova cien - {getpass.getuser()}"
 
 
 class ScheduleError(RuntimeError):
@@ -80,6 +90,7 @@ def _schtasks(*args: str) -> subprocess.CompletedProcess:
         capture_output=True,
         text=True,
         check=False,
+        timeout=TIMEOUT_SECONDS,
         creationflags=_NO_WINDOW if sys.platform == "win32" else 0,
     )
 
@@ -87,7 +98,7 @@ def _schtasks(*args: str) -> subprocess.CompletedProcess:
 def apply(when: time | None, *, exe: Path | None = None) -> None:
     """Vytvorí alebo prestaví úlohu na čas `when`; None úlohu zmaže."""
     if when is None:
-        done = _schtasks("/Delete", "/TN", TASK_NAME, "/F")
+        done = _schtasks("/Delete", "/TN", task_name(), "/F")
         if done.returncode != 0:
             # Úloha nebola (vypnuté odjakživa); to je v poriadku.
             log.info("Úloha automatickej obnovy nebola: %s", (done.stderr or "").strip())
@@ -95,7 +106,7 @@ def apply(when: time | None, *, exe: Path | None = None) -> None:
     with tempfile.TemporaryDirectory() as folder:
         path = Path(folder) / "obnova-cien.xml"
         path.write_text(task_xml(when, exe or default_exe()), encoding="utf-16")
-        done = _schtasks("/Create", "/TN", TASK_NAME, "/XML", str(path), "/F")
+        done = _schtasks("/Create", "/TN", task_name(), "/XML", str(path), "/F")
     if done.returncode != 0:
         raise ScheduleError((done.stderr or done.stdout or "schtasks zlyhal").strip())
     log.info("Úloha automatickej obnovy cien nastavená na %s", when.strftime("%H:%M"))

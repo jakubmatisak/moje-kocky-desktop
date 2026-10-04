@@ -10,7 +10,7 @@
 
 ; Verzia je verzia appky (backend/pyproject.toml); build.ps1 inú nepustí.
 #ifndef AppVersion
-  #define AppVersion "1.2.2"
+  #define AppVersion "1.3.0"
 #endif
 ; Vlastnosti → Podrobnosti súboru chcú len čísla (1.0.0rc1 → 1.0.0.0);
 ; build.ps1 ich berie z packaging\version_info.py, tie isté ako MojeKocky.exe.
@@ -74,8 +74,9 @@ Name: "{autodesktop}\Moje kocky"; Filename: "{app}\MojeKocky.exe"; Tasks: deskto
 Filename: "{app}\MojeKocky.exe"; Description: "{cm:LaunchProgram,Moje kocky}"; Flags: nowait postinstall skipifsilent runasoriginaluser
 
 [UninstallRun]
-; Úloha automatickej obnovy cien (lego_desktop.scheduler); keď nie je, chyba nevadí.
-Filename: "{sys}\schtasks.exe"; Parameters: "/Delete /TN ""Moje kocky\Obnova cien"" /F"; Flags: runhidden; RunOnceId: "DeletePriceRefreshTask"
+; Úlohy automatickej obnovy cien všetkých používateľov (lego_desktop.scheduler);
+; keď nie sú, chyba nevadí.
+Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -NonInteractive -Command ""Get-ScheduledTask -TaskPath '\Moje kocky\' -ErrorAction SilentlyContinue | Unregister-ScheduledTask -Confirm:$false"""; Flags: runhidden; RunOnceId: "DeletePriceRefreshTasks"
 
 [Code]
 #include "old-install.iss"

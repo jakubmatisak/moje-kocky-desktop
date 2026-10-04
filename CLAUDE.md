@@ -358,6 +358,17 @@ otvorenie sekcie raz za týždeň skontroluje zoznam, séria z tohto a minulého
 roka sa raz za dva týždne stiahne znova. Zoznam tém je pomalý, preto tieto
 dve volania majú dlhší limit než 10 s. Cenovú kvótu to nemíňa.
 
+**Cena série je súčet mojich figúrok.** BrickEconomy cenu celej série nemá:
+pod holým číslom (`42233`) vráti prvú figúrku (`42233-1`). Nerozbalený sáčok
+pod holým číslom sa preto von necení (`pricing.source_prices`), len ručne.
+Stránka série vo Figúrkach má kartu `SeriesValueCard.vue` (`GET /prices/series/{num}`,
+`services/series_value.py`): kúpené, hodnota a zisk vlastnených figúrok (bez
+sáčkov), graf súčtu po dňoch od dňa, keď majú cenu všetky (`PriceHistoryChart`
+s vlastnými popismi), a obnova len mojich figúrok (`refresh-all?num=`, len
+s `auth.can('brickeconomy.price_detail')`). Duplikáty sa pripočítavajú a karta
+to povie; `?single=true` (prepínač „Hodnota jednej série“) ráta každú figúrku
+raz (prvý kúpený kus) a server ho prijme len pri kompletnej sérii.
+
 **Figúrky majú kategórie: minifigúrky a blind-box série iných radov.**
 Mighty Machines, Super Mario Character Pack, VIDIYO, Unikitty!, Duplo vrecúška
 nemajú vlastnú tému (Mighty Machines je medzi 460 setmi Technicu), preto sa
@@ -617,21 +628,33 @@ zvyšok dennej kvóty, jedno volanie na položku a zámok proti súbehu. Do stro
 `preferences.autoRefresh` (`enabled`, `time` `HH:MM` predvolene 07:00,
 `limit` 1 až 100, predvolene 80), kontrola v `auth/router.py::_check_auto_refresh`,
 rozhranie `AutoRefreshSettings.vue` na karte BrickEconomy s časom cez
-`TimeField.vue` (`v-time-picker`, nie `type="time"`). Bez schopnosti
+`TimeField.vue` (`v-time-picker`, nie `type="time"`; čas ide von až pri OK
+či zatvorení, ručička inak posiela každý pohyb). Bez schopnosti
 `brickeconomy.prices` je prepínač zakázaný a `due_users` účet vynechá.
 Beh je `services/auto_refresh.py::run_due`: tá istá `refresh_prices` (vek,
 neznáme prvé, kvóta, rezerva) s `limit` a `should_stop`, počítadlo kvóty
 sa najprv naplní z dnešných `api_calls` (`seed_quota`, nový proces).
-Výsledok je v `app_settings` → `auto_refresh_last` (deň, obnovené, výsledok,
-`complete`); prerušený beh v ten deň dobehne, dokončený nie. Spúšťa ho:
+Beh ide s viditeľnosťou účtu (`load_visibility`, ako ručná obnova), inak
+by cudzie ceny považoval za čerstvé. Výsledok je v `app_settings` →
+`auto_refresh_last` (deň, obnovené, `calls`, výsledok, `complete`); prerušený
+beh v ten deň dobehne len zvyšok `limit - calls`, dokončený sa neopakuje.
+Tri volania za sebou bez odpovede (sieť) obnovu zastavia (`refresh.OFFLINE_AFTER`,
+`last_error="offline"`), beh je nedokončený a skúsi sa po `OFFLINE_RETRY`
+(`retry_at`). Spúšťa ho:
 - Plánovač úloh Windows: `lego_desktop/scheduler.py` (`schtasks /XML`,
   `InteractiveToken`, `StartWhenAvailable`, čas = najskorší zo zapnutých
-  účtov), `MojeKocky.exe --refresh-prices` (`lego_desktop/background.py`)
-  vezme zámok inštancie, a keď je aplikácia otvorená, hneď skončí. Otvorenie
-  aplikácie počas behu položí `auto-refresh.stop` a čaká na zámok 30 s.
+  účtov; úloha na používateľa Windows `Moje kocky\Obnova cien - <meno>`,
+  lebo mená sú spoločné pre počítač a cudziu úlohu bežný účet neprepíše;
+  `schtasks` s limitom 15 s mimo slučky asyncio), `MojeKocky.exe
+  --refresh-prices` (`lego_desktop/background.py`) vezme zámok inštancie,
+  a keď je aplikácia otvorená, hneď skončí. Otvorenie aplikácie počas behu
+  položí `auto-refresh.stop` a čaká na zámok 30 s; štart zmaže staré značky.
   Úlohu prestaví každé uloženie nastavenia, kľúča či pravidiel
   (`auto_refresh.sync_schedule`, háčik `on_schedule_change` len v zabalenom
-  programe) a zladí ju štart; odinštalovanie ju zmaže (`[UninstallRun]`).
+  programe) a zladí ju štart. Chyba sa zapamätá (`auto_refresh_schedule`)
+  a rozhranie ju ukáže namiesto „Uložené“ (`refresh-status.schedule_error`).
+  Odinštalovanie zmaže všetky úlohy priečinka `\Moje kocky\` (PowerShell
+  `Unregister-ScheduledTask` v `[UninstallRun]`).
 - Otvorená aplikácia: slučka v lifespan raz za minútu
   (`AUTO_REFRESH_SCHEDULER` z `DataDir.environment`), po zrušení sa na ňu čaká.
 Posledný beh ukazuje `refresh-status.auto_last` (karta aj tooltip v lište).
@@ -1000,7 +1023,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má TESTY_BE testov, frontend TESTY_FE. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 865 testov, frontend 404. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

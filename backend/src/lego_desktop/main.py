@@ -271,6 +271,10 @@ def main() -> None:
     if lock is None:
         _already_running()
         return
+    # Zabitý beh bez okna (časový limit, odhlásenie) nechá značky; zámok je náš.
+    from lego_desktop import background
+
+    background.clear_marks(data)
     _logging(data)
     os.environ.update(data.environment())
     # Migrácie Alembic: pri zabalenom programe sú pribalené vedľa appky.

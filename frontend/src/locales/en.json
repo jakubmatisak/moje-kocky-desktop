@@ -673,6 +673,21 @@
     }
   },
   "minifigs": {
+    "seriesValue": {
+      "title": "Value of my figures",
+      "duplicatesPlural": "The series has {count} duplicate; its price is added. | The series has {count} duplicates; their price is added.",
+      "single": "Value of one series without duplicates",
+      "singleHint": "Each figure once, duplicates are left out.",
+      "singleIncomplete": "The value of one series needs the whole series.",
+      "purchased": "Paid in total",
+      "value": "Total value",
+      "profit": "Profit",
+      "pricedOf": "{priced} of {owned} have a price",
+      "noPrice": "Your figures from this series have no price yet.",
+      "refresh": "Refresh prices of my figures",
+      "chartValue": "Value",
+      "chartPurchase": "Paid in total"
+    },
     "title": "Minifigures",
     "summary": "Series figures: {figures} · collecting: {collecting} · complete: {complete}",
     "syncCheck": "Check for new series",
@@ -957,7 +972,7 @@
   "sources": {
     "autoRefresh": {
       "switch": "Refresh prices automatically every day",
-      "hint": "Even when Moje kocky is not open: the computer only needs to be on and you signed in to Windows. Prices older than a week are refreshed, those without a price first. If the computer was off at that time, the refresh runs once it is on.",
+      "hint": "Even when Moje kocky is not open: the computer only needs to be on and you signed in to Windows. Prices older than a week are refreshed, those without a price first. If the computer was off at that time, the refresh runs once it is on. If you switch it on after the set time, the first refresh runs right away.",
       "needsKey": "Automatic refresh needs a BrickEconomy key and price refresh switched on.",
       "time": "Time",
       "limit": "Prices per run",
@@ -971,8 +986,10 @@
         "reserve": "only the reserve of the limit was left",
         "disabled": "price refresh is switched off",
         "stopped": "interrupted by opening Moje kocky, finished there",
-        "error": "it failed"
-      }
+        "error": "it failed",
+        "offline": "no internet connection, it tries again in half an hour"
+      },
+      "scheduleFailed": "The setting is saved, but the Windows Task Scheduler task could not be set ({error}). Prices are refreshed only while Moje kocky is open."
     },
     "intro": "Each service is a card. A switch is one kind of call; below it is what that call brings. A switched-off call is not sent and uses no quota.",
     "free": "free",
@@ -1384,7 +1401,7 @@
       "rememberedLogin": "Remembered sign-in (only if you tick Remember me), encrypted",
       "rememberedLoginLasts": "30 days since last use; signing out deletes it",
       "task": "task in Windows Task Scheduler",
-      "autoRefresh": "Automatic daily price refresh (only if you switch it on in Settings → Data)",
+      "autoRefresh": "Automatic daily price refresh, one task per Windows user (only if you switch it on in Settings → Data)",
       "autoRefreshLasts": "while automatic refresh is on; switching it off or uninstalling deletes it"
     },
     "desktop": "Desktop version: all data (collection, photos, keys) stays on this computer in %APPDATA%\\MojeKocky. Nothing is sent anywhere except the questions to services you connect yourself.",

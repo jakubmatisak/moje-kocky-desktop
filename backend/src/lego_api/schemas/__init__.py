@@ -439,6 +439,32 @@ class PriceDeltaOut(BaseModel):
     delta_pct: float | None
 
 
+class SeriesValueOut(BaseModel):
+    """Moje figúrky jednej série: súčty a graf ako pri jednej figúrke."""
+
+    owned_count: int
+    #: Rôzne figúrky, ktoré mám; menej než ``owned_count`` = duplikáty.
+    distinct_count: int
+    duplicates: int
+    series_size: int | None
+    #: Mám každú figúrku série aspoň raz (len vtedy ide hodnota jednej série).
+    complete: bool
+    #: Ráta sa každá figúrka raz (prepínač Hodnota jednej série).
+    single: bool
+    priced_count: int
+    purchase_total: Money
+    #: Súčet cien mojich figúrok s cenou; bez jedinej ceny null.
+    market_total: Money | None
+    #: Zisk len figúrok s cenou (ich hodnota mínus ich kúpna cena).
+    profit: Money | None
+    profit_pct: float | None
+    #: Niektorá cena je z druhého stavu (≈).
+    approx: bool
+    price_at: datetime | None
+    #: Súčet po dňoch, od dňa, keď majú cenu všetky moje figúrky.
+    history: list[PricePointOut]
+
+
 class PriceOverviewOut(BaseModel):
     catalog_num: str
     current: PricePointOut | None
@@ -521,6 +547,8 @@ class RefreshStatusOut(BaseModel):
     calls_used: int = 0
     #: Posledná automatická obnova tohto účtu; bez nej null.
     auto_last: AutoRefreshLastOut | None = None
+    #: Úlohu v Plánovači úloh Windows sa nepodarilo nastaviť (text chyby).
+    schedule_error: str | None = None
 
 
 # --- štatistiky -------------------------------------------------------------

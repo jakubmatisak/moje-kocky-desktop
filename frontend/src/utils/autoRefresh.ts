@@ -12,7 +12,7 @@ export interface AutoLast {
 
 type Translate = (key: string, named?: Record<string, unknown>) => string
 
-const OUTCOMES = new Set(['quota', 'reserve', 'disabled', 'stopped', 'error'])
+const OUTCOMES = new Set(['quota', 'reserve', 'disabled', 'stopped', 'error', 'offline'])
 
 export function autoLastLabel (last: AutoLast | null | undefined, t: Translate, now = new Date()): string | null {
   if (!last) {

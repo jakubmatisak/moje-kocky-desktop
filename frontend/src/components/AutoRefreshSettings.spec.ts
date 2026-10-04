@@ -8,6 +8,7 @@ import AutoRefreshSettings from './AutoRefreshSettings.vue'
 
 const puts: Array<{ key: string, body: unknown }> = []
 let stored: Record<string, unknown> = {}
+let scheduleError: string | null = null
 
 vi.mock('@/api/client', async original => ({
   ...(await original<typeof Client>()),
@@ -17,7 +18,13 @@ vi.mock('@/api/client', async original => ({
         return { data: stored }
       }
       if (path === '/prices/refresh-status') {
-        return { data: { running: false, auto_last: { at: '2026-10-04T07:02', updated: 23, outcome: 'ok', complete: true } } }
+        return {
+          data: {
+            running: false,
+            auto_last: { at: '2026-10-04T07:02', updated: 23, outcome: 'ok', complete: true },
+            schedule_error: scheduleError,
+          },
+        }
       }
       return { data: {} }
     },
@@ -48,6 +55,7 @@ describe('Nastavenia: automatická obnova cien', () => {
     i18n.global.locale.value = 'sk'
     puts.length = 0
     stored = {}
+    scheduleError = null
   })
 
   it('bez kľúča BrickEconomy je prepínač zakázaný a čas ani počet nie sú', async () => {
@@ -80,5 +88,19 @@ describe('Nastavenia: automatická obnova cien', () => {
     expect(wrapper.find('[data-test="auto-refresh-time"]').attributes('modelvalue')).toBe('21:15')
     expect(wrapper.find('[data-test="auto-refresh-limit"]').attributes('modelvalue')).toBe('40')
     expect(wrapper.find('[data-test="auto-refresh-last"]').text()).toContain('obnovené ceny: 23')
+  })
+
+  it('keď sa úloha v Plánovači nevytvorí, povie to namiesto „Uložené“', async () => {
+    const wrapper = await mountSettings(['brickeconomy.prices'])
+    scheduleError = 'Access is denied.'
+
+    const vm = wrapper.vm as unknown as { enabled: boolean, save: () => Promise<void> }
+    vm.enabled = true
+    await vm.save()
+    await flushPromises()
+
+    const warning = wrapper.find('[data-test="auto-refresh-schedule-error"]')
+    expect(warning.exists()).toBe(true)
+    expect(warning.text()).toContain('Access is denied.')
   })
 })

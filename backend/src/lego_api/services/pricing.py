@@ -89,7 +89,11 @@ def source_prices(target: PriceTarget, catalog: CatalogItem) -> bool:
     pozná. Snímky pod katalógovým číslom (ručná cena) ``resolve_price_target``
     číta ďalej, toto rozhoduje len o volaní von.
     """
-    return not (is_bare_figure(catalog) and target.price_kind == PriceKind.SET)
+    if is_bare_figure(catalog) and target.price_kind == PriceKind.SET:
+        return False
+    # Nerozbalený sáčok pod holým číslom série: BrickEconomy cenu série nemá,
+    # pod holým číslom vráti prvú figúrku (42233 → Road Roller). Ručná cena áno.
+    return not (catalog.is_series and target.catalog_num == catalog.catalog_num)
 
 
 async def latest_snapshot(

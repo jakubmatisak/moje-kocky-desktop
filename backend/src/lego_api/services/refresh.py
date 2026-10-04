@@ -71,6 +71,8 @@ _states: dict[int, RefreshState] = {}
 #: Rozrobené (odtlačok kľúča, číslo, druh): ten istý kľúč nevolá dvakrát naraz;
 #: iný kľúč si set stiahne sám, lebo len tak k nemu získa prístup.
 _inflight: set[tuple[str | None, str, str]] = set()
+#: Po toľkých volaniach za sebou bez odpovede (výpadok siete) sa obnova zastaví.
+OFFLINE_AFTER = 3
 _provider_lock = asyncio.Semaphore(1)
 _state_lock = asyncio.Lock()
 
@@ -353,6 +355,8 @@ async def refresh_prices(
             state.pending = len(targets)
 
         stopped_at = len(targets)
+        #: Volania za sebou bez odpovede (sieť); po troch nemá zmysel míňať ďalšie.
+        unanswered = 0
         for position, target in enumerate(targets):
             if should_stop is not None and should_stop():
                 stopped_at = position
@@ -362,6 +366,11 @@ async def refresh_prices(
                 data = await _refresh_one(sessionmaker, target, provider, state, cap)
                 if data is not None and data.rrp_eur is not None:
                     rrp_by_num[data.catalog_num] = data.rrp_eur
+                unanswered = 0 if getattr(provider, "last_answered", True) else unanswered + 1
+                if unanswered >= OFFLINE_AFTER:
+                    log.info("Zdroj cien trikrát za sebou neodpovedal, obnova sa zastavila")
+                    state.last_error = "offline"
+                    quota_gone = True
             except QuotaExhausted as exc:
                 log.info("Obnova sa zastavila: %s", exc)
                 state.last_error = "quota"

@@ -163,6 +163,14 @@ class SnapshotIndex:
         idx = bisect.bisect_right(times, moment) - 1
         return self._values[key][idx] if idx >= 0 else None
 
+    def times_any(self, target: PriceTarget) -> list[datetime]:
+        """Časy snímok pre oba stavy položky (graf súčtu série berie aj ≈)."""
+        out: list[datetime] = []
+        for condition in (PriceCondition.NEW, PriceCondition.USED):
+            key = (target.catalog_num, target.price_kind.value, condition.value)
+            out.extend(self._times.get(key, []))
+        return out
+
     def latest_time(self, target: PriceTarget) -> datetime | None:
         """Čas poslednej snímky pre presne ten stav."""
         times = self._times.get(

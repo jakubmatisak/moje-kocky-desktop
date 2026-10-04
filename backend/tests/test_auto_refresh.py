@@ -245,3 +245,90 @@ async def test_scheduler_loop_runs_due_accounts_until_cancelled(session, session
         await task
 
     assert len(provider.calls) == 1
+
+
+class _Seeing(FakeProvider):
+    """Zapamätá si, s akou viditeľnosťou išlo volanie."""
+
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.seen: list[object] = []
+
+    async def get_market(self, num, kind, *, cap):
+        from lego_api import visibility
+
+        self.seen.append(visibility.current())
+        return await super().get_market(num, kind, cap=cap)
+
+
+class _Offline(FakeProvider):
+    """Bez siete: volanie odíde, odpoveď nepríde."""
+
+    async def get_market(self, num, kind, *, cap):
+        self.calls.append((num, kind.value))
+        self.last_answered = False
+        return None
+
+
+async def test_run_sees_only_what_the_account_may_see(session, sessionmaker_) -> None:
+    from lego_api import visibility
+
+    await _seed(session, _user(1, {"enabled": True, "time": "07:00", "limit": 1}))
+    provider = _Seeing()
+
+    await auto_refresh.run_due(sessionmaker_, SETTINGS, MORNING, provider_for=lambda *_: provider)
+
+    assert provider.seen
+    assert all(seen is not visibility.INTERNAL for seen in provider.seen)
+
+
+async def test_interrupted_run_finishes_only_the_rest_of_the_limit(session, sessionmaker_) -> None:
+    await _seed(session, _user(1, {"enabled": True, "time": "07:00", "limit": 3}), sets=5)
+    provider = FakeProvider()
+
+    await auto_refresh.run_due(
+        sessionmaker_,
+        SETTINGS,
+        MORNING,
+        should_stop=lambda: len(provider.calls) >= 2,
+        provider_for=lambda *_: provider,
+    )
+    await auto_refresh.run_due(sessionmaker_, SETTINGS, MORNING, provider_for=lambda *_: provider)
+
+    assert len(provider.calls) == 3
+
+
+async def test_offline_run_stops_early_and_tries_again_later(session, sessionmaker_) -> None:
+    from datetime import timedelta
+
+    await _seed(session, _user(1, {"enabled": True, "time": "07:00", "limit": 80}), sets=8)
+    provider = _Offline()
+
+    await auto_refresh.run_due(sessionmaker_, SETTINGS, MORNING, provider_for=lambda *_: provider)
+
+    assert len(provider.calls) == 3
+    async with sessionmaker_() as s:
+        last = await auto_refresh.last_run(s, 1)
+        assert last is not None
+        assert (last["outcome"], last["complete"]) == ("offline", False)
+        assert await auto_refresh.due_users(s, SETTINGS, MORNING + timedelta(minutes=10)) == []
+        later = await auto_refresh.due_users(s, SETTINGS, MORNING + timedelta(minutes=31))
+        assert [u.id for u in later] == [1]
+
+
+async def test_failing_windows_task_is_reported_and_cleared(auth_client, sessionmaker_) -> None:
+    def broken(_when):
+        raise RuntimeError("Access is denied.")
+
+    auto_refresh.on_schedule_change = broken
+    await auth_client.put(
+        "/auth/me/preferences/autoRefresh", json={"enabled": True, "time": "06:30", "limit": 80}
+    )
+    body = (await auth_client.get("/prices/refresh-status")).json()
+    assert "Access is denied" in body["schedule_error"]
+
+    auto_refresh.on_schedule_change = lambda _when: None
+    await auth_client.put(
+        "/auth/me/preferences/autoRefresh", json={"enabled": False, "time": "06:30", "limit": 80}
+    )
+    assert (await auth_client.get("/prices/refresh-status")).json()["schedule_error"] is None

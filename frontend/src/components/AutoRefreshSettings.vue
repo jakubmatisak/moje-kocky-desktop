@@ -46,7 +46,14 @@
       return
     }
     profile.remember('autoRefresh', body)
-    notify.success(t('notice.saved'))
+    // Úloha v Plánovači úloh Windows sa nastavuje pri uložení; jej chyba nie je „Uložené“.
+    await prices.fetchStatus()
+    const failed = prices.status?.schedule_error
+    if (failed) {
+      notify.error(t('sources.autoRefresh.scheduleFailed', { error: failed }))
+    } else {
+      notify.success(t('notice.saved'))
+    }
   }
 
   onMounted(async () => {
@@ -106,5 +113,14 @@
     </div>
 
     <div v-if="last" class="text-body-small text-medium-emphasis" data-test="auto-refresh-last">{{ last }}</div>
+
+    <div
+      v-if="prices.status?.schedule_error"
+      class="d-flex align-center ga-1 text-body-small text-warning"
+      data-test="auto-refresh-schedule-error"
+    >
+      <v-icon icon="mdi-alert-outline" size="16" />
+      {{ t('sources.autoRefresh.scheduleFailed', { error: prices.status.schedule_error }) }}
+    </div>
   </div>
 </template>

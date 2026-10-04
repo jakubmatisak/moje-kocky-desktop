@@ -30,6 +30,10 @@
     usedPoints: PricePoint[]
     /** Priemerná kúpna cena vlastnených kusov, ak ju poznáme. */
     purchase: number | null
+    /** Popis hlavnej krivky; séria ju volá „Hodnota“, nie „Nový“. */
+    newLabel?: string
+    /** Popis kúpnej čiary; pri sérii je to súčet kúpnych cien. */
+    purchaseLabel?: string
   }>()
 
   const { t } = useI18n()
@@ -93,7 +97,7 @@
     const datasets = []
     if (newSeries.value.length > 0) {
       datasets.push({
-        label: t('detail.historyNew'),
+        label: props.newLabel ?? t('detail.historyNew'),
         data: newSeries.value,
         borderColor: CHART_COLORS.value,
         backgroundColor: CHART_COLORS.value,
@@ -117,7 +121,7 @@
     }
     if (props.purchase !== null) {
       datasets.push({
-        label: t('detail.historyPurchase'),
+        label: props.purchaseLabel ?? t('detail.historyPurchase'),
         data: [
           { x: span.value.min, y: toDisplay(props.purchase) },
           { x: span.value.max, y: toDisplay(props.purchase) },

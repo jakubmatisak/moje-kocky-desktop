@@ -45,10 +45,36 @@ def test_apply_creates_the_task_from_xml_and_deletes_it(monkeypatch, tmp_path) -
     scheduler.apply(time(7, 0), exe=EXE)
     scheduler.apply(None, exe=EXE)
 
-    assert calls[0][:4] == ["schtasks", "/Create", "/TN", scheduler.TASK_NAME]
+    assert calls[0][:4] == ["schtasks", "/Create", "/TN", scheduler.task_name()]
     assert calls[0][-1] == "/F"
     assert "T07:00:00" in written[0]
-    assert calls[1] == ["schtasks", "/Delete", "/TN", scheduler.TASK_NAME, "/F"]
+    assert calls[1] == ["schtasks", "/Delete", "/TN", scheduler.task_name(), "/F"]
+
+
+def test_every_windows_user_has_an_own_task(monkeypatch) -> None:
+    """Inštalácia je pre všetkých, mená úloh v Plánovači sú spoločné pre počítač."""
+    monkeypatch.setattr(scheduler.getpass, "getuser", lambda: "Jakub")
+    assert scheduler.task_name() == r"Moje kocky\Obnova cien - Jakub"
+    monkeypatch.setattr(scheduler.getpass, "getuser", lambda: "Anna")
+    assert scheduler.task_name() == r"Moje kocky\Obnova cien - Anna"
+
+
+def test_schtasks_has_a_time_limit(monkeypatch) -> None:
+    seen: list[dict] = []
+
+    def run(args, **kwargs):
+        seen.append(kwargs)
+
+        class Done:
+            returncode = 0
+            stdout = ""
+            stderr = ""
+
+        return Done()
+
+    monkeypatch.setattr(scheduler.subprocess, "run", run)
+    scheduler.apply(None, exe=EXE)
+    assert seen[0]["timeout"] == 15
 
 
 def test_apply_reports_a_failing_schtasks(monkeypatch) -> None:

@@ -52,6 +52,12 @@ def run_headless(data: DataDir, *, refresh: Refresh | None = None) -> str:
     return "done"
 
 
+def clear_marks(data: DataDir) -> None:
+    """Staré značky po behu, ktorý skončil bez upratania (zámok už drží aplikácia)."""
+    _remove(data.root / RUNNING)
+    _remove(data.root / STOP)
+
+
 def wait_for_headless(data: DataDir, *, timeout: float = 30.0) -> InstanceLock | None:
     """Aplikácia sa otvára a zámok drží beh bez okna: požiada ho o koniec a počká.
 

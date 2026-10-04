@@ -1035,6 +1035,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/prices/series/{num}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Series Value
+         * @description Moje figúrky zo série spolu; pred ``/{num}``, inak by ho cesta zhltla.
+         *
+         *     ``single`` (hodnota jednej série) platí len pri kompletnej sérii.
+         */
+        get: operations["get_series_value_api_v1_prices_series__num__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/prices/{num}": {
         parameters: {
             query?: never;
@@ -3316,6 +3338,8 @@ export interface components {
              */
             calls_used: number;
             auto_last?: components["schemas"]["AutoRefreshLastOut"] | null;
+            /** Schedule Error */
+            schedule_error?: string | null;
         };
         /** RegisterRequest */
         RegisterRequest: {
@@ -3487,6 +3511,40 @@ export interface components {
             total: number;
             /** Missing */
             missing: components["schemas"]["SeriesMissingOut"][];
+        };
+        /**
+         * SeriesValueOut
+         * @description Moje figúrky jednej série: súčty a graf ako pri jednej figúrke.
+         */
+        SeriesValueOut: {
+            /** Owned Count */
+            owned_count: number;
+            /** Distinct Count */
+            distinct_count: number;
+            /** Duplicates */
+            duplicates: number;
+            /** Series Size */
+            series_size: number | null;
+            /** Complete */
+            complete: boolean;
+            /** Single */
+            single: boolean;
+            /** Priced Count */
+            priced_count: number;
+            /** Purchase Total */
+            purchase_total: string | null;
+            /** Market Total */
+            market_total: string | null;
+            /** Profit */
+            profit: string | null;
+            /** Profit Pct */
+            profit_pct: number | null;
+            /** Approx */
+            approx: boolean;
+            /** Price At */
+            price_at: string | null;
+            /** History */
+            history: components["schemas"]["PricePointOut"][];
         };
         /** SetAlternateOut */
         SetAlternateOut: {
@@ -6240,6 +6298,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PriceLookupOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_series_value_api_v1_prices_series__num__get: {
+        parameters: {
+            query?: {
+                single?: boolean;
+            };
+            header?: never;
+            path: {
+                num: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeriesValueOut"];
                 };
             };
             /** @description Validation Error */

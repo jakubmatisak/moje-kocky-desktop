@@ -83,11 +83,6 @@ async def test_series_value_sums_my_figures_only(auth_client: AsyncClient, sessi
     assert body["market_total"] == "10.50"
     assert body["profit"] == "3.50"
     assert body["approx"] is False
-    # Graf až odkedy majú cenu všetky moje figúrky s cenou: deň 2 a deň 3.
-    assert [(p["captured_at"][:10], p["avg_price"]) for p in body["history"]] == [
-        ("2026-09-02", "9.50"),
-        ("2026-09-03", "10.50"),
-    ]
 
 
 async def test_series_value_without_my_figures_is_empty(
@@ -99,7 +94,6 @@ async def test_series_value_without_my_figures_is_empty(
 
     assert (body["owned_count"], body["priced_count"]) == (0, 0)
     assert body["market_total"] is None
-    assert body["history"] == []
 
 
 async def test_sealed_bag_is_not_priced_under_the_bare_series_number() -> None:

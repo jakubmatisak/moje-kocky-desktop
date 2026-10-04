@@ -297,6 +297,15 @@ class BulkUpdateRequest(BaseModel):
     dry_run: bool = False
 
 
+class BulkDeleteRequest(BaseModel):
+    """Hromadné zmazanie vlastných kusov; výber rovnako ako pri ``BulkUpdateRequest``."""
+
+    item_ids: list[int] | None = None
+    catalog_nums: list[str] | None = None
+    #: Len spočítať (na potvrdenie „Zmazať 24 kusov?“).
+    dry_run: bool = False
+
+
 class BulkUpdateOut(BaseModel):
     items: int
     sets: int
@@ -461,8 +470,6 @@ class SeriesValueOut(BaseModel):
     #: Niektorá cena je z druhého stavu (≈).
     approx: bool
     price_at: datetime | None
-    #: Súčet po dňoch, od dňa, keď majú cenu všetky moje figúrky.
-    history: list[PricePointOut]
 
 
 class PriceOverviewOut(BaseModel):

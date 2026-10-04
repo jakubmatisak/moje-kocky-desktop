@@ -363,8 +363,9 @@ pod holým číslom (`42233`) vráti prvú figúrku (`42233-1`). Nerozbalený s�
 pod holým číslom sa preto von necení (`pricing.source_prices`), len ručne.
 Stránka série vo Figúrkach má kartu `SeriesValueCard.vue` (`GET /prices/series/{num}`,
 `services/series_value.py`): kúpené, hodnota a zisk vlastnených figúrok (bez
-sáčkov), graf súčtu po dňoch od dňa, keď majú cenu všetky (`PriceHistoryChart`
-s vlastnými popismi), a obnova len mojich figúrok (`refresh-all?num=`, len
+sáčkov), vývoj portfólia série ako na Prehľade (`/stats/timeline?series=`,
+`PortfolioChart`: od prvého nákupu, kus až odo dňa kúpy, bez trhovej ceny
+kúpnou cenou) a obnova len mojich figúrok (`refresh-all?num=`, len
 s `auth.can('brickeconomy.price_detail')`). Duplikáty sa pripočítavajú a karta
 to povie; `?single=true` (prepínač „Hodnota jednej série“) ráta každú figúrku
 raz (prvý kúpený kus) a server ho prijme len pri kompletnej sérii.
@@ -510,6 +511,15 @@ Len vlastnené kusy účtu, kategória cez `set_membership` na set,
 `dry_run` na počet pred potvrdením (`services/bulk.py`). Figúrky zo sérií
 Zbierka nemá, hromadne sa upravujú v detaile série: `BulkBar` tam dostane
 `query` `{ series: [num] }` bez `sets_only`, „vybrať všetko“ je celá séria.
+Hromadné zmazanie (`POST /items/bulk-delete`, ten istý výber, `dry_run`
+na počet, len vlastnené kusy aj s fotkami a kontrolami dielikov ako
+`DELETE /items/{id}` cez `_delete_pieces`) ponúka `BulkBar` len s `deletable`:
+stránka série vo Figúrkach. Tam sa vyberajú všetky figúrky, aj chýbajúce, a
+„vybrať všetko“ je ich výslovný zoznam (`createSelection({ explicitAll: true })`),
+nie celá séria, aby nerozbalené sáčky ostali. Úprava a zmazanie sa dotknú
+len vlastnených; „Kúpil som vybrané“ (slot `actions` v `BulkBar`) otvorí
+`SeriesPurchaseDialog` s `chosen` a pridá vybrané figúrky, chýbajúce aj
+duplikáty, jednou sumou cez `POST /items/bulk`.
 
 **Prehľad počíta rozsah cez ten istý filter.** Všetky `/stats/*` majú
 `FilterDep` a filtrujú so stavom „všetko“ (predané v rozsahu ostanú).
@@ -1023,7 +1033,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 865 testov, frontend 404. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 869 testov, frontend 410. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

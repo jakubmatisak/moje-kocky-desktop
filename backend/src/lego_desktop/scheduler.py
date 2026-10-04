@@ -24,6 +24,8 @@ log = logging.getLogger(__name__)
 #: vlastnú úlohu (mená v Plánovači sú spoločné pre počítač a cudziu úlohu
 #: bežný používateľ neprepíše). Odinštalovanie zmaže celý priečinok.
 TASK_FOLDER = "Moje kocky"
+#: Úloha prvej zostavy 1.3.0, ešte bez mena používateľa; pri nastavovaní sa zmaže.
+LEGACY_TASK_NAME = f"{TASK_FOLDER}\\Obnova cien"
 #: Na volanie schtasks; dlhšie by zdržalo uloženie nastavenia.
 TIMEOUT_SECONDS = 15
 #: Bez okna konzoly pri volaní schtasks z aplikácie bez konzoly.
@@ -95,8 +97,14 @@ def _schtasks(*args: str) -> subprocess.CompletedProcess:
     )
 
 
+def _forget_legacy_task() -> None:
+    """Stará spoločná úloha by bežala popri novej; keď nie je, chyba nevadí."""
+    _schtasks("/Delete", "/TN", LEGACY_TASK_NAME, "/F")
+
+
 def apply(when: time | None, *, exe: Path | None = None) -> None:
     """Vytvorí alebo prestaví úlohu na čas `when`; None úlohu zmaže."""
+    _forget_legacy_task()
     if when is None:
         done = _schtasks("/Delete", "/TN", task_name(), "/F")
         if done.returncode != 0:

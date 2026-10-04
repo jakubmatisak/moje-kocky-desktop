@@ -362,19 +362,6 @@ async def get_series_value(
         profit_pct=pct,
         approx=value.approx,
         price_at=value.price_at,
-        history=[
-            PricePointOut(
-                captured_at=when,
-                avg_price=total,
-                min_price=None,
-                max_price=None,
-                qty=None,
-                condition=PriceCondition.NEW.value,
-                price_kind=PriceKind.SET.value,
-                source="series",
-            )
-            for when, total in value.history
-        ],
     )
 
 

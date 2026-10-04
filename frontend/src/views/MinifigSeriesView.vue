@@ -16,6 +16,7 @@
   import { useI18n } from 'vue-i18n'
   import { useRoute } from 'vue-router'
   import { api, errorMessage } from '@/api/client'
+  import BulkBar from '@/components/BulkBar.vue'
   import CardGrid from '@/components/CardGrid.vue'
   import GhostActions from '@/components/GhostActions.vue'
   import GhostCard from '@/components/GhostCard.vue'
@@ -28,6 +29,7 @@
   import SortHeader from '@/components/SortHeader.vue'
   import { useMinifigsView } from '@/composables/useMinifigsView'
   import { usePageLoad } from '@/composables/usePageLoad'
+  import { createSelection } from '@/composables/useSelection'
   import { imageSrc } from '@/utils/imageSrc'
   import { memberDefaultDir, memberShowFrom, sortMembers } from '@/utils/seriesList'
   import { headerDir, nextSort } from '@/utils/tableSort'
@@ -65,6 +67,34 @@
   const page = usePageLoad(load)
 
   const ownedCount = computed(() => members.value.filter(m => m.owned > 0).length)
+
+  /**
+   * Výber figúrok: „Kúpil som vybrané“ (chýbajúce aj duplikáty naraz) a pri
+   * tých, ktoré mám, hromadná úprava a zmazanie (server mení len vlastnené).
+   * „Všetko“ je zoznam figúrok (`explicitAll`), nie celá séria, aby
+   * nerozbalené sáčky ostali; tie sú v detaile série.
+   */
+  const selection = createSelection({ groups: () => members.value.map(m => m.catalog.catalog_num), explicitAll: true })
+  const chosenMembers = computed(() => members.value.filter(m => selection.hasGroup(m.catalog.catalog_num)))
+  const chosenOpen = ref(false)
+
+  /** Pri výbere klik na kartu chýbajúcej figúrky vyberá, nie pridáva či otvára. */
+  function pickGhost (event: Event, catalogNum: string): void {
+    if (!selection.active.value) return
+    event.stopPropagation()
+    event.preventDefault()
+    selection.toggleGroup(catalogNum)
+  }
+
+  function afterChosen (): void {
+    selection.stop()
+    page.run()
+  }
+  const bulkScope = computed(() => ({ series: [series.value?.series_num ?? num.value] }))
+
+  function pick (catalogNum: string): void {
+    if (selection.active.value) selection.toggleGroup(catalogNum)
+  }
   const missingCount = computed(() => members.value.length - ownedCount.value)
 
   /**
@@ -89,6 +119,7 @@
 
   // Iná séria: staré karty k nej nepatria, znova kostra.
   watch(num, () => {
+    selection.stop()
     page.reset()
     page.run()
   })
@@ -213,6 +244,14 @@
 
         <v-spacer />
 
+        <v-btn
+          v-if="!selection.active.value"
+          data-test="series-select"
+          prepend-icon="mdi-checkbox-multiple-outline"
+          variant="text"
+          @click="selection.active.value = true"
+        >{{ t('bulk.select') }}</v-btn>
+
         <!-- Celá séria naraz za jednu sumu, rozpočíta sa na figúrky. -->
         <v-btn
           color="primary"
@@ -228,6 +267,8 @@
         <v-table density="comfortable" hover>
           <thead>
             <tr>
+              <th v-if="selection.active.value" class="minifigs-table__check" />
+
               <th class="minifigs-table__photo" />
 
               <th v-for="column in COLUMNS" :key="column.key" :class="column.class">
@@ -248,6 +289,13 @@
               :key="member.catalog.catalog_num"
               :class="{ 'minifigs-table__row--missing': member.owned === 0 }"
             >
+              <td v-if="selection.active.value" class="minifigs-table__check">
+                <v-checkbox-btn
+                  :model-value="selection.hasGroup(member.catalog.catalog_num)"
+                  @update:model-value="pick(member.catalog.catalog_num)"
+                />
+              </td>
+
               <td class="minifigs-table__photo">
                 <SetImage
                   :alt="member.catalog.name"
@@ -320,14 +368,27 @@
 
       <CardGrid v-else>
         <template v-for="member in shown" :key="member.catalog.catalog_num">
+          <!-- Pri výbere karta neotvára detail, ale vyberá figúrku. -->
           <v-card
             v-if="member.owned > 0"
             border
             class="h-100 d-flex flex-column"
+            :class="{ 'figure-card--selected': selection.active.value && selection.hasGroup(member.catalog.catalog_num) }"
+            :data-test="`figure-${member.catalog.catalog_num}`"
             flat
-            :to="{ name: 'set-detail', params: { num: member.catalog.catalog_num }, query: { from: 'minifigs' } }"
+            :to="selection.active.value ? undefined : { name: 'set-detail', params: { num: member.catalog.catalog_num }, query: { from: 'minifigs' } }"
+            @click="pick(member.catalog.catalog_num)"
           >
-            <SetImage :alt="member.catalog.name" rounded="0" :size="132" :src="imageSrc(member.catalog.image_url) ?? undefined" />
+            <div class="position-relative">
+              <SetImage :alt="member.catalog.name" rounded="0" :size="132" :src="imageSrc(member.catalog.image_url) ?? undefined" />
+
+              <v-icon
+                v-if="selection.active.value"
+                class="figure-card__check"
+                :color="selection.hasGroup(member.catalog.catalog_num) ? 'primary' : undefined"
+                :icon="selection.hasGroup(member.catalog.catalog_num) ? 'mdi-checkbox-marked' : 'mdi-checkbox-blank-outline'"
+              />
+            </div>
 
             <div class="pa-3 d-flex flex-column ga-1 flex-grow-1">
               <div class="text-body-large font-weight-medium text-truncate">{{ member.catalog.name }}</div>
@@ -349,14 +410,77 @@
             </div>
           </v-card>
 
-          <GhostCard v-else :catalog="member.catalog" :wanted="member.wanted" @owned="page.run()" />
+          <div
+            v-else
+            class="position-relative h-100"
+            :class="{ 'figure-card--selected': selection.active.value && selection.hasGroup(member.catalog.catalog_num) }"
+            :data-test="`ghost-${member.catalog.catalog_num}`"
+            @click.capture="pickGhost($event, member.catalog.catalog_num)"
+          >
+            <GhostCard :catalog="member.catalog" :wanted="member.wanted" @owned="page.run()" />
+
+            <v-icon
+              v-if="selection.active.value"
+              class="figure-card__check"
+              :color="selection.hasGroup(member.catalog.catalog_num) ? 'primary' : undefined"
+              :icon="selection.hasGroup(member.catalog.catalog_num) ? 'mdi-checkbox-marked' : 'mdi-checkbox-blank-outline'"
+            />
+          </div>
         </template>
       </CardGrid>
+
+      <!-- Úprava a zmazanie len figúrok, ktoré mám (aj ich duplikátov). -->
+      <BulkBar
+        v-if="selection.active.value"
+        deletable
+        :query="bulkScope"
+        :selection="selection"
+        :total="members.length"
+        unit="figures"
+        @done="page.run()"
+      >
+        <template #actions>
+          <v-btn
+            color="primary"
+            data-test="buy-chosen"
+            :disabled="chosenMembers.length === 0"
+            prepend-icon="mdi-cart-check"
+            size="small"
+            variant="flat"
+            @click="chosenOpen = true"
+          >{{ t('purchase.boughtChosen') }}</v-btn>
+        </template>
+      </BulkBar>
+
+      <SeriesPurchaseDialog
+        v-model="chosenOpen"
+        :chosen="chosenMembers"
+        :members="members"
+        :series="series"
+        @saved="afterChosen"
+      />
     </template>
   </div>
 </template>
 
 <style scoped>
+.figure-card--selected,
+.figure-card--selected > * {
+  border-color: rgb(var(--v-theme-primary)) !important;
+}
+
+.figure-card__check {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgb(var(--v-theme-surface));
+  border-radius: 4px;
+}
+
+.minifigs-table__check {
+  width: 48px;
+}
+
 /* Tabuľka série: riadky ako v Chcem a Zbierke, na telefóne sa posúva do strany. */
 .minifigs-table {
   overflow-x: auto;

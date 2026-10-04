@@ -10,6 +10,7 @@ import { VDialog } from 'vuetify/components/VDialog'
 import { VSpacer } from 'vuetify/components/VGrid'
 import { VList, VListItem } from 'vuetify/components/VList'
 import { VMenu } from 'vuetify/components/VMenu'
+import { VProgressLinear } from 'vuetify/components/VProgressLinear'
 import { VSelect } from 'vuetify/components/VSelect'
 import { createSelection } from '@/composables/useSelection'
 import i18n from '@/plugins/i18n'
@@ -109,5 +110,68 @@ describe('hromadná úprava: rozsah výberu', () => {
 
     expect(query).toEqual({ series: ['71051'] })
     expect(body).toMatchObject({ item_ids: [11], dry_run: true })
+  })
+})
+
+describe('hromadné zmazanie (stránka série)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    i18n.global.locale.value = 'sk'
+    post.mockReset()
+    post.mockResolvedValue({ data: { items: 3, sets: 2 } })
+  })
+
+  afterEach(() => {
+    wrapper?.unmount()
+    wrapper = null
+    document.body.innerHTML = ''
+  })
+
+  function mountDeletable (deletable: boolean) {
+    const selection = createSelection({ groups: () => ['71052-1', '71052-2'], explicitAll: true })
+    selection.active.value = true
+    selection.selectAll()
+    wrapper = mount(BulkBar, {
+      attachTo: document.body,
+      props: { selection, total: 2, unit: 'figures', query: { series: ['71052'] }, deletable },
+      global: {
+        plugins: [
+          createVuetify({
+            components: {
+              VBtn, VCard, VCardActions, VCardText, VCardTitle, VCombobox, VDialog,
+              VList, VListItem, VMenu, VProgressLinear, VSelect, VSpacer,
+            },
+          }),
+          i18n,
+        ],
+      },
+    })
+  }
+
+  it('v Zbierke tlačidlo Zmazať nie je', async () => {
+    mountDeletable(false)
+    await flushPromises()
+    expect(() => button('Zmazať')).toThrow()
+  })
+
+  it('najprv počet, zmaže až po potvrdení a pošle zoznam figúrok', async () => {
+    mountDeletable(true)
+    await flushPromises()
+
+    button('Zmazať').click()
+    await flushPromises()
+    expect(post.mock.calls).toHaveLength(1)
+    expect(post.mock.calls[0]?.[0]).toBe('/items/bulk-delete')
+    expect(post.mock.calls[0]?.[1]).toMatchObject({
+      params: { query: { series: ['71052'] } },
+      body: { catalog_nums: ['71052-1', '71052-2'], dry_run: true },
+    })
+    expect(document.body.textContent).toContain('Zmazať 3 kusy?')
+
+    const confirm = [...document.body.querySelectorAll<HTMLElement>('.v-dialog .v-btn')].find(b => b.textContent?.trim() === 'Zmazať')
+    confirm?.click()
+    await flushPromises()
+    expect(post.mock.calls).toHaveLength(2)
+    expect(post.mock.calls[1]?.[1]).toMatchObject({ body: { dry_run: false } })
   })
 })

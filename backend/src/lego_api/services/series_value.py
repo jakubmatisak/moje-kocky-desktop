@@ -11,8 +11,8 @@ rozhranie to ponúka, len keď je séria kompletná.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import UTC, date, datetime, time
+from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,8 +21,6 @@ from lego_api.models import CatalogItem, CollectionItem, ItemStatus
 from lego_api.services.filters import series_num
 from lego_api.services.portfolio import (
     ZERO,
-    SnapshotIndex,
-    ValuedItem,
     load_items,
     load_snapshots,
     value_items,
@@ -47,8 +45,6 @@ class SeriesValue:
     #: Niektorá cena je z druhého stavu (≈).
     approx: bool = False
     price_at: datetime | None = None
-    #: (deň, súčet) od dňa, odkedy majú cenu všetky moje figúrky s trhovou cenou.
-    history: list[tuple[datetime, Decimal]] = field(default_factory=list)
 
     @property
     def duplicates(self) -> int:
@@ -79,32 +75,6 @@ def _first_of_each(items: list[CollectionItem]) -> list[CollectionItem]:
     return list(chosen.values())
 
 
-def _history(
-    market: list[ValuedItem], manual: Decimal, index: SnapshotIndex
-) -> list[tuple[datetime, Decimal]]:
-    """Súčet po dňoch; ku každému dňu posledná známa cena každej figúrky.
-
-    Začína dňom, keď už má cenu každá figúrka s trhovou cenou, inak by súčet
-    rástol len tým, ako pribúdajú ceny. Ručná cena je dnešná a pripočíta sa
-    ku každému dňu rovnako, ako v grafe portfólia.
-    """
-    if not market:
-        return []
-    targets = [resolve_price_target(v.item, v.catalog) for v in market]
-    days: set[date] = set()
-    for target in targets:
-        days.update(t.date() for t in index.times_any(target))
-    points: list[tuple[datetime, Decimal]] = []
-    for day in sorted(days):
-        moment = datetime.combine(day, time.max, tzinfo=UTC)
-        values = [index.value_at_any(t, moment) for t in targets]
-        if any(v is None for v in values):
-            continue
-        total = sum((v[0] for v in values if v is not None), ZERO) + manual
-        points.append((datetime.combine(day, time(12), tzinfo=UTC), total))
-    return points
-
-
 async def series_value(
     session: AsyncSession, user_id: int, num: str, *, single: bool = False
 ) -> SeriesValue:
@@ -122,8 +92,6 @@ async def series_value(
     valued = value_items(items, index)
 
     priced = [v for v in valued if v.price_source != "missing"]
-    market = [v for v in priced if v.price_source in ("market", "market_approx")]
-    manual = sum((v.market_value for v in priced if v.price_source == "manual"), ZERO)
     times = [v.price_at for v in priced if v.price_at is not None]
     return SeriesValue(
         owned_count=owned_count,
@@ -135,5 +103,4 @@ async def series_value(
         priced_purchase=sum((v.purchase for v in priced), ZERO),
         approx=any(v.price_source == "market_approx" for v in priced),
         price_at=max(times) if times else None,
-        history=_history(market, manual, index),
     )

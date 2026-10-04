@@ -566,6 +566,29 @@ export interface paths {
         patch: operations["update_item_api_v1_items__item_id__patch"];
         trace?: never;
     };
+    "/items/bulk-delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk Delete
+         * @description Zmaže naraz viac vlastnených kusov (výber ako pri hromadnej úprave).
+         *
+         *     Predané kusy a kusy iného účtu sa nemažú nikdy. ``dry_run`` len zráta,
+         *     aby rozhranie mohlo povedať, koľko kusov zmizne.
+         */
+        post: operations["bulk_delete_api_v1_items_bulk_delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/items/bulk-update": {
         parameters: {
             query?: never;
@@ -2006,6 +2029,21 @@ export interface components {
             category_add?: number | null;
             /** Category Remove */
             category_remove?: number | null;
+        };
+        /**
+         * BulkDeleteRequest
+         * @description Hromadné zmazanie vlastných kusov; výber rovnako ako pri ``BulkUpdateRequest``.
+         */
+        BulkDeleteRequest: {
+            /** Item Ids */
+            item_ids?: number[] | null;
+            /** Catalog Nums */
+            catalog_nums?: string[] | null;
+            /**
+             * Dry Run
+             * @default false
+             */
+            dry_run: boolean;
         };
         /** BulkUpdateOut */
         BulkUpdateOut: {
@@ -3543,8 +3581,6 @@ export interface components {
             approx: boolean;
             /** Price At */
             price_at: string | null;
-            /** History */
-            history: components["schemas"]["PricePointOut"][];
         };
         /** SetAlternateOut */
         SetAlternateOut: {
@@ -5360,6 +5396,78 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_delete_api_v1_items_bulk_delete_post: {
+        parameters: {
+            query?: {
+                status?: "owned" | "sold" | "all";
+                q?: string | null;
+                category?: number[] | null;
+                kind?: ("set" | "minifig")[] | null;
+                series?: string[] | null;
+                theme?: string[] | null;
+                subtheme?: string[] | null;
+                condition?: string[] | null;
+                purpose?: string[] | null;
+                location?: string[] | null;
+                flag?: string[] | null;
+                tag?: string[] | null;
+                variant?: string[] | null;
+                year_from?: number | null;
+                year_to?: number | null;
+                retired?: boolean | null;
+                price?: ("gain" | "loss" | "even" | "missing")[] | null;
+                duplicates?: boolean;
+                incomplete?: boolean;
+                bought_from?: string | null;
+                bought_to?: string | null;
+                price_min?: number | string | null;
+                price_max?: number | string | null;
+                value_min?: number | string | null;
+                value_max?: number | string | null;
+                place?: string[] | null;
+                channel?: string[] | null;
+                rating_min?: number | null;
+                growth?: ("up" | "down" | "none")[] | null;
+                source?: ("market" | "market_approx" | "manual" | "missing" | "stale")[] | null;
+                retired_recent?: boolean;
+                imported?: number[] | null;
+                purchase?: ("manual" | "auto" | "none")[] | null;
+                box?: string[] | null;
+                /** @description Sumy v dnešných peniazoch, prepočítané infláciou. */
+                real?: boolean;
+                /** @description Rozsah sekcie Zbierka: bez figúrok zo sérií (tie sú vo Figúrkach), ani v ponuke volieb panela. Prehľad a detail setu ho neposielajú. */
+                sets_only?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkDeleteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkUpdateOut"];
                 };
             };
             /** @description Validation Error */

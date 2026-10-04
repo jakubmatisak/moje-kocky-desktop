@@ -1,8 +1,12 @@
 <script setup lang="ts">
-  import type { SeriesValue } from '@/api/types'
+  import type { SeriesValue, TimelinePoint } from '@/api/types'
   /**
    * Cena mojich figúrok zo série, ako karta ceny v detaile jednej figúrky:
-   * kúpené, hodnota a zisk spolu, graf súčtu v čase a obnova cien.
+   * kúpené, hodnota a zisk spolu, vývoj portfólia série a obnova cien.
+   *
+   * Graf je ten istý ako portfólio na Prehľade (`/stats/timeline` s filtrom
+   * `series`): od prvého nákupu, každý kus až odo dňa kúpy, bez trhovej ceny
+   * kúpnou cenou, predaný do dňa predaja. Prepínač jednej série ho nemení.
    *
    * BrickEconomy cenu celej série nemá, hodnota je súčet mojich figúrok
    * (`GET /prices/series/{num}`). Duplikáty sa pripočítavajú; „Hodnota jednej
@@ -13,7 +17,7 @@
   import { computed, onMounted, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { api } from '@/api/client'
-  import PriceHistoryChart from '@/components/PriceHistoryChart.vue'
+  import PortfolioChart from '@/components/PortfolioChart.vue'
   import { onPageReload } from '@/composables/usePageLoad'
   import { useAuthStore } from '@/stores/auth'
   import { useCollectionStore } from '@/stores/collection'
@@ -28,6 +32,14 @@
   const collection = useCollectionStore()
 
   const value = ref<SeriesValue | null>(null)
+  const timeline = ref<TimelinePoint[]>([])
+
+  async function loadTimeline (): Promise<void> {
+    const { data } = await api.GET('/stats/timeline', {
+      params: { query: { step: 'day', series: [props.num] } },
+    })
+    timeline.value = data ?? []
+  }
   const single = ref(false)
   const refreshing = ref(false)
   const refreshNote = ref<string | null>(null)
@@ -44,12 +56,6 @@
   }
 
   const hasPrice = computed(() => value.value?.market_total !== null && value.value?.market_total !== undefined)
-  /** Kúpna cena len figúrok s cenou: hodnota mínus zisk, ako ho ráta server. */
-  const pricedPurchase = computed(() => {
-    const market = toNumber(value.value?.market_total)
-    const profit = toNumber(value.value?.profit)
-    return market === null || profit === null ? null : market - profit
-  })
   const profitClass = computed(() => {
     const profit = toNumber(value.value?.profit)
     if (profit === null) return ''
@@ -60,7 +66,7 @@
     refreshing.value = true
     refreshNote.value = null
     await priceStore.refreshOne(props.num, async () => {
-      await Promise.all([load(), collection.refreshAll(), auth.loadKeys()])
+      await Promise.all([load(), loadTimeline(), collection.refreshAll(), auth.loadKeys()])
       const s = priceStore.status
       refreshNote.value = s ? t('detail.refreshNoteSeries', { updated: s.updated, left: s.calls_left }) : null
       refreshing.value = false
@@ -71,9 +77,10 @@
   watch(() => props.num, () => {
     single.value = false
     load()
+    loadTimeline()
   })
-  onMounted(load)
-  onPageReload(load)
+  onMounted(() => Promise.all([load(), loadTimeline()]))
+  onPageReload(() => Promise.all([load(), loadTimeline()]))
 </script>
 
 <template>
@@ -142,14 +149,8 @@
 
     <div v-if="!hasPrice" class="text-body-medium text-medium-emphasis">{{ t('minifigs.seriesValue.noPrice') }}</div>
 
-    <!-- Ten istý graf ako pri jednej figúrke; skryje sa, kým nemá dva dni. -->
-    <PriceHistoryChart
-      :new-label="t('minifigs.seriesValue.chartValue')"
-      :new-points="value.history"
-      :purchase="pricedPurchase"
-      :purchase-label="t('minifigs.seriesValue.chartPurchase')"
-      :used-points="[]"
-    />
+    <!-- Vývoj portfólia série ako na Prehľade: vložené, hodnota a výnos z predajov. -->
+    <PortfolioChart v-if="timeline.length > 1" :points="timeline" />
 
     <div v-if="auth.can('brickeconomy.price_detail')" class="d-flex align-center flex-wrap ga-2">
       <span v-if="refreshNote" class="text-body-small text-medium-emphasis">{{ refreshNote }}</span>

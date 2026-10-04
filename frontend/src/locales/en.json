@@ -684,9 +684,7 @@
       "profit": "Profit",
       "pricedOf": "{priced} of {owned} have a price",
       "noPrice": "Your figures from this series have no price yet.",
-      "refresh": "Refresh prices of my figures",
-      "chartValue": "Value",
-      "chartPurchase": "Paid in total"
+      "refresh": "Refresh prices of my figures"
     },
     "title": "Minifigures",
     "summary": "Series figures: {figures} · collecting: {collecting} · complete: {complete}",
@@ -771,7 +769,9 @@
     "willAddPlural": "{count} figure will be added | {count} figures will be added",
     "perPieceAbout": "about {price} each",
     "splitHint": "The total is split evenly to the cent, so it adds up to what you paid.",
-    "haveItSet": "I have it"
+    "haveItSet": "I have it",
+    "chosenTitle": "I bought the chosen figures",
+    "boughtChosen": "I bought the chosen"
   },
   "scan": {
     "camera": "Scan with camera",
@@ -1281,7 +1281,11 @@
       "category_add": "Add to category",
       "category_remove": "Remove from category",
       "box": "Move to box"
-    }
+    },
+    "delete": "Delete",
+    "deleteConfirm": "Delete {pieces}? Their photos are deleted too and it cannot be undone. Sold pieces stay.",
+    "deleted": "Deleted: {pieces}",
+    "deleteFailed": "The pieces could not be deleted"
   },
   "table": {
     "priceAt": "Price from",

@@ -48,3 +48,17 @@ describe('výber kusov na hromadnú úpravu', () => {
     expect(cards.payload()).toEqual({ catalog_nums: ['b'] })
   })
 })
+
+describe('výber s výslovným „všetko“ (stránka série vo Figúrkach)', () => {
+  it('všetko je zoznam figúrok, nie celý filter, a odškrtnutie jednej ho zmenší', () => {
+    const selection = createSelection({ groups: () => ['71052-1', '71052-2'], explicitAll: true })
+
+    selection.selectAll()
+    expect(selection.all.value).toBe(true)
+    expect(selection.count(2)).toBe(2)
+    expect(selection.payload()).toEqual({ catalog_nums: ['71052-1', '71052-2'] })
+
+    selection.toggleGroup('71052-1')
+    expect(selection.payload()).toEqual({ catalog_nums: ['71052-2'] })
+  })
+})

@@ -20,6 +20,7 @@ from lego_api.models import (
     User,
 )
 from lego_api.schemas import (
+    BulkDeleteRequest,
     BulkUpdateOut,
     BulkUpdateRequest,
     CatalogOut,
@@ -506,6 +507,54 @@ async def get_item(item_id: int, user: CurrentUser, session: SessionDep) -> Coll
     return await _owned_item(session, user.id, item_id)
 
 
+async def _chosen_pieces(
+    session, user: User, f: ItemFilter, item_ids: list[int] | None, catalog_nums: list[str] | None
+) -> list[CollectionItem]:
+    """Vlastnené kusy, ktoré filter ukazuje, prípadne zúžené na vybrané kusy či karty."""
+    _, shown, _ = await _filtered(session, user, f)
+    items = [v.item for v in shown if v.item.status == ItemStatus.OWNED]
+    if item_ids is not None or catalog_nums is not None:
+        picked = await pick_items(session, user.id, item_ids=item_ids, catalog_nums=catalog_nums)
+        chosen = {p.id for p in picked}
+        items = [i for i in items if i.id in chosen]
+    return items
+
+
+async def _delete_pieces(session, settings: Settings, items: list[CollectionItem]) -> None:
+    """Zmaže kusy aj s fotkami na disku a kontrolami dielikov (SQLite bez cudzích kľúčov)."""
+    ids = [i.id for i in items]
+    if not ids:
+        return
+    photos = (await session.execute(select(ItemPhoto).where(ItemPhoto.item_id.in_(ids)))).scalars()
+    for photo in photos:
+        (Path(settings.photos_dir) / photo.filename).unlink(missing_ok=True)
+        await session.delete(photo)
+    await delete_checks(session, ids)
+    for item in items:
+        await session.delete(item)
+
+
+@router.post("/items/bulk-delete", response_model=BulkUpdateOut)
+async def bulk_delete(
+    payload: BulkDeleteRequest,
+    user: CurrentUser,
+    session: SessionDep,
+    settings: SettingsDep,
+    f: FilterDep,
+) -> BulkUpdateOut:
+    """Zmaže naraz viac vlastnených kusov (výber ako pri hromadnej úprave).
+
+    Predané kusy a kusy iného účtu sa nemažú nikdy. ``dry_run`` len zráta,
+    aby rozhranie mohlo povedať, koľko kusov zmizne.
+    """
+    items = await _chosen_pieces(session, user, f, payload.item_ids, payload.catalog_nums)
+    result = BulkUpdateOut(items=len(items), sets=len({i.catalog_num for i in items}))
+    if not payload.dry_run:
+        await _delete_pieces(session, settings, items)
+        await session.commit()
+    return result
+
+
 @router.post("/items/bulk-update", response_model=BulkUpdateOut)
 async def bulk_update(
     payload: BulkUpdateRequest, user: CurrentUser, session: SessionDep, f: FilterDep
@@ -618,14 +667,7 @@ async def delete_item(
     item = await _owned_item(session, user.id, item_id)
     # Fotky sa mažú výslovne. Cudzí kľúč by v databáze zmazal len riadky,
     # súbory na disku by zostali visieť.
-    photos = (
-        await session.execute(select(ItemPhoto).where(ItemPhoto.item_id == item_id))
-    ).scalars()
-    for photo in photos:
-        (Path(settings.photos_dir) / photo.filename).unlink(missing_ok=True)
-        await session.delete(photo)
-    await delete_checks(session, [item_id])
-    await session.delete(item)
+    await _delete_pieces(session, settings, [item])
     await session.commit()
 
 

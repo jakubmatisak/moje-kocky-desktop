@@ -7,6 +7,9 @@
    *
    * Rozsah je filter Zbierky (bez figúrok zo sérií). Detail série pošle
    * vlastný `query` (`series`), inak by sa figúrky hromadne upraviť nedali.
+   *
+   * `deletable` pridá hromadné zmazanie (stránky série): po počte zo servera
+   * potvrdenie, zmažú sa len vlastnené kusy aj s fotkami, späť to nejde.
    */
   import type { Selection } from '@/composables/useSelection'
   import { computed, ref } from 'vue'
@@ -21,14 +24,15 @@
   type Action = 'location' | 'box' | 'purpose' | 'condition' | 'flags_add' | 'flags_remove' | 'category_add' | 'category_remove'
 
   /**
-   * `total`: koľko položiek výsledok má; `unit`: karty setov, alebo kusy.
+   * `total`: koľko položiek výsledok má; `unit`: karty setov, kusy či figúrky.
    * `query`: rozsah výberu pre server; bez neho filter Zbierky.
    */
   const props = defineProps<{
     selection: Selection
     total: number
-    unit: 'sets' | 'pieces'
+    unit: 'sets' | 'pieces' | 'figures'
     query?: Record<string, unknown>
+    deletable?: boolean
   }>()
   const emit = defineEmits<{ done: [] }>()
 
@@ -51,9 +55,47 @@
   const selected = computed(() => props.selection.count(props.total))
 
   function countLabel (n: number): string {
+    if (props.unit === 'figures') return t('dashboard.figuresPlural', n, { named: { count: n } })
     return props.unit === 'pieces'
       ? t('collection.piecesPlural', n, { named: { count: n } })
       : t('collection.setsPlural', n, { named: { count: n } })
+  }
+
+  // --- hromadné zmazanie ------------------------------------------------
+
+  const removeOpen = ref(false)
+  /** Koľko kusov by zmizlo (`dry_run`); kým nie je, potvrdiť sa nedá. */
+  const removePreview = ref<number | null>(null)
+
+  async function sendDelete (dryRun: boolean): Promise<{ items: number } | null> {
+    const { data, error } = await api.POST('/items/bulk-delete', {
+      params: { query: (props.query ?? collection.filterQuery()) as never },
+      body: { ...props.selection.payload(), dry_run: dryRun },
+    })
+    if (error || !data) {
+      notify.error(error, t('bulk.deleteFailed'))
+      return null
+    }
+    return data
+  }
+
+  async function startDelete (): Promise<void> {
+    removePreview.value = null
+    removeOpen.value = true
+    busy.value = true
+    removePreview.value = (await sendDelete(true))?.items ?? null
+    busy.value = false
+  }
+
+  async function confirmDelete (): Promise<void> {
+    busy.value = true
+    const result = await sendDelete(false)
+    busy.value = false
+    if (!result) return
+    notify.success(t('bulk.deleted', { pieces: t('collection.piecesPlural', result.items, { named: { count: result.items } }) }))
+    removeOpen.value = false
+    props.selection.clear()
+    emit('done')
   }
 
   const options = computed<Array<{ value: string | number, title: string }>>(() => {
@@ -146,6 +188,9 @@
 
     <v-spacer />
 
+    <!-- Ďalšia akcia stránky (Kúpil som vybrané na stránke série). -->
+    <slot name="actions" />
+
     <v-menu>
       <template #activator="{ props: menu }">
         <v-btn
@@ -168,10 +213,46 @@
       </v-list>
     </v-menu>
 
+    <v-btn
+      v-if="deletable"
+      color="negative"
+      data-test="bulk-delete"
+      :disabled="selection.empty.value"
+      prepend-icon="mdi-delete-outline"
+      size="small"
+      variant="outlined"
+      @click="startDelete"
+    >{{ t('bulk.delete') }}</v-btn>
+
     <v-btn size="small" variant="text" @click="selection.stop()">
       {{ t('common.cancel') }}
     </v-btn>
   </v-card>
+
+  <v-dialog v-model="removeOpen" max-width="460">
+    <v-card :title="t('bulk.delete')">
+      <v-card-text class="text-body-large" data-test="bulk-delete-confirm">
+        <template v-if="removePreview !== null">
+          {{ t('bulk.deleteConfirm', { pieces: t('collection.piecesPlural', removePreview, { named: { count: removePreview } }) }) }}
+        </template>
+
+        <v-progress-linear v-else indeterminate />
+      </v-card-text>
+
+      <v-card-actions>
+        <v-spacer />
+        <v-btn variant="text" @click="removeOpen = false">{{ t('common.cancel') }}</v-btn>
+
+        <v-btn
+          color="negative"
+          :disabled="!removePreview"
+          :loading="busy"
+          variant="flat"
+          @click="confirmDelete"
+        >{{ t('bulk.delete') }}</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 
   <v-dialog v-model="open" max-width="460">
     <v-card :title="t(`bulk.actions.${action}`)">

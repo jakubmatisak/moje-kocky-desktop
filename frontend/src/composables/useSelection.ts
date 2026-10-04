@@ -17,6 +17,11 @@ import { computed, ref } from 'vue'
 export interface SelectionUniverse {
   items?: () => number[]
   groups?: () => string[]
+  /**
+   * „Vybrať všetko“ je výslovný zoznam načítaných položiek, nie celý filter.
+   * Stránka série vo Figúrkach: všetko sú figúrky, ktoré mám, nie aj sáčky.
+   */
+  explicitAll?: boolean
 }
 
 export function createSelection (universe: SelectionUniverse = {}) {
@@ -57,8 +62,8 @@ export function createSelection (universe: SelectionUniverse = {}) {
 
   function selectAll (): void {
     all.value = true
-    items.value = new Set()
-    groups.value = new Set()
+    items.value = new Set(universe.explicitAll ? universe.items?.() : [])
+    groups.value = new Set(universe.explicitAll ? universe.groups?.() : [])
   }
 
   function clear (): void {
@@ -69,12 +74,12 @@ export function createSelection (universe: SelectionUniverse = {}) {
 
   /** Koľko položiek je vybraných; pri „všetkom“ celý výsledok filtra. */
   function count (total: number): number {
-    return all.value ? total : items.value.size + groups.value.size
+    return all.value && !universe.explicitAll ? total : items.value.size + groups.value.size
   }
 
   /** Telo požiadavky bez zmien: zoznamy, alebo nič (= filter z adresy). */
   function payload (): { item_ids?: number[], catalog_nums?: string[] } {
-    if (all.value) {
+    if (all.value && !universe.explicitAll) {
       return {}
     }
     const out: { item_ids?: number[], catalog_nums?: string[] } = {}
@@ -90,7 +95,7 @@ export function createSelection (universe: SelectionUniverse = {}) {
   return {
     active,
     all,
-    empty: computed(() => !all.value && items.value.size === 0 && groups.value.size === 0),
+    empty: computed(() => (!all.value || Boolean(universe.explicitAll)) && items.value.size === 0 && groups.value.size === 0),
     hasItem: (id: number): boolean => all.value || items.value.has(id),
     hasGroup: (num: string): boolean => all.value || groups.value.has(num),
     toggleItem,

@@ -7,11 +7,19 @@ import { useAuthStore } from '@/stores/auth'
 import SeriesValueCard from './SeriesValueCard.vue'
 
 let answer: Record<string, unknown> = {}
+const asked: Array<{ path: string, query: unknown }> = []
+const TIMELINE = [
+  { day: '2026-09-01', invested: '10.00', market_value: '12.00', proceeds: '0.00' },
+  { day: '2026-09-02', invested: '10.00', market_value: '13.00', proceeds: '0.00' },
+]
 
 vi.mock('@/api/client', async original => ({
   ...(await original<typeof Client>()),
   api: {
-    GET: async () => ({ data: answer }),
+    GET: async (path: string, options?: { params?: { query?: unknown } }) => {
+      asked.push({ path, query: options?.params?.query })
+      return { data: path === '/stats/timeline' ? TIMELINE : answer }
+    },
   },
 }))
 
@@ -32,7 +40,6 @@ function value (overrides: Record<string, unknown> = {}) {
     profit_pct: 50,
     approx: false,
     price_at: '2026-09-03T12:00:00Z',
-    history: [],
     ...overrides,
   }
 }
@@ -53,6 +60,15 @@ async function mountCard (capabilities: string[] = []) {
 describe('Séria: cena mojich figúrok', () => {
   beforeEach(() => {
     i18n.global.locale.value = 'sk'
+    asked.length = 0
+  })
+
+  it('graf je vývoj portfólia série, ako na Prehľade (od prvého nákupu)', async () => {
+    answer = value()
+    const wrapper = await mountCard()
+
+    expect(asked).toContainEqual({ path: '/stats/timeline', query: { step: 'day', series: ['42233'] } })
+    expect(wrapper.findComponent({ name: 'PortfolioChart' }).props('points')).toEqual(TIMELINE)
   })
 
   it('upozorní, že sa duplikáty pripočítavajú', async () => {

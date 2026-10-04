@@ -684,9 +684,7 @@
       "profit": "Zisk",
       "pricedOf": "cenu má {priced} z {owned}",
       "noPrice": "Tvoje figúrky zo série zatiaľ nemajú cenu.",
-      "refresh": "Obnoviť ceny mojich figúrok",
-      "chartValue": "Hodnota",
-      "chartPurchase": "Kúpené spolu"
+      "refresh": "Obnoviť ceny mojich figúrok"
     },
     "title": "Figúrky",
     "summary": "Figúrok zo sérií: {figures} · zbierané série: {collecting} · kompletné: {complete}",
@@ -771,7 +769,9 @@
     "willAddPlural": "Pribudne {count} figúrka | Pribudnú {count} figúrky | Pribudne {count} figúrok",
     "perPieceAbout": "asi {price} za kus",
     "splitHint": "Suma sa rozpočíta rovnomerne na centy presne, súčet sedí so zaplatenou sumou.",
-    "haveItSet": "Mám ho"
+    "haveItSet": "Mám ho",
+    "chosenTitle": "Kúpil som vybrané figúrky",
+    "boughtChosen": "Kúpil som vybrané"
   },
   "scan": {
     "camera": "Skenovať kamerou",
@@ -1281,7 +1281,11 @@
       "category_add": "Zaradiť do kategórie",
       "category_remove": "Vyradiť z kategórie",
       "box": "Presunúť do krabice"
-    }
+    },
+    "delete": "Zmazať",
+    "deleteConfirm": "Zmazať {pieces}? Zmažú sa aj ich fotky a vrátiť sa to nedá. Predané kusy ostanú.",
+    "deleted": "Zmazané: {pieces}",
+    "deleteFailed": "Kusy sa nepodarilo zmazať"
   },
   "table": {
     "priceAt": "Cena z",

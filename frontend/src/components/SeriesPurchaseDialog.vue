@@ -8,6 +8,9 @@
    * pridajú len chýbajúce figúrky; keď bola kúpená celá sada navyše, dajú sa
    * pridať aj tie, ktoré už mám, ako duplikáty. Kúpené figúrky z Chcem
    * vyradí server (`POST /items/bulk`).
+   *
+   * S `chosen` („Kúpil som vybrané“ zo stránky série) sa pridajú presne
+   * vybrané figúrky, chýbajúce aj duplikáty, tou istou jednou sumou.
    */
   import { computed, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
@@ -23,7 +26,7 @@
   import { imageSrc } from '@/utils/imageSrc'
 
   const open = defineModel<boolean>({ required: true })
-  const props = defineProps<{ series: CmfSeries, members: CmfMember[] }>()
+  const props = defineProps<{ series: CmfSeries, members: CmfMember[], chosen?: CmfMember[] }>()
   const emit = defineEmits<{ saved: [] }>()
 
   const { t } = useI18n()
@@ -42,7 +45,10 @@
   const error = ref<string | null>(null)
 
   const missing = computed(() => props.members.filter(m => m.owned === 0))
-  const targets = computed(() => (includeOwned.value ? props.members : missing.value))
+  const targets = computed(() => {
+    if (props.chosen) return props.chosen
+    return includeOwned.value ? props.members : missing.value
+  })
   const perPiece = computed(() => {
     const value = toNumber(total.value)
     return value === null || targets.value.length === 0 ? null : value / targets.value.length
@@ -118,7 +124,7 @@
           />
         </template>
 
-        <v-card-title>{{ t('purchase.wholeSeriesTitle') }}</v-card-title>
+        <v-card-title>{{ chosen ? t('purchase.chosenTitle') : t('purchase.wholeSeriesTitle') }}</v-card-title>
         <v-card-subtitle>{{ series.name }}</v-card-subtitle>
       </v-card-item>
 
@@ -126,7 +132,7 @@
         <v-alert v-if="error" density="comfortable" type="error" variant="tonal">{{ error }}</v-alert>
 
         <v-switch
-          v-if="missing.length > 0 && missing.length < members.length"
+          v-if="!chosen && missing.length > 0 && missing.length < members.length"
           v-model="includeOwned"
           color="primary"
           density="compact"

@@ -45,10 +45,11 @@ def test_apply_creates_the_task_from_xml_and_deletes_it(monkeypatch, tmp_path) -
     scheduler.apply(time(7, 0), exe=EXE)
     scheduler.apply(None, exe=EXE)
 
-    assert calls[0][:4] == ["schtasks", "/Create", "/TN", scheduler.task_name()]
-    assert calls[0][-1] == "/F"
+    created = [c for c in calls if c[1] == "/Create"]
+    assert created[0][:4] == ["schtasks", "/Create", "/TN", scheduler.task_name()]
+    assert created[0][-1] == "/F"
     assert "T07:00:00" in written[0]
-    assert calls[1] == ["schtasks", "/Delete", "/TN", scheduler.task_name(), "/F"]
+    assert ["schtasks", "/Delete", "/TN", scheduler.task_name(), "/F"] in calls
 
 
 def test_every_windows_user_has_an_own_task(monkeypatch) -> None:
@@ -108,3 +109,25 @@ def test_missing_task_on_delete_is_fine(monkeypatch) -> None:
     monkeypatch.setattr(scheduler.subprocess, "run", run)
 
     scheduler.apply(None, exe=EXE)
+
+
+def test_the_old_shared_task_from_the_first_build_is_removed(monkeypatch) -> None:
+    """Prvá zostava 1.3.0 mala jednu úlohu bez mena používateľa; nesmie ostať visieť."""
+    calls: list[list[str]] = []
+
+    def run(args, **kwargs):
+        calls.append(list(args))
+
+        class Done:
+            returncode = 0
+            stdout = ""
+            stderr = ""
+
+        return Done()
+
+    monkeypatch.setattr(scheduler.subprocess, "run", run)
+
+    scheduler.apply(time(7, 0), exe=EXE)
+
+    assert ["schtasks", "/Delete", "/TN", scheduler.LEGACY_TASK_NAME, "/F"] in calls
+    assert scheduler.LEGACY_TASK_NAME == r"Moje kocky\Obnova cien"

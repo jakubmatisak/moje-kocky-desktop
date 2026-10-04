@@ -493,6 +493,17 @@ class ManualPriceRequest(BaseModel):
     condition: str = Field(default="N", pattern="^[NU]$")
 
 
+class AutoRefreshLastOut(BaseModel):
+    """Posledná automatická obnova cien účtu (desktop)."""
+
+    #: Miestny čas behu, ``RRRR-MM-DDTHH:MM``.
+    at: str
+    updated: int
+    #: ``ok``, ``quota``, ``reserve``, ``disabled``, ``stopped`` alebo ``error``.
+    outcome: str
+    complete: bool
+
+
 class RefreshStatusOut(BaseModel):
     running: bool
     pending: int
@@ -508,6 +519,8 @@ class RefreshStatusOut(BaseModel):
     #: dnes použité volania; tie isté čísla ako karta limitov (``/usage``).
     calls_limit: int = 0
     calls_used: int = 0
+    #: Posledná automatická obnova tohto účtu; bez nej null.
+    auto_last: AutoRefreshLastOut | None = None
 
 
 # --- štatistiky -------------------------------------------------------------

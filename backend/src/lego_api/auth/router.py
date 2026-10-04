@@ -2,6 +2,7 @@
 
 import json
 import logging
+import re
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
@@ -42,6 +43,7 @@ from lego_api.schemas import (
     UpdateMeRequest,
     UserOut,
 )
+from lego_api.services import auto_refresh
 from lego_api.services import keys as keys_service
 from lego_api.services import sources as sources_service
 from lego_api.services.account import delete_account, export_account
@@ -351,6 +353,8 @@ async def set_my_sources(
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
     user.fetch_settings = {**(user.fetch_settings or {}), **parsed}
     await session.commit()
+    # Vypnutá dávka cien = automatická obnova nemá čo robiť, úloha ide preč.
+    await auto_refresh.sync_schedule(session, settings)
     if parsed.get("auto_purchase_price"):
         # Z katalógu hneď, zadarmo; z BrickEconomy pri najbližšej obnove cien.
         await fill_purchase_prices(session, user.id)
@@ -385,6 +389,8 @@ async def set_my_keys(
             continue
         keys_service.store(user, name, raw, settings)
     await session.commit()
+    # Bez kľúča BrickEconomy sa automaticky neobnovuje nič.
+    await auto_refresh.sync_schedule(session, settings)
     return _keys_out(user, settings)
 
 
@@ -398,6 +404,8 @@ PREFERENCE_KEYS = {
     "unlock",
     "wishlist",
     "minifigs",
+    # Automatická denná obnova cien (desktop): prepínač, čas HH:MM, počet.
+    "autoRefresh",
 }
 #: Stav jednej obrazovky je pár filtrov, nie román.
 PREFERENCE_MAX_BYTES = 8_000
@@ -410,7 +418,7 @@ async def get_my_preferences(user: CurrentUser) -> dict[str, dict]:
 
 @router.put("/me/preferences/{key}", response_model=dict[str, dict])
 async def set_my_preference(
-    key: str, payload: dict, user: CurrentUser, session: SessionDep
+    key: str, payload: dict, user: CurrentUser, session: SessionDep, settings: SettingsDep
 ) -> dict[str, dict]:
     """Zapamätá si stav jednej obrazovky, napríklad filtre Zbierky.
 
@@ -422,6 +430,8 @@ async def set_my_preference(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Neznáme nastavenie")
     if len(json.dumps(payload)) > PREFERENCE_MAX_BYTES:
         raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, "Nastavenie je príliš veľké")
+    if key == "autoRefresh" and payload:
+        _check_auto_refresh(payload)
     current = dict(user.preferences or {})
     if payload:
         current[key] = payload
@@ -429,7 +439,33 @@ async def set_my_preference(
         current.pop(key, None)
     user.preferences = current
     await session.commit()
+    if key == "autoRefresh":
+        # Úloha v Plánovači úloh Windows ide za nastavením (desktop).
+        await auto_refresh.sync_schedule(session, settings)
     return current
+
+
+def _check_auto_refresh(payload: dict) -> None:
+    """Prepínač áno/nie, čas HH:MM a počet 1 až 100; inak 422, nie tichá náhrada."""
+    enabled = payload.get("enabled")
+    when = payload.get("time")
+    limit = payload.get("limit")
+    if enabled is not None and not isinstance(enabled, bool):
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Prepínač je áno alebo nie.")
+    if when is not None and (not isinstance(when, str) or not _TIME.fullmatch(when)):
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Čas musí byť v tvare HH:MM.")
+    if limit is not None and (
+        isinstance(limit, bool)
+        or not isinstance(limit, int)
+        or not 1 <= limit <= auto_refresh.MAX_LIMIT
+    ):
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            f"Počet cien musí byť 1 až {auto_refresh.MAX_LIMIT}.",
+        )
+
+
+_TIME = re.compile(r"([01]\d|2[0-3]):[0-5]\d")
 
 
 async def _issue_refresh(session, user: User, request: Request, remember: bool) -> str:

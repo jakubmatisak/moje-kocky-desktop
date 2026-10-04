@@ -13,6 +13,7 @@ v `app_settings` (`auto_refresh_last`) podľa účtu; prerušený beh
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -26,7 +27,6 @@ from lego_api.capabilities import Cap
 from lego_api.config import Settings
 from lego_api.models import AppSetting, User
 from lego_api.providers.brickeconomy import BrickEconomyProvider, quota
-from lego_api.routers.usage import brickeconomy_used
 from lego_api.services.keys import keys_of
 from lego_api.services.refresh import claim, refresh_prices
 
@@ -146,6 +146,9 @@ async def run_due(
         api_log.set_user(user.id)
         fingerprint = getattr(provider, "fingerprint", None)
         if fingerprint and isinstance(provider, BrickEconomyProvider):
+            # Tu, nie hore: router by inak ťahal služby a tie zas router.
+            from lego_api.routers.usage import brickeconomy_used
+
             async with sessionmaker() as session:
                 used = await brickeconomy_used(session, user.id, settings, provider)
             seed_quota(fingerprint, used=used, limit=settings.brickeconomy_daily_limit)
@@ -212,3 +215,19 @@ async def sync_schedule(session: AsyncSession, settings: Settings) -> None:
         on_schedule_change(when)
     except Exception:  # noqa: BLE001 - nastavenie sa uloží aj bez úlohy
         log.exception("Úlohu automatickej obnovy cien sa nepodarilo nastaviť")
+
+
+async def scheduler_loop(
+    sessionmaker: async_sessionmaker[AsyncSession],
+    settings: Settings,
+    *,
+    interval: float = 60.0,
+    provider_for: Callable[[Settings, object], object] = BrickEconomyProvider.for_user,
+) -> None:
+    """Otvorená aplikácia: raz za minútu obnoví, komu nastal čas (miestny čas)."""
+    while True:
+        try:
+            await run_due(sessionmaker, settings, datetime.now(), provider_for=provider_for)
+        except Exception:  # noqa: BLE001 - slučka musí bežať ďalej
+            log.exception("Kontrola automatickej obnovy cien zlyhala")
+        await asyncio.sleep(interval)

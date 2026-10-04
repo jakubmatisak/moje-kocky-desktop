@@ -1,6 +1,7 @@
 """Vstupný bod aplikácie. Servuje API aj zostavený frontend."""
 
 import asyncio
+import contextlib
 import logging
 import mimetypes
 import os
@@ -112,7 +113,19 @@ async def lifespan(app: FastAPI):
     await tokens.prune_at_startup(get_sessionmaker())
     # Skutočný stav registrácie drží databáza, správca ho mení v Nastaveniach.
     log.info("Aplikácia je pripravená. Predvolená registrácia: %s", settings.allow_registration)
-    yield
+    scheduler = None
+    if settings.auto_refresh_scheduler:
+        # Desktop: automatická obnova cien, kým je aplikácia otvorená.
+        from lego_api.services import auto_refresh
+
+        scheduler = asyncio.create_task(auto_refresh.scheduler_loop(get_sessionmaker(), settings))
+    try:
+        yield
+    finally:
+        if scheduler is not None:
+            scheduler.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await scheduler
 
 
 class VisibilityMiddleware:

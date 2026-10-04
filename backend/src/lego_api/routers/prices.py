@@ -22,6 +22,7 @@ from lego_api.providers.brickeconomy import BrickEconomyProvider, QuotaExhausted
 from lego_api.routers.catalog import catalog_detail
 from lego_api.routers.usage import brickeconomy_used
 from lego_api.schemas import (
+    AutoRefreshLastOut,
     CatalogOut,
     ManualPriceRequest,
     PriceCheckOut,
@@ -31,7 +32,7 @@ from lego_api.schemas import (
     PricePointOut,
     RefreshStatusOut,
 )
-from lego_api.services import price_misses
+from lego_api.services import auto_refresh, price_misses
 from lego_api.services.catalog import CatalogService, normalize_num
 from lego_api.services.fetch_policy import CallBlocked
 from lego_api.services.pricing import (
@@ -63,6 +64,7 @@ async def _status(
     state = get_state(user_id)
     left = provider.remaining_calls() if provider.enabled else 0
     used = await brickeconomy_used(session, user_id, settings, provider) if provider.enabled else 0
+    last = await auto_refresh.last_run(session, user_id)
     return RefreshStatusOut(
         running=state.running,
         pending=state.pending,
@@ -75,6 +77,14 @@ async def _status(
         skipped_fresh=state.skipped_fresh,
         calls_limit=settings.brickeconomy_daily_limit,
         calls_used=used,
+        auto_last=AutoRefreshLastOut(
+            at=last["at"],
+            updated=last.get("updated", 0),
+            outcome=last.get("outcome", "ok"),
+            complete=bool(last.get("complete")),
+        )
+        if last
+        else None,
     )
 
 

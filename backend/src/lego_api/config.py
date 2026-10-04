@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     cookie_domain: str | None = None
     #: Len východisko pre novú inštaláciu. Správca to prebije v Nastaveniach.
     allow_registration: bool = True
+    #: Desktop: automatická obnova cien beží aj v otvorenej aplikácii (services/auto_refresh).
+    auto_refresh_scheduler: bool = False
 
     # Kľúče k cudzím službám (Rebrickable, Brickset, BrickEconomy) tu nie sú.
     # Každý používateľ má svoje vlastné, uložené zašifrované pri účte,

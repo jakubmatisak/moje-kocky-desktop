@@ -35,8 +35,8 @@
     <template #activator="{ props: menu }">
       <v-text-field
         v-bind="{ ...menu, ...$attrs }"
+        append-inner-icon="mdi-clock-outline"
         :model-value="model"
-        prepend-inner-icon="mdi-clock-outline"
         readonly
       />
     </template>

@@ -975,6 +975,7 @@
       "hint": "Even when Moje kocky is not open: the computer only needs to be on and you signed in to Windows. Prices older than a week are refreshed, those without a price first. If the computer was off at that time, the refresh runs once it is on. If you switch it on after the set time, the first refresh runs right away.",
       "needsKey": "Automatic refresh needs a BrickEconomy key and price refresh switched on.",
       "time": "Time",
+      "timeHint": "Local time of this computer.",
       "limit": "Prices per run",
       "limitHint": "At most 100, and never more than is left of the daily limit that day.",
       "limitInvalid": "Enter a number from 1 to 100.",

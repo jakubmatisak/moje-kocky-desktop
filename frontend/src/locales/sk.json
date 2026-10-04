@@ -975,6 +975,7 @@
       "hint": "Aj keď Moje kocky nie sú otvorené: stačí zapnutý počítač a prihlásenie do Windows. Obnovia sa ceny staršie ako týždeň, najprv tie, ktoré cenu ešte nemajú. Keď bol počítač v ten čas vypnutý, obnova dobehne po zapnutí. Keď ju zapneš po nastavenom čase, prvá obnova prebehne hneď.",
       "needsKey": "Na automatickú obnovu treba kľúč BrickEconomy a zapnutú obnovu cien.",
       "time": "Čas",
+      "timeHint": "Miestny čas tohto počítača.",
       "limit": "Počet cien na jeden beh",
       "limitHint": "Najviac 100 a nikdy viac, než v ten deň ostáva z denného limitu.",
       "limitInvalid": "Zadaj číslo od 1 do 100.",

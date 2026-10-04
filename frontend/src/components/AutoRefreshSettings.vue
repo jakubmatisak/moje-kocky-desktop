@@ -89,9 +89,10 @@
         data-test="auto-refresh-time"
         density="compact"
         :disabled="!enabled"
-        hide-details
+        :hint="t('sources.autoRefresh.timeHint')"
         :label="t('sources.autoRefresh.time')"
-        style="max-width: 160px"
+        persistent-hint
+        style="max-width: 260px"
         variant="outlined"
         @update:model-value="save"
       />

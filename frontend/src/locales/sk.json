@@ -84,7 +84,13 @@
       "all": "Všetko",
       "showAll": "Celá história"
     },
-    "donutSetsPlural": "set | sety | setov"
+    "donutSetsPlural": "set | sety | setov",
+    "period": {
+      "title": "Nerealizovaný zisk za obdobie {from} – {to}:",
+      "before": "na začiatku {pct}",
+      "now": "teraz {pct}",
+      "sold": "Predaje v období: {amount} (realizovaný zisk je zvlášť)"
+    }
   },
   "collection": {
     "priceAt": "cena z {date}",
@@ -276,7 +282,11 @@
     "retiredShort": "Stiahnutý",
     "galleryTitle": "Ďalšie fotky ({count})",
     "galleryOpen": "Zväčšiť",
-    "galleryCredit": "Image(s) courtesy of Brickset.com"
+    "galleryCredit": "Image(s) courtesy of Brickset.com",
+    "historyBought": "Kúpené",
+    "historySold": "Predané",
+    "historyEvent": "{what}: {count} ks · {amount}",
+    "historyEmptyPeriod": "V tomto období nie je žiadna cena."
   },
   "sell": {
     "title": "Predať kus",
@@ -684,7 +694,8 @@
       "profit": "Zisk",
       "pricedOf": "cenu má {priced} z {owned}",
       "noPrice": "Tvoje figúrky zo série zatiaľ nemajú cenu.",
-      "refresh": "Obnoviť ceny mojich figúrok"
+      "refresh": "Obnoviť ceny mojich figúrok",
+      "estimated": "Pred {date} je súčet odhad: figúrke bez staršej ceny sa ráta jej prvá cena z BrickEconomy."
     },
     "title": "Figúrky",
     "summary": "Figúrok zo sérií: {figures} · zbierané série: {collecting} · kompletné: {complete}",

@@ -6,8 +6,18 @@
    * graf teda nestojí žiadne volanie navyše. Body nového a použitého kusu
    * majú rôzne dátumy, preto je os x číselná (čas v ms), nie kategórie:
    * rozostupy tak zodpovedajú času a netreba knižnicu na dátumy.
+   *
+   * `events` sú nákupy a predaje: zvislá čiarkovaná čiara v ten deň (plugin
+   * `eventLines`) a značka dole, ktorá pri prejdení myšou povie počet a sumu.
+   *
+   * S `periods` má výber obdobia ako portfólio na Prehľadu (1M až Všetko,
+   * od–do, `useChartRange`). Krivky sa orežú na obdobie a na okraji dostanú
+   * bod dopočítaný z cien okolo (`clipSeries`), nákupy mimo obdobia zmiznú.
+   * Obdobie si nepamätá nič, každý graf začína celou históriou.
    */
   import type { PricePoint } from '@/api/types'
+  import type { ChartEvent } from '@/utils/chartEvents'
+  import type { Plugin } from 'chart.js'
   import {
     Chart as ChartJS,
     Legend,
@@ -20,8 +30,11 @@
   import { Line } from 'vue-chartjs'
   import { useI18n } from 'vue-i18n'
   import { useTheme } from 'vuetify'
+  import DateField from '@/components/DateField.vue'
+  import { useChartRange } from '@/composables/useChartRange'
   import { CHART_COLORS } from '@/plugins/vuetify'
-  import { amount, displayCurrency, pricesHidden, toDisplay, toNumber } from '@/utils/format'
+  import { clipSeries, RANGE_PRESETS } from '@/utils/chartRange'
+  import { amount, displayCurrency, exactMoney, pricesHidden, toDisplay, toNumber } from '@/utils/format'
 
   ChartJS.register(LinearScale, PointElement, LineElement, Tooltip, Legend)
 
@@ -30,7 +43,19 @@
     usedPoints: PricePoint[]
     /** Priemerná kúpna cena vlastnených kusov, ak ju poznáme. */
     purchase: number | null
+    /** Nákupy a predaje na zvislé čiary. */
+    events?: ChartEvent[]
+    /** Výber obdobia nad grafom. */
+    periods?: boolean
   }>()
+
+  const { preset, from, to, fromInput, toInput, setEdge, showAll } = useChartRange('all')
+
+  const EVENT_COLORS: Record<string, string> = { buy: CHART_COLORS.themes[1]!, sell: CHART_COLORS.proceeds }
+
+  const eventPoints = computed(() => (props.events ?? [])
+    .map(e => ({ ...e, x: new Date(`${e.day.slice(0, 10)}T12:00:00`).getTime() }))
+    .filter(e => (from.value === null || e.x >= from.value) && (to.value === null || e.x <= to.value)))
 
   const { t } = useI18n()
   const theme = useTheme()
@@ -60,16 +85,51 @@
     return [...byDay.values()].toSorted((a, b) => a.x - b.x)
   }
 
-  const newSeries = computed(() => series(props.newPoints))
-  const usedSeries = computed(() => series(props.usedPoints))
+  const allNew = computed(() => series(props.newPoints))
+  const allUsed = computed(() => series(props.usedPoints))
+  const newSeries = computed(() => clipSeries(allNew.value, from.value, to.value))
+  const usedSeries = computed(() => clipSeries(allUsed.value, from.value, to.value))
 
-  /** Graf má zmysel od dvoch rôznych dní v aspoň jednej krivke. */
-  const hasData = computed(() => newSeries.value.length > 1 || usedSeries.value.length > 1)
+  /** Graf má zmysel od dvoch rôznych dní v aspoň jednej krivke (celej histórie). */
+  const hasData = computed(() => allNew.value.length > 1 || allUsed.value.length > 1)
+  /** V zvolenom období nie je ani jedna cena. */
+  const emptyPeriod = computed(() => newSeries.value.length === 0 && usedSeries.value.length === 0)
 
   const span = computed(() => {
-    const xs = [...newSeries.value, ...usedSeries.value].map(p => p.x)
+    const xs = [...newSeries.value, ...usedSeries.value, ...eventPoints.value].map(p => p.x)
+    if (xs.length === 0) return { min: from.value ?? 0, max: to.value ?? Date.now() }
     return { min: Math.min(...xs), max: Math.max(...xs) }
   })
+
+  /** Výška značiek udalostí: najnižšia suma v grafe, nech sú pri osi x. */
+  const eventY = computed(() => {
+    const ys = [...newSeries.value, ...usedSeries.value].map(p => p.y)
+    if (props.purchase !== null) ys.push(toDisplay(props.purchase))
+    return ys.length > 0 ? Math.min(...ys) : 0
+  })
+
+  /** Zvislé čiarkované čiary v dňoch nákupov a predajov, cez celú výšku grafu. */
+  const eventLines: Plugin<'line'> = {
+    id: 'eventLines',
+    beforeDatasetsDraw (chart) {
+      const { ctx, chartArea, scales } = chart
+      const x = scales.x
+      if (!x) return
+      ctx.save()
+      ctx.setLineDash([4, 4])
+      ctx.lineWidth = 1.2
+      for (const e of eventPoints.value) {
+        const px = x.getPixelForValue(e.x)
+        if (px < chartArea.left || px > chartArea.right) continue
+        ctx.strokeStyle = EVENT_COLORS[e.kind] ?? CHART_COLORS.invested
+        ctx.beginPath()
+        ctx.moveTo(px, chartArea.top)
+        ctx.lineTo(px, chartArea.bottom)
+        ctx.stroke()
+      }
+      ctx.restore()
+    },
+  }
 
   const dayFormat = new Intl.DateTimeFormat('sk-SK', { day: 'numeric', month: 'numeric', year: 'numeric' })
   const monthFormat = new Intl.DateTimeFormat('sk-SK', { month: 'short', year: 'numeric' })
@@ -130,6 +190,21 @@
         pointHoverRadius: 0,
       })
     }
+    for (const kind of ['buy', 'sell']) {
+      const points = eventPoints.value.filter(e => e.kind === kind)
+      if (points.length === 0) continue
+      datasets.push({
+        label: t(kind === 'buy' ? 'detail.historyBought' : 'detail.historySold'),
+        data: points.map(e => ({ x: e.x, y: eventY.value })),
+        events: points,
+        borderColor: EVENT_COLORS[kind],
+        backgroundColor: EVENT_COLORS[kind],
+        showLine: false,
+        pointStyle: 'triangle',
+        pointRadius: 6,
+        pointHoverRadius: 8,
+      })
+    }
     return { datasets }
   })
 
@@ -151,8 +226,17 @@
         callbacks: {
           title: (items: { parsed: { x: number | null } }[]) =>
             items[0]?.parsed.x == null ? '' : dayFormat.format(new Date(items[0].parsed.x)),
-          label: (ctx: { dataset: { label?: string }, parsed: { y: number | null } }) =>
-            `${ctx.dataset.label}: ${amount(ctx.parsed.y)}`,
+          label: (ctx: { dataset: { label?: string, events?: ChartEvent[] }, dataIndex: number, parsed: { y: number | null } }) => {
+            const event = ctx.dataset.events?.[ctx.dataIndex]
+            if (event) {
+              return t('detail.historyEvent', {
+                what: ctx.dataset.label,
+                count: event.count,
+                amount: exactMoney(event.amount),
+              })
+            }
+            return `${ctx.dataset.label}: ${amount(ctx.parsed.y)}`
+          },
         },
       },
     },
@@ -184,10 +268,57 @@
 
 <template>
   <div v-if="hasData">
-    <div class="text-body-small text-medium-emphasis mb-1">{{ t('detail.historyTitle') }}</div>
+    <div class="d-flex align-center flex-wrap ga-2 mb-1">
+      <div class="text-body-small text-medium-emphasis me-auto">{{ t('detail.historyTitle') }}</div>
 
-    <div class="price-history">
-      <Line :data="chartData" :options="chartOptions" />
+      <v-btn-toggle
+        v-if="periods"
+        v-model="preset"
+        data-test="history-presets"
+        density="compact"
+        divided
+        variant="outlined"
+      >
+        <v-btn v-for="value in RANGE_PRESETS" :key="value" size="small" :value="value">
+          {{ t(`dashboard.range.${value}`) }}
+        </v-btn>
+      </v-btn-toggle>
+    </div>
+
+    <div v-if="periods" class="d-flex align-center flex-wrap ga-2 mb-2">
+      <DateField
+        class="range-field"
+        density="compact"
+        hide-details
+        :label="t('filters.from')"
+        :model-value="fromInput"
+        @update:model-value="setEdge('from', String($event ?? ''))"
+      />
+
+      <DateField
+        class="range-field"
+        density="compact"
+        hide-details
+        :label="t('filters.to')"
+        :model-value="toInput"
+        @update:model-value="setEdge('to', String($event ?? ''))"
+      />
+
+      <v-btn
+        v-if="preset !== 'all'"
+        prepend-icon="mdi-arrow-expand-horizontal"
+        size="small"
+        variant="text"
+        @click="showAll"
+      >{{ t('dashboard.range.showAll') }}</v-btn>
+    </div>
+
+    <div v-if="emptyPeriod" class="price-history d-flex align-center justify-center text-body-medium text-medium-emphasis">
+      {{ t('detail.historyEmptyPeriod') }}
+    </div>
+
+    <div v-else class="price-history">
+      <Line :data="chartData as never" :options="chartOptions" :plugins="[eventLines]" />
     </div>
   </div>
 </template>
@@ -196,5 +327,9 @@
 .price-history {
   height: 220px;
   position: relative;
+}
+
+.range-field {
+  flex: 0 1 170px;
 }
 </style>

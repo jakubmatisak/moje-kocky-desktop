@@ -84,7 +84,13 @@
       "all": "All",
       "showAll": "Whole history"
     },
-    "donutSetsPlural": "set | sets"
+    "donutSetsPlural": "set | sets",
+    "period": {
+      "title": "Unrealised profit over {from} – {to}:",
+      "before": "at the start {pct}",
+      "now": "now {pct}",
+      "sold": "Sales in the period: {amount} (realised profit is separate)"
+    }
   },
   "collection": {
     "priceAt": "price from {date}",
@@ -276,7 +282,11 @@
     "retiredShort": "Retired",
     "galleryTitle": "More photos ({count})",
     "galleryOpen": "Enlarge",
-    "galleryCredit": "Image(s) courtesy of Brickset.com"
+    "galleryCredit": "Image(s) courtesy of Brickset.com",
+    "historyBought": "Bought",
+    "historySold": "Sold",
+    "historyEvent": "{what}: {count} pcs · {amount}",
+    "historyEmptyPeriod": "No price in this period."
   },
   "sell": {
     "title": "Sell a piece",
@@ -684,7 +694,8 @@
       "profit": "Profit",
       "pricedOf": "{priced} of {owned} have a price",
       "noPrice": "Your figures from this series have no price yet.",
-      "refresh": "Refresh prices of my figures"
+      "refresh": "Refresh prices of my figures",
+      "estimated": "Before {date} the sum is an estimate: a figure without an older price counts with its first BrickEconomy price."
     },
     "title": "Minifigures",
     "summary": "Series figures: {figures} · collecting: {collecting} · complete: {complete}",

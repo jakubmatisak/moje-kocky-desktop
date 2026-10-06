@@ -24,6 +24,7 @@ from lego_api.routers.usage import brickeconomy_used
 from lego_api.schemas import (
     AutoRefreshLastOut,
     CatalogOut,
+    ChartEventOut,
     ManualPriceRequest,
     PriceCheckOut,
     PriceDeltaOut,
@@ -362,6 +363,24 @@ async def get_series_value(
         profit_pct=pct,
         approx=value.approx,
         price_at=value.price_at,
+        history=[
+            PricePointOut(
+                captured_at=when,
+                avg_price=total,
+                min_price=None,
+                max_price=None,
+                qty=None,
+                condition=PriceCondition.NEW.value,
+                price_kind=PriceKind.SET.value,
+                source="series",
+            )
+            for when, total in value.history
+        ],
+        estimated_until=value.estimated_until,
+        events=[
+            ChartEventOut(day=day, kind=kind, count=count, amount=amount)
+            for day, kind, count, amount in value.events
+        ],
     )
 
 

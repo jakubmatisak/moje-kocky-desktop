@@ -3,8 +3,9 @@
  * Prehľad. Nerealizovaný a realizovaný zisk stoja vedľa seba ako dve
  * samostatné čísla a nikde sa nesčítavajú do jedného.
  */
+  import type { PeriodChange } from '@/utils/periodChange'
   import type { Scope } from '@/utils/scope'
-  import { computed, onMounted, watch } from 'vue'
+  import { computed, onMounted, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
 
   import BreakdownCard from '@/components/BreakdownCard.vue'
@@ -26,7 +27,7 @@
   import { useFilterStore } from '@/stores/filters'
   import { useNotifyStore } from '@/stores/notify'
   import { useProfileStore } from '@/stores/preferences'
-  import { count, exactMoney, money, percent } from '@/utils/format'
+  import { count, exactMoney, money, percent, shortDate } from '@/utils/format'
   import { imageSrc } from '@/utils/imageSrc'
   import { refreshScope, restoreScope } from '@/utils/scope'
 
@@ -39,6 +40,8 @@
   const notify = useNotifyStore()
 
   const summary = computed(() => collection.dashboardSummary)
+  /** Zisk za obdobie zvolené v grafe portfólia (6M, 1R, od–do); pri celej histórii nič. */
+  const period = ref<PeriodChange | null>(null)
   /*
    * Prázdna je zbierka, nie rozsah: rozsah bez kusov ukáže nuly, nie „pridaj
    * prvý set“. Bez súhrnu (ešte neprišiel, alebo zlyhal) prázdna nie je.
@@ -230,6 +233,33 @@
       </v-col>
     </v-row>
 
+    <!-- Zvolené obdobie grafu: o koľko sa za ten čas zmenil nerealizovaný zisk. -->
+    <v-card
+      v-if="showMarket && period"
+      border
+      class="pa-3 d-flex flex-wrap align-center ga-3"
+      data-test="period-change"
+      flat
+    >
+      <span class="text-body-medium text-medium-emphasis">
+        {{ t('dashboard.period.title', { from: shortDate(period.startDay), to: shortDate(period.endDay) }) }}
+      </span>
+
+      <span class="text-body-large font-weight-medium" :class="period.change >= 0 ? 'text-positive' : 'text-negative'">
+        {{ money(period.change, { sign: true, decimals: 0 }) }}
+        <span v-if="period.pct !== null" class="text-body-medium">({{ percent(period.pct, { sign: true }) }})</span>
+      </span>
+
+      <span class="text-body-medium">
+        {{ t('dashboard.period.before', { pct: percent(period.pctStart, { sign: true }) }) }}
+        · {{ t('dashboard.period.now', { pct: percent(period.pctEnd, { sign: true }) }) }}
+      </span>
+
+      <span v-if="period.sold > 0" class="text-body-small text-medium-emphasis">
+        {{ t('dashboard.period.sold', { amount: money(period.sold, { decimals: 0 }) }) }}
+      </span>
+    </v-card>
+
     <v-alert
       v-if="summary.price_missing > 0"
       density="comfortable"
@@ -241,7 +271,7 @@
 
     <v-row dense>
       <v-col v-if="showMarket" cols="12" lg="8">
-        <PortfolioCard :weekly="collection.timeline" />
+        <PortfolioCard :weekly="collection.timeline" @period="value => period = value" />
       </v-col>
 
       <v-col cols="12" :lg="showMarket ? 4 : 12">

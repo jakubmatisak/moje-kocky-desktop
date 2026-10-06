@@ -1,12 +1,13 @@
 <script setup lang="ts">
-  import type { SeriesValue, TimelinePoint } from '@/api/types'
+  import type { SeriesValue } from '@/api/types'
   /**
    * Cena mojich figúrok zo série, ako karta ceny v detaile jednej figúrky:
-   * kúpené, hodnota a zisk spolu, vývoj portfólia série a obnova cien.
+   * kúpené, hodnota a zisk spolu, vývoj ceny a obnova cien.
    *
-   * Graf je ten istý ako portfólio na Prehľade (`/stats/timeline` s filtrom
-   * `series`): od prvého nákupu, každý kus až odo dňa kúpy, bez trhovej ceny
-   * kúpnou cenou, predaný do dňa predaja. Prepínač jednej série ho nemení.
+   * Graf je súčet histórie cien z BrickEconomy (`history`), ako pri jednej
+   * figúrke, nie od nákupu; pred prvou cenou figúrky sa ráta jej prvá cena
+   * a riadok pod grafom povie, do kedy je súčet odhad. Zvislé čiary sú nákupy
+   * a predaje (`events`). Zisk v súčtoch je od nákupu.
    *
    * BrickEconomy cenu celej série nemá, hodnota je súčet mojich figúrok
    * (`GET /prices/series/{num}`). Duplikáty sa pripočítavajú; „Hodnota jednej
@@ -14,10 +15,10 @@
    * obnoví len figúrky, ktoré mám (`POST /prices/refresh-all?num=`), a bez
    * kľúča BrickEconomy sa tlačidlo neukáže (`auth.can`).
    */
-  import { computed, onMounted, ref, watch } from 'vue'
+  import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
-  import { api } from '@/api/client'
-  import PortfolioChart from '@/components/PortfolioChart.vue'
+  import { api, onCollectionChanged } from '@/api/client'
+  import PriceHistoryChart from '@/components/PriceHistoryChart.vue'
   import { onPageReload } from '@/composables/usePageLoad'
   import { useAuthStore } from '@/stores/auth'
   import { useCollectionStore } from '@/stores/collection'
@@ -32,14 +33,6 @@
   const collection = useCollectionStore()
 
   const value = ref<SeriesValue | null>(null)
-  const timeline = ref<TimelinePoint[]>([])
-
-  async function loadTimeline (): Promise<void> {
-    const { data } = await api.GET('/stats/timeline', {
-      params: { query: { step: 'day', series: [props.num] } },
-    })
-    timeline.value = data ?? []
-  }
   const single = ref(false)
   const refreshing = ref(false)
   const refreshNote = ref<string | null>(null)
@@ -56,6 +49,12 @@
   }
 
   const hasPrice = computed(() => value.value?.market_total !== null && value.value?.market_total !== undefined)
+  /** Kúpna cena len figúrok s cenou (hodnota mínus zisk), na čiaru v grafe. */
+  const pricedPurchase = computed(() => {
+    const market = toNumber(value.value?.market_total)
+    const profit = toNumber(value.value?.profit)
+    return market === null || profit === null ? null : market - profit
+  })
   const profitClass = computed(() => {
     const profit = toNumber(value.value?.profit)
     if (profit === null) return ''
@@ -66,7 +65,7 @@
     refreshing.value = true
     refreshNote.value = null
     await priceStore.refreshOne(props.num, async () => {
-      await Promise.all([load(), loadTimeline(), collection.refreshAll(), auth.loadKeys()])
+      await Promise.all([load(), collection.refreshAll(), auth.loadKeys()])
       const s = priceStore.status
       refreshNote.value = s ? t('detail.refreshNoteSeries', { updated: s.updated, left: s.calls_left }) : null
       refreshing.value = false
@@ -77,10 +76,14 @@
   watch(() => props.num, () => {
     single.value = false
     load()
-    loadTimeline()
   })
-  onMounted(() => Promise.all([load(), loadTimeline()]))
-  onPageReload(() => Promise.all([load(), loadTimeline()]))
+  onMounted(load)
+  onPageReload(load)
+  // Kúpa, úprava či zmazanie figúrok (aj hromadné, aj „Mám ju“): súčty aj graf hneď,
+  // nie až po obnovení okna.
+  onUnmounted(onCollectionChanged(() => {
+    load()
+  }))
 </script>
 
 <template>
@@ -149,8 +152,18 @@
 
     <div v-if="!hasPrice" class="text-body-medium text-medium-emphasis">{{ t('minifigs.seriesValue.noPrice') }}</div>
 
-    <!-- Vývoj portfólia série ako na Prehľade: vložené, hodnota a výnos z predajov. -->
-    <PortfolioChart v-if="timeline.length > 1" :points="timeline" />
+    <!-- Súčet histórie cien z BrickEconomy ako pri jednej figúrke; zvislé čiary sú nákupy a predaje. -->
+    <PriceHistoryChart
+      :events="value.events"
+      :new-points="value.history"
+      periods
+      :purchase="pricedPurchase"
+      :used-points="[]"
+    />
+
+    <div v-if="value.estimated_until && value.history.length > 1" class="text-body-small text-medium-emphasis" data-test="series-estimated">
+      {{ t('minifigs.seriesValue.estimated', { date: shortDate(value.estimated_until) }) }}
+    </div>
 
     <div v-if="auth.can('brickeconomy.price_detail')" class="d-flex align-center flex-wrap ga-2">
       <span v-if="refreshNote" class="text-body-small text-medium-emphasis">{{ refreshNote }}</span>

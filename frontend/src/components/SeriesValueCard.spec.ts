@@ -7,19 +7,26 @@ import { useAuthStore } from '@/stores/auth'
 import SeriesValueCard from './SeriesValueCard.vue'
 
 let answer: Record<string, unknown> = {}
-const asked: Array<{ path: string, query: unknown }> = []
-const TIMELINE = [
-  { day: '2026-09-01', invested: '10.00', market_value: '12.00', proceeds: '0.00' },
-  { day: '2026-09-02', invested: '10.00', market_value: '13.00', proceeds: '0.00' },
+const HISTORY = [
+  { captured_at: '2026-09-01T12:00:00Z', avg_price: '9.50' },
+  { captured_at: '2026-09-02T12:00:00Z', avg_price: '10.50' },
 ]
+const EVENTS = [{ day: '2026-09-01', kind: 'buy', count: 2, amount: '7.00' }]
+
+let loads = 0
+const changeListeners: Array<() => void> = []
 
 vi.mock('@/api/client', async original => ({
   ...(await original<typeof Client>()),
   api: {
-    GET: async (path: string, options?: { params?: { query?: unknown } }) => {
-      asked.push({ path, query: options?.params?.query })
-      return { data: path === '/stats/timeline' ? TIMELINE : answer }
+    GET: async () => {
+      loads += 1
+      return { data: answer }
     },
+  },
+  onCollectionChanged: (listener: () => void) => {
+    changeListeners.push(listener)
+    return () => changeListeners.splice(changeListeners.indexOf(listener), 1)
   },
 }))
 
@@ -40,6 +47,9 @@ function value (overrides: Record<string, unknown> = {}) {
     profit_pct: 50,
     approx: false,
     price_at: '2026-09-03T12:00:00Z',
+    history: HISTORY,
+    estimated_until: '2026-09-02',
+    events: EVENTS,
     ...overrides,
   }
 }
@@ -60,15 +70,30 @@ async function mountCard (capabilities: string[] = []) {
 describe('Séria: cena mojich figúrok', () => {
   beforeEach(() => {
     i18n.global.locale.value = 'sk'
-    asked.length = 0
   })
 
-  it('graf je vývoj portfólia série, ako na Prehľade (od prvého nákupu)', async () => {
+  it('po kúpe, úprave či zmazaní figúrok sa karta aj graf načítajú znova', async () => {
+    answer = value()
+    await mountCard()
+    const before = loads
+
+    for (const listener of changeListeners) {
+      listener()
+    }
+    await flushPromises()
+
+    expect(loads).toBe(before + 1)
+  })
+
+  it('graf je súčet histórie cien z BrickEconomy s nákupmi a riadkom o odhade', async () => {
     answer = value()
     const wrapper = await mountCard()
 
-    expect(asked).toContainEqual({ path: '/stats/timeline', query: { step: 'day', series: ['42233'] } })
-    expect(wrapper.findComponent({ name: 'PortfolioChart' }).props('points')).toEqual(TIMELINE)
+    const chart = wrapper.findComponent({ name: 'PriceHistoryChart' })
+    expect(chart.props('newPoints')).toEqual(HISTORY)
+    expect(chart.props('events')).toEqual(EVENTS)
+    expect(chart.props('purchase')).toBe(17)
+    expect(wrapper.find('[data-test="series-estimated"]').text().replace(/\s/g, ' ')).toContain('2. 9. 2026')
   })
 
   it('upozorní, že sa duplikáty pripočítavajú', async () => {

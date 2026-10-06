@@ -448,6 +448,17 @@ class PriceDeltaOut(BaseModel):
     delta_pct: float | None
 
 
+class ChartEventOut(BaseModel):
+    """Zvislá čiara v grafe ceny: nákup či predaj v jeden deň."""
+
+    day: date
+    #: ``buy`` alebo ``sell``.
+    kind: str
+    count: int
+    #: Súčet kúpnych, pri predaji predajných cien.
+    amount: Money
+
+
 class SeriesValueOut(BaseModel):
     """Moje figúrky jednej série: súčty a graf ako pri jednej figúrke."""
 
@@ -470,6 +481,11 @@ class SeriesValueOut(BaseModel):
     #: Niektorá cena je z druhého stavu (≈).
     approx: bool
     price_at: datetime | None
+    #: Súčet cien z BrickEconomy po dňoch; pred prvou cenou figúrky jej prvá cena.
+    history: list[PricePointOut]
+    #: Prvý deň zo skutočných cien všetkých figúrok; skôr je súčet odhad.
+    estimated_until: date | None
+    events: list[ChartEventOut]
 
 
 class PriceOverviewOut(BaseModel):

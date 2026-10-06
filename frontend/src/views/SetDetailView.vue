@@ -37,6 +37,7 @@
   import { useCollectionStore } from '@/stores/collection'
   import { useNotifyStore } from '@/stores/notify'
   import { usePriceStore } from '@/stores/prices'
+  import { eventsFromPieces } from '@/utils/chartEvents'
   import { count, type CurrencyCode, dateTime, exactMoney, money, percent, shortDate, toNumber } from '@/utils/format'
   import { imageSrc } from '@/utils/imageSrc'
   import { placeLabel } from '@/utils/place'
@@ -408,6 +409,9 @@
   const refreshing = ref(false)
   const buyOpen = ref(false)
   const refreshNote = ref<string | null>(null)
+
+  /** Nákupy a predaje kusov tohto setu na zvislé čiary v grafe ceny. */
+  const chartEvents = computed(() => eventsFromPieces(pieces.value.filter(p => p.catalog_num === num.value)))
 
   /** Priemerná kúpna cena vlastnených kusov tohto setu, pre čiaru v grafe. */
   const averagePurchase = computed(() => {
@@ -1178,7 +1182,9 @@
             <!-- Graf sa sám skryje, kým nemá aspoň dva rôzne dni; čísla potom zaberú celú šírku. -->
             <PriceHistoryChart
               v-if="!isSeriesPage"
+              :events="chartEvents"
               :new-points="pricesN?.history ?? []"
+              periods
               :purchase="averagePurchase"
               :used-points="pricesU?.history ?? []"
             />

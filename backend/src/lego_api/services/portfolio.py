@@ -163,6 +163,28 @@ class SnapshotIndex:
         idx = bisect.bisect_right(times, moment) - 1
         return self._values[key][idx] if idx >= 0 else None
 
+    def times_any(self, target: PriceTarget) -> list[datetime]:
+        """Časy snímok položky v oboch stavoch (graf súčtu série berie aj ≈)."""
+        out: list[datetime] = []
+        for condition in (PriceCondition.NEW, PriceCondition.USED):
+            out.extend(
+                self._times.get((target.catalog_num, target.price_kind.value, condition.value), [])
+            )
+        return out
+
+    def first_any(self, target: PriceTarget) -> Decimal | None:
+        """Prvá známa cena položky (najprv jej stav, inak druhý); na odhad pred ňou."""
+        other = (
+            PriceCondition.USED if target.condition == PriceCondition.NEW else PriceCondition.NEW
+        )
+        for condition in (target.condition, other):
+            values = self._values.get(
+                (target.catalog_num, target.price_kind.value, condition.value)
+            )
+            if values:
+                return values[0]
+        return None
+
     def latest_time(self, target: PriceTarget) -> datetime | None:
         """Čas poslednej snímky pre presne ten stav."""
         times = self._times.get(

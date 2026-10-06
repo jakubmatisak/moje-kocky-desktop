@@ -2287,6 +2287,23 @@ export interface components {
             /** Rules */
             rules?: components["schemas"]["CategoryRule"][] | null;
         };
+        /**
+         * ChartEventOut
+         * @description Zvislá čiara v grafe ceny: nákup či predaj v jeden deň.
+         */
+        ChartEventOut: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Kind */
+            kind: string;
+            /** Count */
+            count: number;
+            /** Amount */
+            amount: string | null;
+        };
         /** CmfMemberOut */
         CmfMemberOut: {
             catalog: components["schemas"]["CatalogOut"];
@@ -3581,6 +3598,12 @@ export interface components {
             approx: boolean;
             /** Price At */
             price_at: string | null;
+            /** History */
+            history: components["schemas"]["PricePointOut"][];
+            /** Estimated Until */
+            estimated_until: string | null;
+            /** Events */
+            events: components["schemas"]["ChartEventOut"][];
         };
         /** SetAlternateOut */
         SetAlternateOut: {

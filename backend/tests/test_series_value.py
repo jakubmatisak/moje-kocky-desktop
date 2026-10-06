@@ -141,3 +141,51 @@ async def test_single_value_is_ignored_for_an_incomplete_series(
 
     assert (body["complete"], body["single"]) == (False, False)
     assert body["market_total"] == "10.50"
+
+
+async def test_history_is_the_sum_of_brickeconomy_prices_from_the_oldest_one(
+    auth_client: AsyncClient, sessionmaker_
+) -> None:
+    """Graf ako pri jednej figúrke: súčet cien z BrickEconomy, nie od nákupu.
+
+    Figúrka 2 má prvú cenu až deň 2; deň 1 sa ráta jej prvou cenou (odhad)
+    a ``estimated_until`` povie, odkedy je súčet celý zo skutočných cien.
+    """
+    await _seed(sessionmaker_)
+    await _own(auth_client)
+
+    body = (await auth_client.get("/prices/series/42233")).json()
+
+    assert [(p["captured_at"][:10], p["avg_price"]) for p in body["history"]] == [
+        ("2026-09-01", "9.50"),
+        ("2026-09-02", "9.50"),
+        ("2026-09-03", "10.50"),
+    ]
+    assert body["estimated_until"] == "2026-09-02"
+
+
+async def test_purchases_and_sales_are_chart_events(
+    auth_client: AsyncClient, sessionmaker_
+) -> None:
+    await _seed(sessionmaker_)
+    for num, price in (("42233-1", "3"), ("42233-2", "4")):
+        await auth_client.post(
+            "/items",
+            json={"catalog_num": num, "purchase_price_eur": price, "purchase_date": "2026-09-01"},
+        )
+    sold = await auth_client.post(
+        "/items",
+        json={"catalog_num": "42233-3", "purchase_price_eur": "2", "purchase_date": "2026-09-02"},
+    )
+    await auth_client.post(
+        f"/items/{sold.json()[0]['id']}/sell",
+        json={"sold_price_eur": "8", "sold_date": "2026-09-03"},
+    )
+
+    body = (await auth_client.get("/prices/series/42233")).json()
+
+    assert body["events"] == [
+        {"day": "2026-09-01", "kind": "buy", "count": 2, "amount": "7.00"},
+        {"day": "2026-09-02", "kind": "buy", "count": 1, "amount": "2.00"},
+        {"day": "2026-09-03", "kind": "sell", "count": 1, "amount": "8.00"},
+    ]

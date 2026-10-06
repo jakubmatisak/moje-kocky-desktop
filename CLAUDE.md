@@ -540,7 +540,11 @@ Import, šablóna aj export majú stĺpec `krabica`.
 obrazovke virtuálna tabuľka vyplní výsledky (`fill`), riadok musí
 odovzdať `itemRef`, inak ukáže len prvých päť riadkov; šírky sú
 v `utils/tableColumns.ts` a `table-layout: fixed`, inak sa pri posúvaní
-menia. Na telefóne obyčajná tabuľka a posúva sa stránka.
+menia. Na telefóne obyčajná tabuľka a posúva sa stránka. Užšia než 900 px
+(meria sa karta tabuľky cez `useElementSize`, nie okno, takže aj pri
+otvorenom paneli filtrov) je bez hlavičky s kompaktným riadkom: fotka, číslo
+a názov, séria · rok · kusy, Kúpené/Hodnota/Zisk a stav · umiestnenie ·
+dátum ceny (`CollectionTable.vue`, `compact`); radí výber Zoradiť.
 
 **Zobrazenie je pri účte.** `preferences.display`: tmavý režim, zúžené
 bočné menu (rail) a inflácia, cez `composables/useDisplayPrefs.ts`
@@ -1053,7 +1057,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 871 testov, frontend 424. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 871 testov, frontend 426. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

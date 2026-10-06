@@ -5,12 +5,18 @@
    * na hlavičku (každý stĺpec okrem fotky, `SortHeader`) zmení kľúč a smer
    * v store (`sortFromHeader`), tabuľka sama neradí nič. Pri zoskupení je
    * riadok set alebo séria, pri „každom kuse“ kus. V režime výberu klik riadok označí, inak otvorí detail setu.
+   *
+   * Užšia než `COMPACT_BELOW` (meria sa tabuľka, nie okno: úzko je aj pri
+   * otvorenom paneli filtrov) je tabuľka v podobe `mobile` bez hlavičky
+   * a riadok je kompaktný: fotka, číslo a názov, séria s rokom a kusmi,
+   * sumy a pod nimi stav, umiestnenie a dátum ceny. Radí výber Zoradiť.
    */
   import type { Selection } from '@/composables/useSelection'
   import type { SortDir } from '@/stores/collection'
   import type { TableRow } from '@/utils/tableColumns'
   import type { VNodeRef } from 'vue'
-  import { computed } from 'vue'
+  import { useElementSize } from '@vueuse/core'
+  import { computed, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { useRouter } from 'vue-router'
   import { VDataTable, VDataTableVirtual } from 'vuetify/components'
@@ -38,13 +44,21 @@
       : collection.grouped.map(row => rowFromGroup(row, props.sold)),
   )
 
-  const headers = computed(() => COLUMNS.map(column => ({
-    key: column.key,
-    title: t(`table.${column.key}`),
-    align: column.align ?? 'start',
-    sortable: false,
-    width: column.width,
-  })))
+  const COMPACT_BELOW = 900
+  const card = ref<HTMLElement | null>(null)
+  const { width } = useElementSize(card)
+  /** Pred prvým meraním (šírka 0) ostáva široká tabuľka. */
+  const compact = computed(() => width.value > 0 && width.value < COMPACT_BELOW)
+
+  const headers = computed(() => compact.value
+    ? [{ key: 'compact', title: '', sortable: false }]
+    : COLUMNS.map(column => ({
+      key: column.key,
+      title: t(`table.${column.key}`),
+      align: column.align ?? 'start',
+      sortable: false,
+      width: column.width,
+    })))
 
   /** Smer šípky v hlavičke stĺpca, alebo null, keď sa podľa neho neradí. */
   function columnDir (key: string): SortDir | null {
@@ -86,6 +100,20 @@
   /** Výška riadku s fotkou; virtuálna tabuľka ju potrebuje na odhad posúvania. */
   const PHOTO = 64
   const ROW_HEIGHT = 77
+  const COMPACT_HEIGHT = 112
+  const COMPACT_PHOTO = 56
+
+  /** Druhý riadok kompaktnej podoby: séria · rok · kusy. */
+  function compactMeta (row: TableRow): string {
+    return [row.theme, row.year, t('collection.pieces', { count: row.quantity })].filter(Boolean).join(' · ')
+  }
+
+  /** Posledný riadok: stav · umiestnenie · dátum ceny, bez prázdnych. */
+  function compactDetails (row: TableRow): string {
+    return [conditionText(row.conditions), row.location, row.priceAt === '—' ? '' : row.priceAt]
+      .filter(Boolean)
+      .join(' · ')
+  }
 
   function conditionText (conditions: Record<string, number>): string {
     const entries = Object.entries(conditions)
@@ -95,7 +123,13 @@
 </script>
 
 <template>
-  <v-card border class="collection-table-card" :class="{ 'collection-table-card--fill': fill }" flat>
+  <v-card
+    ref="card"
+    border
+    class="collection-table-card"
+    :class="{ 'collection-table-card--fill': fill, 'collection-table-card--compact': compact }"
+    flat
+  >
     <component
       :is="fill ? VDataTableVirtual : VDataTable"
       class="collection-table"
@@ -104,8 +138,9 @@
       :headers="headers"
       :height="fill ? '100%' : undefined"
       :hide-default-footer="!fill"
+      :hide-default-header="compact"
       hover
-      :item-height="fill ? ROW_HEIGHT : undefined"
+      :item-height="fill ? (compact ? COMPACT_HEIGHT : ROW_HEIGHT) : undefined"
       item-value="key"
       :items="rows"
       :items-per-page="fill ? undefined : -1"
@@ -127,6 +162,53 @@
       -->
       <template #item="slot">
         <tr
+          v-if="compact"
+          :ref="rowRef(slot)"
+          class="collection-table__row"
+          :class="{ 'collection-table__row--selected': selection.active.value && selected(slot.item) }"
+          data-test="compact-row"
+          @click="onRow(slot.item)"
+        >
+          <td class="collection-table__compact">
+            <div class="compact-layout d-flex ga-3 align-start">
+              <!-- Malá fotka vľavo v stĺpci pevnej šírky: fotky všetkých riadkov sú pod sebou. -->
+              <div class="compact-photo">
+                <SetImage :alt="slot.item.name" rounded="sm" :size="COMPACT_PHOTO" :src="imageSrc(slot.item.image) ?? undefined" />
+              </div>
+
+              <div class="flex-grow-1 min-width-0">
+                <div class="compact-line">
+                  <v-icon
+                    v-if="selection.active.value"
+                    class="me-1"
+                    :color="selected(slot.item) ? 'primary' : undefined"
+                    :icon="selected(slot.item) ? 'mdi-checkbox-marked' : 'mdi-checkbox-blank-outline'"
+                    size="small"
+                  />
+
+                  <span class="text-medium-emphasis me-2">{{ slot.item.num }}</span><span class="font-weight-medium">{{ slot.item.name }}</span>
+                </div>
+
+                <div class="compact-line text-body-small text-medium-emphasis">{{ compactMeta(slot.item) }}</div>
+
+                <div class="compact-amounts d-flex flex-wrap text-body-medium">
+                  <span class="text-no-wrap"><span class="text-medium-emphasis">{{ t('table.purchase') }}</span> {{ slot.item.purchase }}</span>
+                  <span class="text-no-wrap"><span class="text-medium-emphasis">{{ t('table.value') }}</span> {{ slot.item.value }}</span>
+
+                  <span
+                    class="text-no-wrap"
+                    :class="slot.item.profitSign > 0 ? 'text-positive' : slot.item.profitSign < 0 ? 'text-negative' : ''"
+                  ><span class="text-medium-emphasis">{{ t('table.profit') }}</span> {{ slot.item.profit }}<template v-if="slot.item.profitPct !== '—'"> ({{ slot.item.profitPct }})</template></span>
+                </div>
+
+                <div class="compact-line text-body-small text-medium-emphasis">{{ compactDetails(slot.item) }}</div>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <tr
+          v-else
           :ref="rowRef(slot)"
           class="collection-table__row"
           :class="{ 'collection-table__row--selected': selection.active.value && selected(slot.item) }"
@@ -191,6 +273,37 @@
   .collection-table :deep(table) {
     table-layout: fixed;
     min-width: 1608px;
+  }
+
+  /* Kompaktná podoba: jeden stĺpec na celú šírku, nič sa neposúva do strany. */
+  .collection-table-card--compact .collection-table :deep(table) {
+    min-width: 0;
+  }
+
+  .collection-table-card--compact .collection-table :deep(td.collection-table__compact) {
+    white-space: normal;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .compact-line {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Sumy v riadku s medzerou; Vuetify 4 nemá column-gap-* ani ga-x-*. */
+  .compact-amounts {
+    column-gap: 16px;
+  }
+
+  .compact-photo {
+    flex: 0 0 72px;
+    width: 72px;
+  }
+
+  .min-width-0 {
+    min-width: 0;
   }
 
   /* Hlavička sa nesmie lámať („Kus / y“), šírky sú na to dosť veľké. */

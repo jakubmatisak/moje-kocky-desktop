@@ -172,6 +172,15 @@ class SnapshotIndex:
             )
         return out
 
+    def times(self, target: PriceTarget) -> list[datetime]:
+        """Časy snímok pre presne ten stav."""
+        return list(self._times.get(target.key(), []))
+
+    def first(self, target: PriceTarget) -> Decimal | None:
+        """Prvá známa cena pre presne ten stav."""
+        values = self._values.get(target.key())
+        return values[0] if values else None
+
     def first_any(self, target: PriceTarget) -> Decimal | None:
         """Prvá známa cena položky (najprv jej stav, inak druhý); na odhad pred ňou."""
         other = (

@@ -3600,6 +3600,8 @@ export interface components {
             price_at: string | null;
             /** History */
             history: components["schemas"]["PricePointOut"][];
+            /** History Used */
+            history_used: components["schemas"]["PricePointOut"][];
             /** Estimated Until */
             estimated_until: string | null;
             /** Events */

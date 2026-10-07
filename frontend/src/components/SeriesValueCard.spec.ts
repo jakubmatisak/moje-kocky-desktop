@@ -11,6 +11,10 @@ const HISTORY = [
   { captured_at: '2026-09-01T12:00:00Z', avg_price: '9.50' },
   { captured_at: '2026-09-02T12:00:00Z', avg_price: '10.50' },
 ]
+const HISTORY_USED = [
+  { captured_at: '2026-09-01T12:00:00Z', avg_price: '5.00', condition: 'U' },
+  { captured_at: '2026-09-02T12:00:00Z', avg_price: '5.50', condition: 'U' },
+]
 const EVENTS = [{ day: '2026-09-01', kind: 'buy', count: 2, amount: '7.00' }]
 
 let loads = 0
@@ -48,6 +52,7 @@ function value (overrides: Record<string, unknown> = {}) {
     approx: false,
     price_at: '2026-09-03T12:00:00Z',
     history: HISTORY,
+    history_used: HISTORY_USED,
     estimated_until: '2026-09-02',
     events: EVENTS,
     ...overrides,
@@ -91,6 +96,8 @@ describe('Séria: cena mojich figúrok', () => {
 
     const chart = wrapper.findComponent({ name: 'PriceHistoryChart' })
     expect(chart.props('newPoints')).toEqual(HISTORY)
+    // Druhá čiara Rozbalený, ako v grafe setu.
+    expect(chart.props('usedPoints')).toEqual(HISTORY_USED)
     expect(chart.props('events')).toEqual(EVENTS)
     expect(chart.props('purchase')).toBe(17)
     expect(wrapper.find('[data-test="series-estimated"]').text().replace(/\s/g, ' ')).toContain('2. 9. 2026')

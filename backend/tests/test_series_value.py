@@ -23,12 +23,14 @@ DAY2 = DAY1 + timedelta(days=1)
 DAY3 = DAY1 + timedelta(days=2)
 
 
-def _snap(num: str, price: str, when: datetime) -> PriceSnapshot:
+def _snap(
+    num: str, price: str, when: datetime, condition: PriceCondition = PriceCondition.NEW
+) -> PriceSnapshot:
     return PriceSnapshot(
         catalog_num=num,
         source="brickeconomy",
         price_kind=PriceKind.SET,
-        condition=PriceCondition.NEW,
+        condition=condition,
         avg_price=Decimal(price),
         captured_at=when,
     )
@@ -162,6 +164,52 @@ async def test_history_is_the_sum_of_brickeconomy_prices_from_the_oldest_one(
         ("2026-09-03", "10.50"),
     ]
     assert body["estimated_until"] == "2026-09-02"
+    # Cenu rozbaleného kusu nemá ani jedna figúrka: druhá čiara nie je.
+    assert body["history_used"] == []
+
+
+async def test_used_history_is_a_second_line_when_every_figure_has_a_used_price(
+    auth_client: AsyncClient, sessionmaker_
+) -> None:
+    """Ako graf setu: čiara Nový a čiara Rozbalený, každá zo svojho stavu."""
+    await _seed(sessionmaker_)
+    async with sessionmaker_() as session:
+        session.add(_snap("42233-1", "3", DAY1, PriceCondition.USED))
+        session.add(_snap("42233-1", "3.5", DAY3, PriceCondition.USED))
+        session.add(_snap("42233-2", "2", DAY2, PriceCondition.USED))
+        await session.commit()
+    await _own(auth_client)
+
+    body = (await auth_client.get("/prices/series/42233")).json()
+
+    assert [(p["captured_at"][:10], p["avg_price"]) for p in body["history"]] == [
+        ("2026-09-01", "9.50"),
+        ("2026-09-02", "9.50"),
+        ("2026-09-03", "10.50"),
+    ]
+    assert [
+        (p["captured_at"][:10], p["avg_price"], p["condition"]) for p in body["history_used"]
+    ] == [
+        ("2026-09-01", "5.00", "U"),
+        ("2026-09-02", "5.00", "U"),
+        ("2026-09-03", "5.50", "U"),
+    ]
+
+
+async def test_used_line_is_missing_when_a_figure_has_no_used_price(
+    auth_client: AsyncClient, sessionmaker_
+) -> None:
+    """Súčet bez jednej figúrky by bol nízky a zavádzajúci, radšej žiadna čiara."""
+    await _seed(sessionmaker_)
+    async with sessionmaker_() as session:
+        session.add(_snap("42233-1", "3", DAY1, PriceCondition.USED))
+        await session.commit()
+    await _own(auth_client)
+
+    body = (await auth_client.get("/prices/series/42233")).json()
+
+    assert body["history_used"] == []
+    assert len(body["history"]) == 3
 
 
 async def test_purchases_and_sales_are_chart_events(

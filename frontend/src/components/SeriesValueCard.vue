@@ -6,7 +6,9 @@
    *
    * Graf je súčet histórie cien z BrickEconomy (`history`), ako pri jednej
    * figúrke, nie od nákupu; pred prvou cenou figúrky sa ráta jej prvá cena
-   * a riadok pod grafom povie, do kedy je súčet odhad. Zvislé čiary sú nákupy
+   * a riadok pod grafom povie, do kedy je súčet odhad. Ako pri sete sú čiary
+   * dve, Nový a Rozbalený (`history_used`, len keď cenu pozná každá figúrka).
+   * Zvislé čiary sú nákupy
    * a predaje (`events`). Zisk v súčtoch je od nákupu.
    *
    * BrickEconomy cenu celej série nemá, hodnota je súčet mojich figúrok
@@ -158,7 +160,7 @@
       :new-points="value.history"
       periods
       :purchase="pricedPurchase"
-      :used-points="[]"
+      :used-points="value.history_used"
     />
 
     <div v-if="value.estimated_until && value.history.length > 1" class="text-body-small text-medium-emphasis" data-test="series-estimated">

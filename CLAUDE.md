@@ -365,7 +365,9 @@ Stránka série vo Figúrkach má kartu `SeriesValueCard.vue` (`GET /prices/seri
 `services/series_value.py`): kúpené, hodnota a zisk vlastnených figúrok (bez
 sáčkov), graf ceny ako pri jednej figúrke: súčet histórie cien z BrickEconomy
 (`SeriesValueOut.history`, nie od nákupu; pred prvou cenou figúrky jej prvá
-cena a `estimated_until` povie, odkedy je súčet zo skutočných cien) a obnova
+cena a `estimated_until` povie, odkedy je súčet zo skutočných cien; druhá
+čiara Rozbalený `history_used` len keď cenu rozbaleného kusu pozná každá
+figúrka, inak by súčet bez nej vyzeral ako pád ceny) a obnova
 len mojich figúrok (`refresh-all?num=`, len
 s `auth.can('brickeconomy.price_detail')`). Duplikáty sa pripočítavajú a karta
 to povie; `?single=true` (prepínač „Hodnota jednej série“) ráta každú figúrku
@@ -1057,7 +1059,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 871 testov, frontend 426. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 873 testov, frontend 426. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

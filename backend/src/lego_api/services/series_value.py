@@ -9,6 +9,10 @@ nákupu. Pred prvou cenou figúrky sa ráta jej prvá cena (odhad), aby súčet
 nerástol len tým, ako pribúdajú ceny; ``estimated_until`` povie, odkedy je
 súčet zo skutočných cien. Nákupy a predaje sú udalosti na zvislé čiary.
 
+Čiary sú dve, ako v grafe setu: Nový (cena nového kusu, figúrka bez nej
+spadne na rozbalenú, ≈) a Rozbalený. Rozbalená je len vtedy, keď ju pozná
+každá figúrka: súčet bez jednej by bol nízky a vyzeral by ako pád ceny.
+
 Duplikáty (dva kusy tej istej figúrky) sa bežne rátajú oba. S ``single``
 sa ráta každá figúrka raz (prvý kúpený kus), teda hodnota jednej série;
 rozhranie to ponúka, len keď je séria kompletná.
@@ -17,13 +21,13 @@ rozhranie to ponúka, len keď je séria kompletná.
 from __future__ import annotations
 
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime, time
 from decimal import Decimal
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lego_api.models import CatalogItem, CollectionItem, ItemStatus
+from lego_api.models import CatalogItem, CollectionItem, ItemStatus, PriceCondition
 from lego_api.services.filters import series_num
 from lego_api.services.portfolio import (
     ZERO,
@@ -55,6 +59,8 @@ class SeriesValue:
     price_at: datetime | None = None
     #: (deň, súčet cien) od najstaršej ceny; pred prvou cenou figúrky jej prvá cena.
     history: list[tuple[datetime, Decimal]] = field(default_factory=list)
+    #: To isté z cien rozbalených kusov; prázdne, keď ju niektorá figúrka nemá.
+    history_used: list[tuple[datetime, Decimal]] = field(default_factory=list)
     #: Prvý deň, keď je súčet celý zo skutočných cien; bez odhadu None.
     estimated_until: date | None = None
     #: Nákupy a predaje figúrok série po dňoch (deň, druh, počet, suma).
@@ -82,13 +88,25 @@ def _mine(items: list[CollectionItem], num: str) -> list[CollectionItem]:
 
 
 def _history(
-    market: list[ValuedItem], manual: Decimal, index: SnapshotIndex
+    market: list[ValuedItem],
+    manual: Decimal,
+    index: SnapshotIndex,
+    condition: PriceCondition = PriceCondition.NEW,
 ) -> tuple[list[tuple[datetime, Decimal]], date | None]:
-    """Súčet cien po dňoch od najstaršej snímky; odhad do prvej ceny každej figúrky."""
-    targets = [resolve_price_target(v.item, v.catalog) for v in market]
+    """Súčet cien po dňoch od najstaršej snímky; odhad do prvej ceny každej figúrky.
+
+    Nový berie aj druhý stav (≈), keď figúrka cenu nového kusu nemá. Rozbalený
+    len presný stav, a keď ho niektorá figúrka nemá vôbec, čiara nie je.
+    """
+    targets = [
+        replace(resolve_price_target(v.item, v.catalog), condition=condition) for v in market
+    ]
+    exact = condition == PriceCondition.USED
+    if exact and any(index.first(t) is None for t in targets):
+        return [], None
     days: set[date] = set()
     for target in targets:
-        days.update(t.date() for t in index.times_any(target))
+        days.update(t.date() for t in (index.times(target) if exact else index.times_any(target)))
     points: list[tuple[datetime, Decimal]] = []
     estimated_until: date | None = None
     estimated_seen = False
@@ -97,10 +115,14 @@ def _history(
         total = manual
         estimated = False
         for target in targets:
-            found = index.value_at_any(target, moment)
+            if exact:
+                price = index.value_at(target, moment)
+                found = None if price is None else (price, True)
+            else:
+                found = index.value_at_any(target, moment)
             if found is None:
                 estimated = True
-                total += index.first_any(target) or ZERO
+                total += (index.first(target) if exact else index.first_any(target)) or ZERO
             else:
                 total += found[0]
         if estimated:
@@ -157,6 +179,9 @@ async def series_value(
     market = [v for v in priced if v.price_source in ("market", "market_approx")]
     manual = sum((v.market_value for v in priced if v.price_source == "manual"), ZERO)
     history, estimated_until = _history(market, manual, index)
+    history_used, used_until = _history(market, manual, index, PriceCondition.USED)
+    if used_until is not None:
+        estimated_until = max(estimated_until or used_until, used_until)
     times = [v.price_at for v in priced if v.price_at is not None]
     return SeriesValue(
         owned_count=owned_count,
@@ -169,6 +194,7 @@ async def series_value(
         approx=any(v.price_source == "market_approx" for v in priced),
         price_at=max(times) if times else None,
         history=history,
+        history_used=history_used,
         estimated_until=estimated_until,
         events=events,
     )

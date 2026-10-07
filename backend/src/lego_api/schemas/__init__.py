@@ -483,6 +483,8 @@ class SeriesValueOut(BaseModel):
     price_at: datetime | None
     #: Súčet cien z BrickEconomy po dňoch; pred prvou cenou figúrky jej prvá cena.
     history: list[PricePointOut]
+    #: Súčet cien rozbalených kusov; prázdny, keď ju niektorá figúrka nemá.
+    history_used: list[PricePointOut]
     #: Prvý deň zo skutočných cien všetkých figúrok; skôr je súčet odhad.
     estimated_until: date | None
     events: list[ChartEventOut]

@@ -1,6 +1,7 @@
 """Trhové ceny, ich história, obnova a ručné zadanie."""
 
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
@@ -331,6 +332,25 @@ async def forget_check(num: str, user: CurrentUser, session: SessionDep) -> None
     await session.commit()
 
 
+def _series_points(
+    points: list[tuple[datetime, Decimal]], condition: PriceCondition
+) -> list[PricePointOut]:
+    """Body grafu série v tvare histórie ceny jednej figúrky."""
+    return [
+        PricePointOut(
+            captured_at=when,
+            avg_price=total,
+            min_price=None,
+            max_price=None,
+            qty=None,
+            condition=condition.value,
+            price_kind=PriceKind.SET.value,
+            source="series",
+        )
+        for when, total in points
+    ]
+
+
 @router.get("/series/{num}", response_model=SeriesValueOut)
 async def get_series_value(
     num: str, user: CurrentUser, session: SessionDep, single: bool = False
@@ -363,19 +383,8 @@ async def get_series_value(
         profit_pct=pct,
         approx=value.approx,
         price_at=value.price_at,
-        history=[
-            PricePointOut(
-                captured_at=when,
-                avg_price=total,
-                min_price=None,
-                max_price=None,
-                qty=None,
-                condition=PriceCondition.NEW.value,
-                price_kind=PriceKind.SET.value,
-                source="series",
-            )
-            for when, total in value.history
-        ],
+        history=_series_points(value.history, PriceCondition.NEW),
+        history_used=_series_points(value.history_used, PriceCondition.USED),
         estimated_until=value.estimated_until,
         events=[
             ChartEventOut(day=day, kind=kind, count=count, amount=amount)

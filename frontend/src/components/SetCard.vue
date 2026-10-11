@@ -74,7 +74,7 @@
     class="set-card d-flex flex-column h-100"
     :class="{ 'set-card--sold': sold, 'set-card--selected': selected }"
     flat
-    :to="selectable ? undefined : { name: 'set-detail', params: { num: row.catalog.catalog_num } }"
+    :to="selectable ? undefined : { name: 'set-detail', params: { num: row.catalog.catalog_num }, query: filterStore.detailQuery() }"
     @click="selectable && emit('toggle', row.catalog.catalog_num)"
   >
     <div class="position-relative">

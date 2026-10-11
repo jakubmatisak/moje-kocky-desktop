@@ -5066,6 +5066,8 @@ export interface operations {
                 real?: boolean;
                 /** @description Rozsah sekcie Zbierka: bez figúrok zo sérií (tie sú vo Figúrkach), ani v ponuke volieb panela. Prehľad a detail setu ho neposielajú. */
                 sets_only?: boolean;
+                /** @description Rozsah Moje figúrky: len figúrky zo sérií a nerozbalené sáčky, zrkadlo sets_only. S oboma platí sets_only. */
+                figures_only?: boolean;
             };
             header?: never;
             path?: never;
@@ -5171,6 +5173,8 @@ export interface operations {
                 real?: boolean;
                 /** @description Rozsah sekcie Zbierka: bez figúrok zo sérií (tie sú vo Figúrkach), ani v ponuke volieb panela. Prehľad a detail setu ho neposielajú. */
                 sets_only?: boolean;
+                /** @description Rozsah Moje figúrky: len figúrky zo sérií a nerozbalené sáčky, zrkadlo sets_only. S oboma platí sets_only. */
+                figures_only?: boolean;
             };
             header?: never;
             path?: never;
@@ -5239,6 +5243,8 @@ export interface operations {
                 real?: boolean;
                 /** @description Rozsah sekcie Zbierka: bez figúrok zo sérií (tie sú vo Figúrkach), ani v ponuke volieb panela. Prehľad a detail setu ho neposielajú. */
                 sets_only?: boolean;
+                /** @description Rozsah Moje figúrky: len figúrky zo sérií a nerozbalené sáčky, zrkadlo sets_only. S oboma platí sets_only. */
+                figures_only?: boolean;
             };
             header?: never;
             path?: never;
@@ -5475,6 +5481,8 @@ export interface operations {
                 real?: boolean;
                 /** @description Rozsah sekcie Zbierka: bez figúrok zo sérií (tie sú vo Figúrkach), ani v ponuke volieb panela. Prehľad a detail setu ho neposielajú. */
                 sets_only?: boolean;
+                /** @description Rozsah Moje figúrky: len figúrky zo sérií a nerozbalené sáčky, zrkadlo sets_only. S oboma platí sets_only. */
+                figures_only?: boolean;
             };
             header?: never;
             path?: never;
@@ -5547,6 +5555,8 @@ export interface operations {
                 real?: boolean;
                 /** @description Rozsah sekcie Zbierka: bez figúrok zo sérií (tie sú vo Figúrkach), ani v ponuke volieb panela. Prehľad a detail setu ho neposielajú. */
                 sets_only?: boolean;
+                /** @description Rozsah Moje figúrky: len figúrky zo sérií a nerozbalené sáčky, zrkadlo sets_only. S oboma platí sets_only. */
+                figures_only?: boolean;
             };
             header?: never;
             path?: never;
@@ -6622,6 +6632,8 @@ export interface operations {
                 real?: boolean;
                 /** @description Rozsah sekcie Zbierka: bez figúrok zo sérií (tie sú vo Figúrkach), ani v ponuke volieb panela. Prehľad a detail setu ho neposielajú. */
                 sets_only?: boolean;
+                /** @description Rozsah Moje figúrky: len figúrky zo sérií a nerozbalené sáčky, zrkadlo sets_only. S oboma platí sets_only. */
+                figures_only?: boolean;
             };
             header?: never;
             path?: never;
@@ -6691,6 +6703,8 @@ export interface operations {
                 real?: boolean;
                 /** @description Rozsah sekcie Zbierka: bez figúrok zo sérií (tie sú vo Figúrkach), ani v ponuke volieb panela. Prehľad a detail setu ho neposielajú. */
                 sets_only?: boolean;
+                /** @description Rozsah Moje figúrky: len figúrky zo sérií a nerozbalené sáčky, zrkadlo sets_only. S oboma platí sets_only. */
+                figures_only?: boolean;
             };
             header?: never;
             path?: never;
@@ -6759,6 +6773,8 @@ export interface operations {
                 real?: boolean;
                 /** @description Rozsah sekcie Zbierka: bez figúrok zo sérií (tie sú vo Figúrkach), ani v ponuke volieb panela. Prehľad a detail setu ho neposielajú. */
                 sets_only?: boolean;
+                /** @description Rozsah Moje figúrky: len figúrky zo sérií a nerozbalené sáčky, zrkadlo sets_only. S oboma platí sets_only. */
+                figures_only?: boolean;
             };
             header?: never;
             path?: never;
@@ -6828,6 +6844,8 @@ export interface operations {
                 real?: boolean;
                 /** @description Rozsah sekcie Zbierka: bez figúrok zo sérií (tie sú vo Figúrkach), ani v ponuke volieb panela. Prehľad a detail setu ho neposielajú. */
                 sets_only?: boolean;
+                /** @description Rozsah Moje figúrky: len figúrky zo sérií a nerozbalené sáčky, zrkadlo sets_only. S oboma platí sets_only. */
+                figures_only?: boolean;
             };
             header?: never;
             path?: never;
@@ -6897,6 +6915,8 @@ export interface operations {
                 real?: boolean;
                 /** @description Rozsah sekcie Zbierka: bez figúrok zo sérií (tie sú vo Figúrkach), ani v ponuke volieb panela. Prehľad a detail setu ho neposielajú. */
                 sets_only?: boolean;
+                /** @description Rozsah Moje figúrky: len figúrky zo sérií a nerozbalené sáčky, zrkadlo sets_only. S oboma platí sets_only. */
+                figures_only?: boolean;
             };
             header?: never;
             path?: never;
@@ -6965,6 +6985,8 @@ export interface operations {
                 real?: boolean;
                 /** @description Rozsah sekcie Zbierka: bez figúrok zo sérií (tie sú vo Figúrkach), ani v ponuke volieb panela. Prehľad a detail setu ho neposielajú. */
                 sets_only?: boolean;
+                /** @description Rozsah Moje figúrky: len figúrky zo sérií a nerozbalené sáčky, zrkadlo sets_only. S oboma platí sets_only. */
+                figures_only?: boolean;
             };
             header?: never;
             path?: never;

@@ -5,6 +5,7 @@ import { createPinia, type Pinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import CardGrid from '@/components/CardGrid.vue'
 import GhostActions from '@/components/GhostActions.vue'
+import SelectionTotals from '@/components/SelectionTotals.vue'
 import SortHeader from '@/components/SortHeader.vue'
 import i18n from '@/plugins/i18n'
 import { useAuthStore } from '@/stores/auth'
@@ -20,6 +21,9 @@ import MinifigsView from './MinifigsView.vue'
 let preferences: Record<string, unknown> = {}
 const saved = vi.fn()
 const query: Record<string, string> = {}
+/** Čo si zoznam sérií vypýtal na súčty figúrok. */
+let facetsQuery: unknown = null
+const TOTALS = { owned: 7, sold: 0, purchase: '112.66', market_value: '324.89', unrealized: '227.23', unrealized_pct: 233, price_missing: 3 }
 
 function series (num: string, name: string, owned: number, total = 12): Record<string, unknown> {
   return {
@@ -50,7 +54,11 @@ vi.mock('vue-router', async original => ({
 vi.mock('@/api/client', async original => ({
   ...(await original<typeof Client>()),
   api: {
-    GET: async (path: string) => {
+    GET: async (path: string, options?: { params?: { query?: unknown } }) => {
+      if (path === '/items/facets') {
+        facetsQuery = options?.params?.query
+        return { data: { total: 7, totals: TOTALS } }
+      }
       if (path === '/auth/me/preferences') {
         return { data: preferences }
       }
@@ -107,6 +115,15 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers()
+})
+
+describe('Figúrky: súčty mojich figúrok nad sériami', () => {
+  it('riadok Kúpené · Hodnota · Zisk ako v Moje figúrky, len za figúrky', async () => {
+    const { wrapper } = await mount(MinifigsView)
+
+    expect(facetsQuery).toEqual({ status: 'owned', figures_only: true })
+    expect(wrapper.findComponent(SelectionTotals).props('totals')).toEqual(TOTALS)
+  })
 })
 
 describe('Figúrky: zoznam sérií ako tabuľka', () => {

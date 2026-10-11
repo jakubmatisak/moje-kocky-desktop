@@ -131,6 +131,11 @@ function empty (): Filters {
  * s rozsahom z pohľadu, export aj detail setu tak figúrky počítajú ďalej.
  */
 export const COLLECTION_SECTION = { sets_only: true } as const
+/** Rozsah Moje figúrky vo Figúrkach: naopak len figúrky zo sérií (aj sáčky). */
+export const FIGURES_SECTION = { figures_only: true } as const
+
+/** Sekcia, ktorú obrazovka Zbierky práve ukazuje: sety, alebo Moje figúrky. */
+export type Section = 'sets' | 'figures'
 
 /**
  * Adresa má kľúč, ktorý súčasný stav nevytvorí: starý filter figúrok,
@@ -175,6 +180,26 @@ export const useFilterStore = defineStore('filters', () => {
   const facetsPlaces = ref('')
   const categories = ref<Category[]>([])
   const views = ref<SavedView[]>([])
+
+  const section = ref<Section>('sets')
+
+  /**
+   * Iná sekcia má vlastný filter aj počty; tie zo Zbierky by vo Figúrkach
+   * filtrovali niečo, čo tam nie je, a chvíľu by svietili cudzie počty.
+   */
+  function setSection (value: Section): void {
+    if (value === section.value) {
+      return
+    }
+    section.value = value
+    Object.assign(filters, empty())
+    facets.value = null
+  }
+
+  /** Detail z Moje figúrky nechá ponuku na Figúrkach (`?from=minifigs`). */
+  function detailQuery (): Record<string, string> {
+    return section.value === 'figures' ? { from: 'minifigs' } : {}
+  }
 
   const categoryById = computed(() => new Map(categories.value.map(c => [c.id, c])))
 
@@ -222,9 +247,9 @@ export const useFilterStore = defineStore('filters', () => {
     return out
   }
 
-  /** Parametre pre zoznam a počty Zbierky: filter a rozsah sekcie. */
+  /** Parametre pre zoznam a počty: filter a rozsah sekcie (sety, alebo figúrky). */
   function sectionQuery (): Record<string, string | number | boolean | string[] | number[]> {
-    return { ...query(), ...COLLECTION_SECTION }
+    return { ...query(), ...(section.value === 'figures' ? FIGURES_SECTION : COLLECTION_SECTION) }
   }
 
   /** Stav pre adresu stránky. */
@@ -384,6 +409,9 @@ export const useFilterStore = defineStore('filters', () => {
     activeCount,
     query,
     sectionQuery,
+    section,
+    setSection,
+    detailQuery,
     placeKey,
     toRoute,
     fromRoute,

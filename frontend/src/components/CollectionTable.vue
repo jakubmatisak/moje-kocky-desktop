@@ -23,6 +23,7 @@
   import SetImage from '@/components/SetImage.vue'
   import SortHeader from '@/components/SortHeader.vue'
   import { defaultDir, useCollectionStore } from '@/stores/collection'
+  import { useFilterStore } from '@/stores/filters'
   import { imageSrc } from '@/utils/imageSrc'
   import { COLUMNS, rowFromGroup, rowFromItem, sortFromHeader } from '@/utils/tableColumns'
   import { headerDir } from '@/utils/tableSort'
@@ -37,6 +38,7 @@
   const { t } = useI18n()
   const router = useRouter()
   const collection = useCollectionStore()
+  const filterStore = useFilterStore()
 
   const rows = computed<TableRow[]>(() =>
     collection.grouping === 'item'
@@ -94,7 +96,7 @@
       else props.selection.toggleGroup(row.selectKey)
       return
     }
-    router.push({ name: 'set-detail', params: { num: row.num } })
+    router.push({ name: 'set-detail', params: { num: row.num }, query: filterStore.detailQuery() })
   }
 
   /** Výška riadku s fotkou; virtuálna tabuľka ju potrebuje na odhad posúvania. */

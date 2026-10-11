@@ -60,6 +60,13 @@ const router = createRouter({
           component: () => import('@/views/MinifigsView.vue'),
         },
         {
+          // Pred `figurky/:num`, inak by „kusy“ bolo číslo série.
+          path: 'figurky/kusy',
+          name: 'minifig-pieces',
+          component: () => import('@/views/MyFiguresView.vue'),
+          meta: { fitScreen: true },
+        },
+        {
           path: 'figurky/:num',
           name: 'minifig-series',
           component: () => import('@/views/MinifigSeriesView.vue'),

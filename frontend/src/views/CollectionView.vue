@@ -1,4 +1,6 @@
 <script setup lang="ts">
+  import type { ValuedItem } from '@/api/types'
+  import type { SortKey } from '@/stores/collection'
   /**
    * Zbierka s panelom filtrov.
    *
@@ -11,9 +13,13 @@
    *
    * Zbierka sú len sety. Figúrky zo sérií majú sekciu Figúrky a sem nechodia
    * ani v počtoch (`sets_only` v `filterQuery`); Prehľad a export ich počítajú.
+   *
+   * Tá istá obrazovka so `section="figures"` sú Moje figúrky vo Figúrkach:
+   * kusy figúrok zo sérií (`figures_only`) s rovnakými filtrami a súčtami.
+   * Tam nie je Pridať set, export, uložené pohľady ani odkaz na Figúrky,
+   * filter aj zobrazenie si účet pamätá zvlášť (`preferences.figures`).
    */
-  import type { ValuedItem } from '@/api/types'
-  import type { SortKey } from '@/stores/collection'
+  import type { Section } from '@/stores/filters'
   import type { LocationQueryRaw } from 'vue-router'
   import { useDebounceFn } from '@vueuse/core'
   import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -44,6 +50,8 @@
   import { placeLabel } from '@/utils/place'
   import { figuresRoute } from '@/utils/series'
 
+  const props = withDefaults(defineProps<{ section?: Section }>(), { section: 'sets' })
+
   const { t } = useI18n()
   const route = useRoute()
   const router = useRouter()
@@ -52,6 +60,11 @@
   const filterStore = useFilterStore()
   const profile = useProfileStore()
   const auth = useAuthStore()
+
+  /** Moje figúrky namiesto Zbierky. Sekcia sa nastaví hneď, pred prvým načítaním. */
+  const figures = computed(() => props.section === 'figures')
+  filterStore.setSection(props.section)
+  const profileKey = computed(() => (figures.value ? 'figures' : 'collection'))
 
   const SORTS = new Set<string>(SORT_KEYS)
   const DEFAULT_SORT = 'profit'
@@ -127,7 +140,7 @@
    * prázdne nastavenie znamená „nič zvláštne“.
    */
   function saveProfile (query: Record<string, unknown>): void {
-    profile.save('collection', {
+    profile.save(profileKey.value, {
       ...(Object.keys(query).length > 0 ? { query } : {}),
       ...(panelOpen.value ? {} : { panelHidden: true }),
       ...(tableView.value ? { view: 'table' } : {}),
@@ -175,10 +188,10 @@
   /** Bez filtra v adrese (príchod z ponuky) sa vráti posledný stav účtu. */
   async function restoreSaved (): Promise<void> {
     await profile.load()
-    panelOpen.value = profile.get('collection')?.panelHidden !== true
-    tableView.value = profile.get('collection')?.view === 'table'
+    panelOpen.value = profile.get(profileKey.value)?.panelHidden !== true
+    tableView.value = profile.get(profileKey.value)?.view === 'table'
     if (Object.keys(route.query).length > 0) return
-    const saved = profile.get('collection')?.query
+    const saved = profile.get(profileKey.value)?.query
     if (saved && typeof saved === 'object' && Object.keys(saved).length > 0) {
       await router.replace({ query: saved as Record<string, string | string[]> })
     }
@@ -231,6 +244,14 @@
 
   /** Počty sekcie Zbierka, bez figúrok zo sérií (tie počíta Prehľad a Figúrky). */
   const summaryLine = computed(() => {
+    if (figures.value) {
+      const totals = filterStore.facets?.totals
+      if (!totals) return ''
+      return t('collection.figuresSummaryLine', {
+        figures: t('dashboard.figuresPlural', totals.owned, { named: { count: totals.owned } }),
+        sold: totals.sold,
+      })
+    }
     const s = collection.summary
     if (!s) return ''
     return t('collection.summaryLine', {
@@ -317,17 +338,17 @@
     // Starý odkaz (záložka, história) s filtrom figúrok zo sérií, napríklad
     // „chýbajúce figúrky série“, vedie tam, kde figúrky teraz sú. Len adresa;
     // uložený stav účtu sa pri príchode z ponuky len vyčistí.
-    const elsewhere = figuresRoute(route.query)
+    const elsewhere = figures.value ? null : figuresRoute(route.query)
     if (elsewhere) {
       await router.replace(elsewhere)
       return
     }
-    backfillBrickset()
+    if (!figures.value) backfillBrickset()
     await restoreSaved()
     readRoute()
     // Starý filter figúrok či zoskupenie podľa série sa zahodilo; adresa
     // a uložený stav účtu to majú zabudnúť tiež.
-    if (hasStaleKeys(route.query, routeQuery())) syncRoute()
+    if (!figures.value && hasStaleKeys(route.query, routeQuery())) syncRoute()
     await Promise.all([filterStore.loadCategories(), filterStore.loadViews()])
     await page.run()
     collection.loadLocations()
@@ -369,6 +390,9 @@
     </aside>
 
     <div class="d-flex flex-column ga-4 collection-main">
+      <!-- Moje figúrky: prepínač Série / Moje figúrky nad všetkým. -->
+      <slot name="header" />
+
       <div class="d-flex align-center flex-wrap ga-2">
         <span class="text-body-medium text-medium-emphasis">{{ summaryLine }}</span>
         <v-spacer />
@@ -383,10 +407,13 @@
           @click="resetAll"
         >{{ t('filters.resetAll') }}</v-btn>
 
-        <ExportCsvButton size="small" variant="outlined" />
+        <!-- Figúrky sa pridávajú v sérii, export je celá zbierka. -->
+        <ExportCsvButton v-if="!figures" size="small" variant="outlined" />
 
         <v-btn
+          v-if="!figures"
           color="primary"
+          data-test="add-set"
           prepend-icon="mdi-plus"
           size="small"
           :to="{ name: 'add-set' }"
@@ -484,8 +511,12 @@
           variant="outlined"
         >
           <v-btn value="set">
-            {{ t('collection.groupBy.set') }}
-            <v-tooltip activator="parent" location="bottom" :text="t('collection.groupBy.setHint')" />
+            {{ t(figures ? 'collection.groupBy.figure' : 'collection.groupBy.set') }}
+            <v-tooltip
+              activator="parent"
+              location="bottom"
+              :text="t(figures ? 'collection.groupBy.figureHint' : 'collection.groupBy.setHint')"
+            />
           </v-btn>
 
           <v-btn value="item">
@@ -524,7 +555,7 @@
         <v-empty-state
           v-else-if="isEmpty"
           icon="mdi-magnify"
-          :text="t('collection.emptyHint')"
+          :text="t(figures ? 'minifigs.mineEmptyHint' : 'collection.emptyHint')"
           :title="t('collection.empty')"
         >
           <!-- Nič medzi setmi, ale filter by trafil figúrky zo sérií. -->
@@ -553,7 +584,7 @@
               v-for="item in collection.items"
               :key="item.id"
               :active="selection.active.value && selection.hasItem(item.id)"
-              :to="selection.active.value ? undefined : { name: 'set-detail', params: { num: item.catalog_num } }"
+              :to="selection.active.value ? undefined : { name: 'set-detail', params: { num: item.catalog_num }, query: filterStore.detailQuery() }"
               @click="selection.active.value && selection.toggleItem(item.id)"
             >
               <template v-if="selection.active.value" #prepend>
@@ -598,7 +629,7 @@
           v-if="selection.active.value"
           :selection="selection"
           :total="collection.grouping === 'item' ? collection.items.length : collection.grouped.length"
-          :unit="collection.grouping === 'item' ? 'pieces' : 'sets'"
+          :unit="collection.grouping === 'item' ? 'pieces' : (figures ? 'figures' : 'sets')"
           @done="page.run()"
         />
       </div>

@@ -4,7 +4,11 @@
    * Figúrka, ktorá zo zbieranej série chýba. Prerušovaný okraj, aby sa
    * nedala zameniť s tým, čo mám. Rovno sa dá pridať do Chcem, alebo
    * „Mám ju“, keď ju už kúpil, a to bez hľadania čísla.
+   *
+   * S `to` je celá karta odkaz na detail (tam sa dá overiť cena), ako karty
+   * v Chcem; tlačidlá na nej detail neotvárajú.
    */
+  import type { RouteLocationRaw } from 'vue-router'
   import { useI18n } from 'vue-i18n'
   import GhostActions from '@/components/GhostActions.vue'
   import SetImage from '@/components/SetImage.vue'
@@ -16,6 +20,8 @@
     wanted?: boolean
     /** Štítok chýbajúceho, predvolene „Chýba v sérii“. */
     missingLabel?: string
+    /** Detail figúrky; bez neho karta nikam nevedie. */
+    to?: RouteLocationRaw
   }>()
   const emit = defineEmits<{ owned: [] }>()
 
@@ -23,7 +29,7 @@
 </script>
 
 <template>
-  <v-card border class="ghost-card h-100 d-flex flex-column" flat>
+  <v-card border class="ghost-card h-100 d-flex flex-column" flat :to="to">
     <div class="ghost-card__image">
       <SetImage :alt="catalog.name" rounded="0" :size="132" :src="imageSrc(catalog.image_url) ?? undefined" />
     </div>
@@ -39,7 +45,7 @@
         {{ missingLabel ?? t('filters.missingCard') }}
       </v-chip>
 
-      <div class="mt-auto pt-2 d-flex flex-wrap ga-1">
+      <div class="mt-auto pt-2 d-flex flex-wrap ga-1" @click.stop.prevent>
         <GhostActions :catalog="catalog" :wanted="wanted" @owned="emit('owned')" />
       </div>
     </div>

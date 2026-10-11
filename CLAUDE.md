@@ -482,6 +482,20 @@ dlaždica sedí s ponukou aj s Figúrkami. Odkazy z Figúrok na detail nesú
 import), detail série sa pozná podľa `series_size`, nielen podľa kusov
 (`utils/series.ts::isSeriesPage`).
 
+**Moje figúrky sú obrazovka Zbierky so sekciou figúrok.** Spec
+`2026-10-11-moje-figurky-design.md`. Trasa `figurky/kusy` (`minifig-pieces`,
+pred `figurky/:num`) je obal `MyFiguresView.vue` okolo `CollectionView`
+s `section="figures"`; obal je tam, aby sa obrazovka pri prechode zo Zbierky
+pripojila znova. `filterStore.setSection` zahodí filter aj počty druhej
+sekcie, `sectionQuery()` pošle `figures_only` (server: `ItemFilter.figures_only`,
+`in_section` pustí len figúrky zo sérií aj sáčky), `detailQuery()` dá
+odkazom na detail `?from=minifigs`. Filter a zobrazenie si účet pamätá pod
+`preferences.figures` (kľúč musí byť aj v `PREFERENCE_KEYS` na serveri).
+Súčty Kúpené · Hodnota · Zisk sú `FacetsOut.totals`, hlavička „N figúrok“
+tiež. Bez Pridať set, exportu, uložených pohľadov a `FiguresElsewhere`.
+Prepínač Série / Moje figúrky je `FiguresTabs.vue` na oboch stránkach; zoznam
+sérií má nad sebou ten istý riadok súčtov (`/items/facets?figures_only`, bez filtra).
+
 **`catalog.kind` hovorí, ako sa položka cení, nie čo to je.** Figúrky
 Mighty Machines či Super Mario sú v katalógu `kind=set`, lebo sa cenia ako
 sety. Či je kus figúrka zo série, rozhoduje rodič série
@@ -1059,7 +1073,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 873 testov, frontend 426. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 878 testov, frontend 433. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

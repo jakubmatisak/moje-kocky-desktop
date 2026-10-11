@@ -119,7 +119,9 @@
       "set": "Sets combined",
       "item": "Single copies",
       "setHint": "One row per set, copies combined: count and summed prices, value and profit",
-      "itemHint": "One row per copy, each with its own condition, price, date and location"
+      "itemHint": "One row per copy, each with its own condition, price, date and location",
+      "figure": "Minifigures combined",
+      "figureHint": "One row per minifigure, copies combined: count and summed prices, value and profit"
     },
     "status": {
       "all": "Everything",
@@ -155,7 +157,8 @@
     "viewCards": "Cards",
     "viewList": "List",
     "viewTable": "Table",
-    "partsPlural": "{count} part | {count} parts"
+    "partsPlural": "{count} part | {count} parts",
+    "figuresSummaryLine": "{figures} · {sold} sold"
   },
   "add": {
     "categories": "Categories",
@@ -762,7 +765,10 @@
     "colState": "State",
     "colWish": "Wishlist",
     "missing": "Missing",
-    "openDetail": "Open detail"
+    "openDetail": "Open detail",
+    "tabSeries": "Series",
+    "tabMine": "My minifigures",
+    "mineEmptyHint": "Try changing the filters. Add minifigures on their series page."
   },
   "purchase": {
     "title": "I bought it",

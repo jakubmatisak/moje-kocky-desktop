@@ -404,6 +404,7 @@ PREFERENCE_KEYS = {
     "unlock",
     "wishlist",
     "minifigs",
+    "figures",
     # Automatická denná obnova cien (desktop): prepínač, čas HH:MM, počet.
     "autoRefresh",
 }

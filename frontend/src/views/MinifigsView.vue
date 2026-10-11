@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { CmfSeries, CmfSync } from '@/api/types'
+  import type { CmfSeries, CmfSync, SelectionTotals as Totals } from '@/api/types'
   import type { SeriesColumn, SeriesSort, StateFilter } from '@/utils/seriesList'
   /**
    * Figúrky: všetky zberateľské série a koľko z každej mám.
@@ -21,8 +21,10 @@
   import { useRoute, useRouter } from 'vue-router'
   import { api, errorMessage } from '@/api/client'
   import CardGrid from '@/components/CardGrid.vue'
+  import FiguresTabs from '@/components/FiguresTabs.vue'
   import LoadFailed from '@/components/LoadFailed.vue'
   import PageSkeleton from '@/components/PageSkeleton.vue'
+  import SelectionTotals from '@/components/SelectionTotals.vue'
   import SeriesBar from '@/components/SeriesBar.vue'
   import SetImage from '@/components/SetImage.vue'
   import SortHeader from '@/components/SortHeader.vue'
@@ -65,6 +67,15 @@
 
   const series = ref<CmfSeries[]>([])
   const sync = ref<CmfSync | null>(null)
+  /** Súčty mojich figúrok (Kúpené · Hodnota · Zisk), rovnaké ako v Moje figúrky bez filtra. */
+  const totals = ref<Totals | null>(null)
+
+  async function loadTotals (): Promise<void> {
+    const { data } = await api.GET('/items/facets', {
+      params: { query: { status: 'owned', figures_only: true } },
+    })
+    totals.value = data?.totals ?? null
+  }
   /** Chyba sťahovania sérií; chybu načítania zoznamu ukáže LoadFailed. */
   const error = ref<string | null>(null)
   const filter = ref<Filter>('all')
@@ -79,6 +90,7 @@
   const { tableView, setView } = useMinifigsView('list')
 
   async function load (): Promise<boolean> {
+    loadTotals()
     const { data, error: err } = await api.GET('/minifigs/series', {})
     if (err || !data) return false
     series.value = data.series
@@ -251,6 +263,8 @@
 
 <template>
   <div class="d-flex flex-column ga-4">
+    <FiguresTabs />
+
     <div class="d-flex align-center flex-wrap ga-2">
       <span v-if="page.loaded" class="text-body-medium text-medium-emphasis">
         {{ t(isMinifigs ? 'minifigs.summary' : 'minifigs.summaryOther', { figures, collecting: counts.collecting, complete: counts.complete }) }}
@@ -267,6 +281,9 @@
         @click="startSync"
       >{{ t('minifigs.syncCheck') }}</v-btn>
     </div>
+
+    <!-- Hodnota mojich figúrok zo všetkých sérií, ako riadok v Moje figúrky. -->
+    <SelectionTotals :totals="totals" />
 
     <v-alert
       v-if="error"

@@ -137,6 +137,15 @@ def item_filter(
             )
         ),
     ] = False,
+    figures_only: Annotated[
+        bool,
+        Query(
+            description=(
+                "Rozsah Moje figúrky: len figúrky zo sérií a nerozbalené sáčky, "
+                "zrkadlo sets_only. S oboma platí sets_only."
+            )
+        ),
+    ] = False,
 ) -> ItemFilter:
     """Parametre filtra z adresy. Skupina sa dá zadať viackrát (?theme=a&theme=b)."""
     return ItemFilter(
@@ -176,6 +185,7 @@ def item_filter(
         box=box or [],
         real=real,
         sets_only=sets_only,
+        figures_only=figures_only,
     )
 
 

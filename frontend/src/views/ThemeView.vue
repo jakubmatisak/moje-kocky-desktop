@@ -296,6 +296,7 @@
             v-else
             :catalog="member.catalog"
             :missing-label="t('themes.missing')"
+            :to="{ name: 'set-detail', params: { num: member.catalog.catalog_num } }"
             :wanted="member.wanted"
             @owned="onOwned"
           />

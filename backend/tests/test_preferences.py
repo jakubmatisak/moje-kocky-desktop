@@ -73,3 +73,10 @@ async def test_minifigs_view_is_a_known_preference(auth_client: AsyncClient) -> 
     saved = await auth_client.put("/auth/me/preferences/minifigs", json=body)
     assert saved.status_code == 200, saved.text
     assert (await auth_client.get("/auth/me/preferences")).json()["minifigs"] == body
+
+
+async def test_my_figures_remember_their_own_filter(auth_client: AsyncClient) -> None:
+    """Moje figúrky si pamätajú filter zvlášť od Zbierky."""
+    saved = await auth_client.put("/auth/me/preferences/figures", json={"query": {"box": ["x"]}})
+    assert saved.status_code == 200, saved.text
+    assert saved.json()["figures"] == {"query": {"box": ["x"]}}

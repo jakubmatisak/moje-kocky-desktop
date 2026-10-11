@@ -119,7 +119,9 @@
       "set": "Sety spolu",
       "item": "Jednotlivé kusy",
       "setHint": "Jeden riadok na každý set, kusy spolu: počet, súčet cien, hodnoty a zisku",
-      "itemHint": "Jeden riadok na každý kus zvlášť, s vlastným stavom, cenou, dátumom a miestom"
+      "itemHint": "Jeden riadok na každý kus zvlášť, s vlastným stavom, cenou, dátumom a miestom",
+      "figure": "Figúrky spolu",
+      "figureHint": "Jeden riadok na každú figúrku, kusy spolu: počet, súčet cien, hodnoty a zisku"
     },
     "status": {
       "all": "Všetko",
@@ -155,7 +157,8 @@
     "viewCards": "Karty",
     "viewList": "Zoznam",
     "viewTable": "Tabuľka",
-    "partsPlural": "{count} dielik | {count} dieliky | {count} dielikov"
+    "partsPlural": "{count} dielik | {count} dieliky | {count} dielikov",
+    "figuresSummaryLine": "{figures} · {sold} predaných"
   },
   "add": {
     "categories": "Kategórie",
@@ -762,7 +765,10 @@
     "colState": "Stav",
     "colWish": "Chcem",
     "missing": "Chýba",
-    "openDetail": "Otvoriť detail"
+    "openDetail": "Otvoriť detail",
+    "tabSeries": "Série",
+    "tabMine": "Moje figúrky",
+    "mineEmptyHint": "Skús zmeniť filtre. Figúrky pridáš na stránke ich série."
   },
   "purchase": {
     "title": "Kúpil som",

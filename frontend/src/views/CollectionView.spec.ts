@@ -277,3 +277,39 @@ describe('Zbierka: riadok o figúrkach zo sérií len vtedy, keď na tom zálež
     expect(line.findComponent(RouterLinkStub).text()).toBe('Open Minifigures')
   })
 })
+
+describe('Moje figúrky: obrazovka Zbierky so sekciou figúrok', () => {
+  beforeEach(() => {
+    pinia = createPinia()
+    setActivePinia(pinia)
+    i18n.global.locale.value = 'sk'
+    query = {}
+    grouped = [TITANIC]
+    facets = { total: 1, hidden_figures: 0, totals: { owned: 7, sold: 1 } }
+  })
+
+  async function mountFigures () {
+    const wrapper = shallowMount(CollectionView, {
+      props: { section: 'figures' },
+      global: {
+        plugins: [i18n, pinia],
+        stubs: { RouterLink: RouterLinkStub },
+        config: { warnHandler: () => {} },
+      },
+    })
+    await flushPromises()
+    return wrapper
+  }
+
+  it('filtruje figúrky a nemá Pridať set; Zbierka ho má', async () => {
+    const figures = await mountFigures()
+    expect(useFilterStore(pinia).section).toBe('figures')
+    expect(figures.find('[data-test="add-set"]').exists()).toBe(false)
+    expect(figures.text().replace(/\s+/g, ' ')).toContain('7 figúrok')
+    figures.unmount()
+
+    const sets = await mountCollection()
+    expect(useFilterStore(pinia).section).toBe('sets')
+    expect(sets.find('[data-test="add-set"]').exists()).toBe(true)
+  })
+})

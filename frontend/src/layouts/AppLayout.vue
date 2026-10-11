@@ -79,7 +79,7 @@
       icon: 'mdi-account-multiple-outline',
       label: t('nav.minifigs'),
       badge: collection.summary?.series_figures || undefined,
-      routes: ['minifigs', 'minifig-series'],
+      routes: ['minifigs', 'minifig-series', 'minifig-pieces'],
     },
     {
       to: { name: 'themes' },
@@ -123,6 +123,7 @@
       case 'add-set': { return t('add.title')
       }
       case 'minifigs':
+      case 'minifig-pieces':
       case 'minifig-series': { return t('minifigs.title')
       }
       case 'themes':

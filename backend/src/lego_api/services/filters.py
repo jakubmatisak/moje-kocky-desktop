@@ -80,6 +80,9 @@ class ItemFilter:
     #: Rozsah sekcie Zbierka: len samostatné sety, figúrky zo sérií sú vo
     #: Figúrkach. Na rozdiel od filtra Typ obmedzuje aj ponuku volieb v paneli.
     sets_only: bool = False
+    #: Rozsah Moje figúrky vo Figúrkach: len figúrky zo sérií (aj sáčky),
+    #: zrkadlo ``sets_only``. S oboma naraz platí ``sets_only``.
+    figures_only: bool = False
 
 
 @dataclass
@@ -126,8 +129,15 @@ def kind_of(v: ValuedItem) -> str:
 
 
 def in_section(v: ValuedItem, f: ItemFilter) -> bool:
-    """Patrí kus do sekcie, pre ktorú sa filtruje? Zbierka figúrky zo sérií nevidí."""
-    return not f.sets_only or kind_of(v) == "set"
+    """Patrí kus do sekcie, pre ktorú sa filtruje?
+
+    Zbierka figúrky zo sérií nevidí, Moje figúrky naopak samostatné sety.
+    """
+    if f.sets_only:
+        return kind_of(v) == "set"
+    if f.figures_only:
+        return kind_of(v) == "minifig"
+    return True
 
 
 def variant_of(v: ValuedItem) -> str | None:

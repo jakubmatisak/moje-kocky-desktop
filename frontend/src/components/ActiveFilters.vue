@@ -174,7 +174,9 @@
 
       <v-btn size="small" variant="text" @click="store.clear()">{{ t('filters.clear') }}</v-btn>
 
+      <!-- Uložené pohľady sú filtre Zbierky; Moje figúrky ich zatiaľ nemajú. -->
       <v-btn
+        v-if="store.section === 'sets'"
         prepend-icon="mdi-bookmark-plus-outline"
         size="small"
         variant="text"
@@ -182,7 +184,7 @@
       >{{ t('filters.saveView') }}</v-btn>
     </div>
 
-    <div v-if="store.views.length > 0" class="d-flex flex-wrap ga-1 align-center">
+    <div v-if="store.views.length > 0 && store.section === 'sets'" class="d-flex flex-wrap ga-1 align-center">
       <span class="text-body-small text-medium-emphasis me-1">{{ t('filters.views') }}</span>
 
       <v-chip

@@ -417,7 +417,13 @@
             :data-test="`ghost-${member.catalog.catalog_num}`"
             @click.capture="pickGhost($event, member.catalog.catalog_num)"
           >
-            <GhostCard :catalog="member.catalog" :wanted="member.wanted" @owned="page.run()" />
+            <!-- Celá karta vedie na detail, kde sa dá overiť cena chýbajúcej figúrky. -->
+            <GhostCard
+              :catalog="member.catalog"
+              :to="selection.active.value ? undefined : { name: 'set-detail', params: { num: member.catalog.catalog_num }, query: { from: 'minifigs' } }"
+              :wanted="member.wanted"
+              @owned="page.run()"
+            />
 
             <v-icon
               v-if="selection.active.value"

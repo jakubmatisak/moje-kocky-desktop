@@ -4,7 +4,9 @@ import { enableAutoUnmount, flushPromises, RouterLinkStub, shallowMount } from '
 import { createPinia, type Pinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import CardGrid from '@/components/CardGrid.vue'
+import FigureValue from '@/components/FigureValue.vue'
 import GhostActions from '@/components/GhostActions.vue'
+import GhostCard from '@/components/GhostCard.vue'
 import SelectionTotals from '@/components/SelectionTotals.vue'
 import SortHeader from '@/components/SortHeader.vue'
 import i18n from '@/plugins/i18n'
@@ -74,7 +76,10 @@ vi.mock('@/api/client', async original => ({
         return {
           data: {
             series: series('71046', 'Space', 1, 2),
-            members: [member('71046-1', 'Astronaut', 2), member('71046-2', 'Alien', 0, true)],
+            members: [
+              { ...member('71046-1', 'Astronaut', 2), purchase_total: '8.00', market_total: '12.00', profit: '4.00', profit_pct: 50, price_at: '2026-09-03T12:00:00Z' },
+              { ...member('71046-2', 'Alien', 0, true), market_now: '9.00', market_now_at: '2026-09-01T12:00:00Z' },
+            ],
           },
         }
       }
@@ -123,6 +128,25 @@ describe('Figúrky: súčty mojich figúrok nad sériami', () => {
 
     expect(facetsQuery).toEqual({ status: 'owned', figures_only: true })
     expect(wrapper.findComponent(SelectionTotals).props('totals')).toEqual(TOTALS)
+  })
+})
+
+describe('Figúrky: ceny pri figúrkach ako v Zbierke', () => {
+  it('vlastnená figúrka má sumy aj s duplikátom, chýbajúca cenu na trhu', async () => {
+    // Karty sú v CardGrid, ten musí obsah vykresliť.
+    const wrapper = shallowMount(MinifigSeriesView, {
+      global: {
+        plugins: [i18n, pinia],
+        stubs: { RouterLink: RouterLinkStub },
+        renderStubDefaultSlot: true,
+        config: { warnHandler: () => {} },
+      },
+    })
+    await flushPromises()
+
+    const mine = wrapper.findComponent(FigureValue)
+    expect(mine.props()).toMatchObject({ purchase: '8.00', value: '12.00', profitPct: 50, duplicates: 1 })
+    expect(wrapper.findComponent(GhostCard).props('market')).toEqual({ now: '9.00', at: '2026-09-01T12:00:00Z' })
   })
 })
 
@@ -246,9 +270,11 @@ describe('Figúrky: tabuľky radia klikom na hlavičku', () => {
     const headers = () => wrapper.findAllComponents(SortHeader)
     const names = () => wrapper.findAll('.minifigs-table__name').map(n => n.text())
 
-    expect(headers().map(h => h.props('title'))).toEqual(['Séria', 'Rok', 'Mám', 'Chýba', 'Kompletnosť'])
+    expect(headers().map(h => h.props('title'))).toEqual([
+      'Séria', 'Rok', 'Mám', 'Chýba', 'Kompletnosť', 'Kúpené', 'Hodnota', 'Cena z', 'Zisk', '%',
+    ])
     // Najmenej chýba je len vo výbere, šípka nesvieti nikde.
-    expect(headers().map(h => h.props('dir'))).toEqual([null, null, null, null, null])
+    expect(headers().map(h => h.props('dir')).every(d => d === null)).toBe(true)
 
     headers()[2]!.vm.$emit('sort')
     await flushPromises()
@@ -269,8 +295,10 @@ describe('Figúrky: tabuľky radia klikom na hlavičku', () => {
     const headers = () => wrapper.findAllComponents(SortHeader)
     const first = () => wrapper.findAll('.minifigs-table tbody tr')[0]!.text()
 
-    expect(headers().map(h => h.props('title'))).toEqual(['Číslo', 'Figúrka', 'Stav', 'Chcem'])
-    expect(headers().map(h => h.props('dir'))).toEqual(['asc', null, null, null])
+    expect(headers().map(h => h.props('title'))).toEqual([
+      'Číslo', 'Figúrka', 'Stav', 'Chcem', 'Kúpené', 'Hodnota', 'Cena z', 'Zisk', '%',
+    ])
+    expect(headers().map(h => h.props('dir'))).toEqual(['asc', null, null, null, null, null, null, null, null])
 
     headers()[2]!.vm.$emit('sort')
     await flushPromises()

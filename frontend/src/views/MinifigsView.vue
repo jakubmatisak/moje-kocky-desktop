@@ -22,6 +22,7 @@
   import { api, errorMessage } from '@/api/client'
   import CardGrid from '@/components/CardGrid.vue'
   import FiguresTabs from '@/components/FiguresTabs.vue'
+  import FigureValue from '@/components/FigureValue.vue'
   import LoadFailed from '@/components/LoadFailed.vue'
   import PageSkeleton from '@/components/PageSkeleton.vue'
   import SelectionTotals from '@/components/SelectionTotals.vue'
@@ -30,6 +31,7 @@
   import SortHeader from '@/components/SortHeader.vue'
   import { useMinifigsView } from '@/composables/useMinifigsView'
   import { usePageLoad } from '@/composables/usePageLoad'
+  import { exactMoney, money, percent, shortDate } from '@/utils/format'
   import { imageSrc } from '@/utils/imageSrc'
   import {
     compareSeries,
@@ -57,7 +59,18 @@
     { key: 'owned', title: 'minifigs.colOwned', class: 'text-end' },
     { key: 'missing', title: 'minifigs.colMissing', class: 'text-end' },
     { key: 'progress', title: 'minifigs.colProgress', class: 'minifigs-table__progress' },
+    // Súčty mojich figúrok série ako v tabuľke Zbierky.
+    { key: 'purchase', title: 'minifigs.colPurchase', class: 'text-end' },
+    { key: 'value', title: 'minifigs.colValue', class: 'text-end' },
+    { key: 'priceAt', title: 'minifigs.colPriceAt', class: 'text-end' },
+    { key: 'profit', title: 'minifigs.colProfit', class: 'text-end' },
+    { key: 'profitPct', title: 'minifigs.colProfitPct', class: 'text-end' },
   ]
+
+  function profitClass (profit: string | null | undefined): string {
+    if (profit === null || profit === undefined) return ''
+    return Number(profit) >= 0 ? 'text-positive' : 'text-negative'
+  }
   /** Číslovaná séria („Series 28 Minifigures“), ostatné sú tematické (Disney, Marvel…). */
   const NUMBERED = /^series \d+/i
 
@@ -526,6 +539,24 @@
             </template>
 
             <td v-else class="text-body-small text-medium-emphasis" colspan="3">{{ t('minifigs.notSynced') }}</td>
+
+            <td class="text-end text-no-wrap">{{ row.purchase_total !== null && row.purchase_total !== undefined ? exactMoney(row.purchase_total) : '' }}</td>
+
+            <td class="text-end text-no-wrap" :data-test="`value-${row.series_num}`">
+              <template v-if="row.purchase_total !== null && row.purchase_total !== undefined">
+                <template v-if="row.market_total !== null && row.market_total !== undefined">
+                  <span v-if="row.approx" class="text-medium-emphasis">≈ </span>{{ exactMoney(row.market_total) }}
+                </template>
+
+                <template v-else>—</template>
+              </template>
+            </td>
+
+            <td class="text-end text-no-wrap text-medium-emphasis">{{ row.price_at ? shortDate(row.price_at) : '' }}</td>
+
+            <td class="text-end text-no-wrap" :class="profitClass(row.profit)">{{ row.profit !== null && row.profit !== undefined ? money(row.profit, { sign: true }) : '' }}</td>
+
+            <td class="text-end text-no-wrap">{{ row.profit_pct !== null && row.profit_pct !== undefined ? percent(row.profit_pct, { decimals: 0 }) : '' }}</td>
           </tr>
         </tbody>
       </v-table>
@@ -584,6 +615,18 @@
                 {{ t('minifigs.bagsPlural', row.sealed_bags, { named: { count: row.sealed_bags } }) }}
               </v-chip>
             </div>
+
+            <!-- Súčet mojich figúrok série ako karta setu v Zbierke; duplikáty povie. -->
+            <FigureValue
+              v-if="row.purchase_total !== null && row.purchase_total !== undefined"
+              :approx="row.approx"
+              class="mt-auto pt-2"
+              :duplicates="row.duplicates"
+              :price-at="row.price_at"
+              :profit-pct="row.profit_pct"
+              :purchase="row.purchase_total"
+              :value="row.market_total"
+            />
           </template>
 
           <div v-else class="text-body-small text-medium-emphasis mt-2">{{ t('minifigs.notSynced') }}</div>

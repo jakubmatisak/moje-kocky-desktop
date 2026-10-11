@@ -2311,6 +2311,25 @@ export interface components {
             owned: number;
             /** Wanted */
             wanted: boolean;
+            /** Purchase Total */
+            purchase_total?: string | null;
+            /** Market Total */
+            market_total?: string | null;
+            /** Profit */
+            profit?: string | null;
+            /** Profit Pct */
+            profit_pct?: number | null;
+            /** Price At */
+            price_at?: string | null;
+            /**
+             * Approx
+             * @default false
+             */
+            approx: boolean;
+            /** Market Now */
+            market_now?: string | null;
+            /** Market Now At */
+            market_now_at?: string | null;
         };
         /** CmfOverviewOut */
         CmfOverviewOut: {
@@ -2348,6 +2367,26 @@ export interface components {
             synced: boolean;
             /** Category */
             category: string;
+            /** Purchase Total */
+            purchase_total?: string | null;
+            /** Market Total */
+            market_total?: string | null;
+            /** Profit */
+            profit?: string | null;
+            /** Profit Pct */
+            profit_pct?: number | null;
+            /** Price At */
+            price_at?: string | null;
+            /**
+             * Approx
+             * @default false
+             */
+            approx: boolean;
+            /**
+             * Price Missing
+             * @default 0
+             */
+            price_missing: number;
         };
         /** CmfSyncOut */
         CmfSyncOut: {

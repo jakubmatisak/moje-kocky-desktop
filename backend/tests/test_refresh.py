@@ -408,9 +408,54 @@ async def test_forced_refresh_still_respects_the_quota(
     assert len(provider.calls) == 2
 
 
-def test_bulk_refresh_waits_a_week_by_default() -> None:
-    """Zdroj mení hodnoty zhruba raz za dva týždne, denné ťahanie míňa kvótu."""
-    assert Settings().price_max_age_hours == 168
+def test_bulk_refresh_waits_fifteen_days_by_default() -> None:
+    """Zdroj mení hodnoty zhruba raz za dva týždne, častejšie ťahanie míňa kvótu."""
+    assert Settings().price_max_age_hours == 360
+    assert Settings().missing_figure_max_age_hours == 720
+
+
+async def test_missing_figures_of_collected_series_get_a_price_once_a_month(
+    session, fast_settings
+) -> None:
+    """Chýbajúce figúrky série, z ktorej niečo mám: cena raz za 30 dní, až za mojimi kusmi.
+
+    Séria, z ktorej nemám nič, sa nepýta vôbec.
+    """
+    session.add(User(id=1, email="u1@x.sk", password_hash="x"))
+    for series in ("71046", "71047"):
+        session.add(
+            CatalogItem(catalog_num=series, name=series, kind=CatalogKind.SET, series_size=3)
+        )
+        for i in range(1, 4):
+            session.add(
+                CatalogItem(
+                    catalog_num=f"{series}-{i}",
+                    name=f"{series}-{i}",
+                    kind=CatalogKind.MINIFIG,
+                    parent_num=series,
+                )
+            )
+    session.add(
+        CollectionItem(
+            user_id=1,
+            catalog_num="71046-1",
+            condition=ItemCondition.NEW_SEALED,
+            flags=[],
+            price_variant="sealed",
+            purchase_price_eur=Decimal("4"),
+        )
+    )
+    # Cena spred 100 hodín: staršia než deň (fast_settings), ale mladšia než mesiac.
+    session.add(_snapshot("71046-3", hours_ago=100))
+    await session.commit()
+
+    plan = await collect_targets(session, 1, fast_settings)
+
+    assert [t.catalog_num for t in plan.targets] == ["71046-1", "71046-2"]
+
+    fast_settings.missing_figure_max_age_hours = 50
+    plan = await collect_targets(session, 1, fast_settings)
+    assert [t.catalog_num for t in plan.targets] == ["71046-1", "71046-2", "71046-3"]
 
 
 async def test_batch_plans_within_the_reserve(session, sessionmaker_, fast_settings) -> None:

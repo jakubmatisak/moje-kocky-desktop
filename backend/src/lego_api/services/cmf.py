@@ -20,6 +20,7 @@ import logging
 import re
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -36,8 +37,10 @@ from lego_api.models import (
 )
 from lego_api.models.base import utcnow
 from lego_api.providers.rebrickable import BlindCandidate, RebrickableProvider
+from lego_api.services import figure_values
 from lego_api.services.catalog import CatalogService, _suffix_order
 from lego_api.services.fetch_policy import CallBlocked
+from lego_api.services.figure_values import FigureValue
 
 log = logging.getLogger(__name__)
 
@@ -297,6 +300,15 @@ class SeriesOverview:
     synced: bool
     #: ``minifigs`` pre zberateľské minifigúrky, inak názov radu.
     category: str = MINIFIGS
+    #: Súčty mojich figúrok série (``figure_values``); bez vlastnenej figúrky None.
+    purchase_total: Decimal | None = None
+    market_total: Decimal | None = None
+    profit: Decimal | None = None
+    profit_pct: float | None = None
+    price_at: datetime | None = None
+    approx: bool = False
+    #: Moje kusy bez ceny (súčet ich neráta).
+    price_missing: int = 0
 
 
 async def _owned_counts(
@@ -325,6 +337,7 @@ async def overview(session: AsyncSession, user_id: int) -> list[SeriesOverview]:
     tiež, inak by v sekcii chýbalo práve to, čo používateľ zbiera.
     """
     counts, bags = await _owned_counts(session, user_id)
+    values = await figure_values.my_figure_values(session, user_id)
     umbrellas = {
         item.catalog_num: item
         for item in (
@@ -351,6 +364,11 @@ async def overview(session: AsyncSession, user_id: int) -> list[SeriesOverview]:
         umbrella = umbrellas.get(num) if num else None
         nums = members.get(num, []) if num else []
         owned_counts = [counts.get(n, 0) for n in nums]
+        mine = FigureValue()
+        for n in nums:
+            if n in values:
+                mine.merge(values[n])
+        has = mine.pieces > 0
         return SeriesOverview(
             series_num=num if umbrella else None,
             theme_id=theme_id,
@@ -363,6 +381,13 @@ async def overview(session: AsyncSession, user_id: int) -> list[SeriesOverview]:
             sealed_bags=bags.get(num, 0) if num else 0,
             synced=synced,
             category=category,
+            purchase_total=mine.purchase if has else None,
+            market_total=mine.market_total,
+            profit=mine.profit,
+            profit_pct=mine.profit_pct,
+            price_at=mine.price_at,
+            approx=mine.approx,
+            price_missing=mine.price_missing,
         )
 
     result: list[SeriesOverview] = []
@@ -391,6 +416,10 @@ class MemberRow:
     catalog: CatalogItem
     owned: int
     wanted: bool
+    #: Moje kusy tejto figúrky (kúpené, hodnota, zisk); bez kusu None.
+    value: FigureValue | None = None
+    #: Figúrka, ktorú nemám: posledná známa trhová cena a jej dátum.
+    market_now: tuple[Decimal, datetime | None] | None = None
 
 
 async def members(session: AsyncSession, user_id: int, series_num: str) -> list[MemberRow]:
@@ -408,9 +437,17 @@ async def members(session: AsyncSession, user_id: int, series_num: str) -> list[
         ).scalars()
     )
     rows.sort(key=lambda r: _suffix_order(r.catalog_num))
+    values = await figure_values.my_figure_values(session, user_id)
+    prices = await figure_values.market_now(
+        session, [r.catalog_num for r in rows if counts.get(r.catalog_num, 0) == 0]
+    )
     return [
         MemberRow(
-            catalog=row, owned=counts.get(row.catalog_num, 0), wanted=row.catalog_num in wanted
+            catalog=row,
+            owned=counts.get(row.catalog_num, 0),
+            wanted=row.catalog_num in wanted,
+            value=values.get(row.catalog_num),
+            market_now=prices.get(row.catalog_num),
         )
         for row in rows
     ]

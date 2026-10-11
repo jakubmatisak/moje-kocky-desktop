@@ -16,6 +16,7 @@ stiahnutí je presný, kým v nej nechýba môj set, ktorý Brickset pridal
 neskôr. „V zbierke“ nikdy neprekročí počet setov témy ani roka.
 """
 
+import asyncio
 from collections import Counter
 from collections.abc import Iterable
 from collections.abc import Set as AbstractSet
@@ -80,6 +81,37 @@ async def _year_set(provider: BricksetProvider, theme: str) -> set[int] | None:
     found = _year_numbers(rows)
     _years_cache[key] = (utcnow(), found)
     return found
+
+
+#: Koľko getYears naraz. Brickset ich do limitu nepočíta, ale zahlcovať ho netreba.
+YEARS_AT_ONCE = 6
+
+
+async def warm_years(provider: BricksetProvider, names: Iterable[str]) -> None:
+    """Ročníky viacerých tém do pamäte naraz, nie po jednom.
+
+    Prvé otvorenie Sérií po štarte (desktop začína s prázdnou pamäťou pri
+    každom spustení) by inak čakalo na getYears téma za témou, pri desiatke
+    tém sekundy. Témy s čerstvým záznamom v pamäti sa nepýtajú.
+    """
+    gate = asyncio.Semaphore(YEARS_AT_ONCE)
+    now = utcnow()
+
+    async def one(name: str) -> None:
+        async with gate:
+            await _year_set(provider, name)
+
+    todo = {
+        name.lower(): name
+        for name in names
+        if (cached := _years_cache.get(name.lower())) is None or now - cached[0] >= THEMES_TTL
+    }
+    await asyncio.gather(*(one(name) for name in todo.values()))
+
+
+async def saved_theme_names(session: AsyncSession) -> list[str]:
+    """Témy so stiahnutou vlnou, ktorú účet vidí; tie potrebujú počet ročníkov."""
+    return sorted({theme for theme, _year in (await _waves(session)).sets})
 
 
 def _aware(value: datetime) -> datetime:
@@ -461,12 +493,12 @@ async def overview(
         saved.setdefault(theme.lower(), set()).add(year)
     year_sets: dict[str, set[int]] = {}
     if provider is not None:
-        for t in themes:
-            name = t.get("theme") or ""
-            if name.lower() in saved:
-                found = await _year_set(provider, name)
-                if found:
-                    year_sets[name.lower()] = found
+        wanted = [t.get("theme") or "" for t in themes if (t.get("theme") or "").lower() in saved]
+        await warm_years(provider, wanted)
+        for name in wanted:
+            found = await _year_set(provider, name)
+            if found:
+                year_sets[name.lower()] = found
 
     def row(t: dict) -> ThemeRow:
         total = t.get("setCount") or 0

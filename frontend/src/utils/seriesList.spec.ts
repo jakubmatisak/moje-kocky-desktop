@@ -118,3 +118,27 @@ describe('figúrky jednej série: zoradenie tabuľky', () => {
     expect(nums(members as never)).toEqual(['71046-10', '71046-2', '71046-1', '71046-3'])
   })
 })
+
+describe('figúrky: zoradenie podľa súm ako v Zbierke', () => {
+  const valued = (name: string, value: string | null, profit: string | null, priceAt: string | null = null) =>
+    ({ name, owned: 1, total: 12, year: 2024, series_num: name, purchase_total: '5.00', market_total: value, profit, profit_pct: null, price_at: priceAt }) as never
+  const rows = [valued('A', '10.00', '5.00'), valued('B', null, null), valued('C', '30.00', '25.00')]
+  const names = (list: Array<{ name: string }>) => list.map(r => r.name)
+
+  it('hodnota a zisk od najväčšieho, séria bez ceny na konci v oboch smeroch', () => {
+    expect(seriesSortFromHeader('value', 'leastMissing')).toBe('valueDesc')
+    expect(names(rows.toSorted((a, b) => compareSeries(a, b, 'valueDesc', collator)))).toEqual(['C', 'A', 'B'])
+    expect(names(rows.toSorted((a, b) => compareSeries(a, b, 'valueAsc', collator)))).toEqual(['A', 'C', 'B'])
+    expect(names(rows.toSorted((a, b) => compareSeries(a, b, 'profitDesc', collator)))).toEqual(['C', 'A', 'B'])
+  })
+
+  it('figúrky: hodnota mojich kusov, chýbajúca figúrka podľa ceny na trhu', () => {
+    const fig = (num: string, owned: number, value: string | null, now: string | null) =>
+      ({ catalog: { catalog_num: num, name: num }, owned, wanted: false, market_total: value, market_now: now }) as never
+    const list = [fig('71046-1', 1, '6.00', null), fig('71046-2', 0, null, '9.00'), fig('71046-3', 0, null, null)]
+    const nums = (r: Array<{ catalog: { catalog_num: string } }>) => r.map(x => x.catalog.catalog_num)
+
+    expect(memberDefaultDir('value')).toBe('desc')
+    expect(nums(sortMembers(list, 'value', 'desc'))).toEqual(['71046-2', '71046-1', '71046-3'])
+  })
+})

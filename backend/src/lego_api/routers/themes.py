@@ -1,5 +1,6 @@
 """Témy: úplnosť tém a vĺn (téma + rok) podľa Brickset."""
 
+import asyncio
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -35,7 +36,10 @@ async def list_themes(
     provider = _provider(settings, keys)
     if not provider.enabled:
         return ThemesOut(mine=[], all=[], provider_enabled=False)
-    rows = await themes.all_themes(provider)
+    # Zoznam tém a ročníky uložených tém naraz: prvé otvorenie po štarte by
+    # inak čakalo na getThemes a potom na každé getYears zvlášť.
+    names = await themes.saved_theme_names(session)
+    rows, _ = await asyncio.gather(themes.all_themes(provider), themes.warm_years(provider, names))
     if rows is None:
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Brickset teraz neodpovedá")
     mine, everything = await themes.overview(

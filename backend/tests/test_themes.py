@@ -837,3 +837,37 @@ async def test_theme_says_how_many_years_are_saved_and_how_many_are_left(session
     assert (rows["Speed Champions"].downloaded_years, rows["Speed Champions"].year_total) == (2, 2)
     # Ročníky témy sú v pamäti, druhý prehľad Brickset nepýta.
     assert calls == ["Speed Champions"]
+
+
+async def test_years_of_several_themes_are_asked_at_once() -> None:
+    """Prvé otvorenie Sérií po štarte: getYears pre všetky uložené témy naraz, nie po jednom.
+
+    Po jednom to pri desiatke tém trvalo sekundy (desktop má pamäť prázdnu
+    po každom spustení). Druhý raz idú ročníky z pamäte.
+    """
+    import asyncio
+
+    themes.reset_cache()
+    provider = FakeBrickset()
+    running = 0
+    most = 0
+    calls: list[str] = []
+
+    async def slow(theme: str) -> list[dict]:
+        nonlocal running, most
+        calls.append(theme)
+        running += 1
+        most = max(most, running)
+        await asyncio.sleep(0.05)
+        running -= 1
+        return [{"theme": theme, "year": "2024", "setCount": 3}]
+
+    provider.get_years = slow  # type: ignore[method-assign]
+    names = ["Speed Champions", "Technic", "Icons", "City"]
+
+    await themes.warm_years(provider, names)  # type: ignore[arg-type]
+
+    assert most > 1
+    assert sorted(calls) == sorted(names)
+    await themes.warm_years(provider, names)  # type: ignore[arg-type]
+    assert len(calls) == len(names)

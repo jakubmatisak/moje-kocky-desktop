@@ -750,7 +750,17 @@
       "missingAsc": "Missing: fewest",
       "missingDesc": "Missing: most",
       "progressDesc": "Completeness: highest",
-      "progressAsc": "Completeness: lowest"
+      "progressAsc": "Completeness: lowest",
+      "purchaseDesc": "Bought, most",
+      "purchaseAsc": "Bought, least",
+      "valueDesc": "Value, highest",
+      "valueAsc": "Value, lowest",
+      "priceAtDesc": "Price, newest",
+      "priceAtAsc": "Price, oldest",
+      "profitDesc": "Profit, highest",
+      "profitAsc": "Profit, lowest",
+      "profitPctDesc": "Profit %, highest",
+      "profitPctAsc": "Profit %, lowest"
     },
     "categoryMinifigs": "Minifigures",
     "summaryOther": "Pieces from series: {figures} · collecting: {collecting} · complete: {complete}",
@@ -768,7 +778,15 @@
     "openDetail": "Open detail",
     "tabSeries": "Series",
     "tabMine": "My minifigures",
-    "mineEmptyHint": "Try changing the filters. Add minifigures on their series page."
+    "mineEmptyHint": "Try changing the filters. Add minifigures on their series page.",
+    "marketOnly": "Not mine, price only",
+    "marketNow": "Market now",
+    "valueWithDuplicatesPlural": "The sum includes {count} duplicate | The sum includes {count} duplicates",
+    "colPurchase": "Bought",
+    "colValue": "Value",
+    "colPriceAt": "Price from",
+    "colProfit": "Profit",
+    "colProfitPct": "%"
   },
   "purchase": {
     "title": "I bought it",
@@ -989,7 +1007,7 @@
   "sources": {
     "autoRefresh": {
       "switch": "Refresh prices automatically every day",
-      "hint": "Even when Moje kocky is not open: the computer only needs to be on and you signed in to Windows. Prices older than a week are refreshed, those without a price first. If the computer was off at that time, the refresh runs once it is on. If you switch it on after the set time, the first refresh runs right away.",
+      "hint": "Even when Moje kocky is not open: the computer only needs to be on and you signed in to Windows. Prices older than 15 days are refreshed, those without a price first; missing figures of series you collect once every 30 days. If the computer was off at that time, the refresh runs once it is on. If you switch it on after the set time, the first refresh runs right away.",
       "needsKey": "Automatic refresh needs a BrickEconomy key and price refresh switched on.",
       "time": "Time",
       "timeHint": "Local time of this computer.",

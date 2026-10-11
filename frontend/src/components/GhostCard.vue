@@ -10,6 +10,7 @@
    */
   import type { RouteLocationRaw } from 'vue-router'
   import { useI18n } from 'vue-i18n'
+  import FigureValue from '@/components/FigureValue.vue'
   import GhostActions from '@/components/GhostActions.vue'
   import SetImage from '@/components/SetImage.vue'
   import { imageSrc } from '@/utils/imageSrc'
@@ -22,6 +23,8 @@
     missingLabel?: string
     /** Detail figúrky; bez neho karta nikam nevedie. */
     to?: RouteLocationRaw
+    /** Figúrky: posledná známa cena na trhu so štítkom „Nemám, len cena“. */
+    market?: { now: string | null, at: string | null } | null
   }>()
   const emit = defineEmits<{ owned: [] }>()
 
@@ -44,6 +47,14 @@
       <v-chip class="align-self-start mt-1" label size="x-small" variant="outlined">
         {{ missingLabel ?? t('filters.missingCard') }}
       </v-chip>
+
+      <FigureValue
+        v-if="market"
+        class="mt-2"
+        :market-now="market.now"
+        :market-now-at="market.at"
+        missing
+      />
 
       <div class="mt-auto pt-2 d-flex flex-wrap ga-1" @click.stop.prevent>
         <GhostActions :catalog="catalog" :wanted="wanted" @owned="emit('owned')" />

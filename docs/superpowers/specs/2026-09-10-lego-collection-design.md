@@ -154,7 +154,8 @@ docs/superpowers/specs/  tieto dokumenty
 | `COOKIE_SECURE`, `COOKIE_DOMAIN` | false / – | cookie obnovovacieho tokenu |
 | `ALLOW_REGISTRATION` | true | východisko, kým ho správca v appke nezmení |
 | `BRICKECONOMY_DAILY_LIMIT` | 100 | denný strop volaní (oficiálna kvóta je 100), dá sa znížiť |
-| `PRICE_MAX_AGE_HOURS` | 168 | vek snímky, po ktorom sa cena obnoví |
+| `PRICE_MAX_AGE_HOURS` | 360 | vek snímky, po ktorom sa cena obnoví (15 dní) |
+| `MISSING_FIGURE_MAX_AGE_HOURS` | 720 | to isté pre chýbajúce figúrky zbieraných sérií (30 dní) |
 | `PRICE_REFRESH_BUDGET` | 40 | strop položiek na jednu dávku |
 | `PRICE_REFRESH_DELAY_SECONDS` | 1.0 | pauza medzi volaniami |
 | `CMF_PARENT_THEME` | Collectible Minifigures | nadradená téma sérií na Rebrickable |
@@ -565,7 +566,7 @@ Kým sa neúspech nezapisoval, položka bez ceny bola pri každej obnove
 neznáma, prvá na rade a stála volanie pri každom kliknutí. To isté
 postavený kus setu v predaji: zdroj mu použitú cenu nepošle, kým sa set
 nestiahne z predaja. Teraz stojí každá taká položka jedno volanie za
-168 h, ako položka s cenou.
+15 dní, ako položka s cenou.
 
 **Ručná obnova z detailu** (`refresh-all?num=`) vek snímky nepozerá, strop
 dávky a zvyšok kvóty platia aj pre ňu. **Ručná cena**

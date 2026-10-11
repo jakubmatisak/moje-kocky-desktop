@@ -94,7 +94,17 @@ async def series_detail(
         series=CmfSeriesOut(**asdict(found)),
         members=[
             CmfMemberOut(
-                catalog=CatalogOut.model_validate(m.catalog), owned=m.owned, wanted=m.wanted
+                catalog=CatalogOut.model_validate(m.catalog),
+                owned=m.owned,
+                wanted=m.wanted,
+                purchase_total=m.value.purchase if m.value else None,
+                market_total=m.value.market_total if m.value else None,
+                profit=m.value.profit if m.value else None,
+                profit_pct=m.value.profit_pct if m.value else None,
+                price_at=m.value.price_at if m.value else None,
+                approx=m.value.approx if m.value else False,
+                market_now=m.market_now[0] if m.market_now else None,
+                market_now_at=m.market_now[1] if m.market_now else None,
             )
             for m in members
         ],

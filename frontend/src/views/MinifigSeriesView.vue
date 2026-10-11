@@ -18,6 +18,7 @@
   import { api, errorMessage } from '@/api/client'
   import BulkBar from '@/components/BulkBar.vue'
   import CardGrid from '@/components/CardGrid.vue'
+  import FigureValue from '@/components/FigureValue.vue'
   import GhostActions from '@/components/GhostActions.vue'
   import GhostCard from '@/components/GhostCard.vue'
   import LoadFailed from '@/components/LoadFailed.vue'
@@ -30,6 +31,7 @@
   import { useMinifigsView } from '@/composables/useMinifigsView'
   import { usePageLoad } from '@/composables/usePageLoad'
   import { createSelection } from '@/composables/useSelection'
+  import { exactMoney, money, percent, shortDate } from '@/utils/format'
   import { imageSrc } from '@/utils/imageSrc'
   import { memberDefaultDir, memberShowFrom, sortMembers } from '@/utils/seriesList'
   import { headerDir, nextSort } from '@/utils/tableSort'
@@ -107,7 +109,18 @@
     { key: 'name', title: 'minifigs.colFigure' },
     { key: 'state', title: 'minifigs.colState' },
     { key: 'wanted', title: 'minifigs.colWish', class: 'text-center' },
+    // Sumy ako v tabuľke Zbierky; chýbajúca figúrka má v Hodnote cenu na trhu.
+    { key: 'purchase', title: 'minifigs.colPurchase', class: 'text-end' },
+    { key: 'value', title: 'minifigs.colValue', class: 'text-end' },
+    { key: 'priceAt', title: 'minifigs.colPriceAt', class: 'text-end' },
+    { key: 'profit', title: 'minifigs.colProfit', class: 'text-end' },
+    { key: 'profitPct', title: 'minifigs.colProfitPct', class: 'text-end' },
   ]
+
+  function profitClass (profit: string | null | undefined): string {
+    if (profit === null || profit === undefined) return ''
+    return Number(profit) >= 0 ? 'text-positive' : 'text-negative'
+  }
 
   const shown = computed(() => sortMembers(
     members.value.filter(m =>
@@ -342,6 +355,30 @@
                 />
               </td>
 
+              <td class="text-end text-no-wrap">{{ member.owned > 0 ? exactMoney(member.purchase_total) : '' }}</td>
+
+              <td class="text-end text-no-wrap" :data-test="`value-${member.catalog.catalog_num}`">
+                <template v-if="member.owned > 0">
+                  <template v-if="member.market_total !== null && member.market_total !== undefined">
+                    <span v-if="member.approx" class="text-medium-emphasis">≈ </span>{{ exactMoney(member.market_total) }}
+                  </template>
+
+                  <template v-else>—</template>
+                </template>
+
+                <!-- Chýbajúca figúrka: cena na trhu, so štítkom, nech sa nezamení s mojou hodnotou. -->
+                <template v-else-if="member.market_now">
+                  <v-chip class="me-1" label size="x-small" variant="outlined">{{ t('minifigs.marketOnly') }}</v-chip>
+                  {{ exactMoney(member.market_now) }}
+                </template>
+              </td>
+
+              <td class="text-end text-no-wrap text-medium-emphasis">{{ (member.owned > 0 ? member.price_at : member.market_now_at) ? shortDate((member.owned > 0 ? member.price_at : member.market_now_at)!) : '' }}</td>
+
+              <td class="text-end text-no-wrap" :class="profitClass(member.profit)">{{ member.profit !== null && member.profit !== undefined ? money(member.profit, { sign: true }) : '' }}</td>
+
+              <td class="text-end text-no-wrap">{{ member.profit_pct !== null && member.profit_pct !== undefined ? percent(member.profit_pct, { decimals: 0 }) : '' }}</td>
+
               <td class="text-end text-no-wrap">
                 <v-btn
                   v-if="member.owned > 0"
@@ -407,6 +444,17 @@
 
                 <v-chip v-if="member.owned > 1" label size="x-small" variant="tonal">× {{ member.owned }}</v-chip>
               </div>
+
+              <!-- Sumy ako na karte setu v Zbierke; pri × 2 súčet oboch kusov. -->
+              <FigureValue
+                :approx="member.approx"
+                class="mt-auto pt-2"
+                :duplicates="member.owned > 1 ? member.owned - 1 : 0"
+                :price-at="member.price_at"
+                :profit-pct="member.profit_pct"
+                :purchase="member.purchase_total"
+                :value="member.market_total"
+              />
             </div>
           </v-card>
 
@@ -420,6 +468,7 @@
             <!-- Celá karta vedie na detail, kde sa dá overiť cena chýbajúcej figúrky. -->
             <GhostCard
               :catalog="member.catalog"
+              :market="{ now: member.market_now ?? null, at: member.market_now_at ?? null }"
               :to="selection.active.value ? undefined : { name: 'set-detail', params: { num: member.catalog.catalog_num }, query: { from: 'minifigs' } }"
               :wanted="member.wanted"
               @owned="page.run()"

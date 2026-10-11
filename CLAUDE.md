@@ -309,7 +309,10 @@ hodnoty o 2 a 5 rokov a rast za 12 mesiacov. Nestojí to ďalšie volanie,
 len sa to nesmie zabudnúť uložiť. Rast môže byť záporný, preto sa nečíta
 cez `_decimal`, ktoré zahadzuje nulu a mínus ako neplatnú cenu.
 
-**Hromadná obnova raz za týždeň, ručná hneď.** `price_max_age_hours` je 168.
+**Hromadná obnova raz za 15 dní, ručná hneď.** `price_max_age_hours` je 360.
+Chýbajúce figúrky sérií, z ktorých niečo mám, idú do plánu tiež, ale raz za
+30 dní (`missing_figure_max_age_hours` 720) a vždy až za mojimi kusmi a Chcem
+(`_Candidate.missing`); obnova jednej série (`only`) ich nepýta.
 `POST /prices/refresh-all?num=` je ručná obnova z detailu a vek snímky
 nepozerá (`force`); strop dávky a zvyšok kvóty platia aj pre ňu.
 Hromadná obnova z hornej lišty ide cez dialóg `RefreshPricesDialog.vue`
@@ -495,6 +498,16 @@ Súčty Kúpené · Hodnota · Zisk sú `FacetsOut.totals`, hlavička „N figú
 tiež. Bez Pridať set, exportu, uložených pohľadov a `FiguresElsewhere`.
 Prepínač Série / Moje figúrky je `FiguresTabs.vue` na oboch stránkach; zoznam
 sérií má nad sebou ten istý riadok súčtov (`/items/facets?figures_only`, bez filtra).
+
+**Ceny vo Figúrkach ako v Zbierke.** `services/figure_values.py`: pri sérii
+(`CmfSeriesOut`) aj figúrke (`CmfMemberOut`) kúpené, hodnota, zisk, % a
+`price_at`, rovnako rátané ako karta Cena mojich figúrok (duplikáty každý
+kus, sáčok bez figúrky nie, bez ceny null). Figúrka, ktorú nemám, má len
+`market_now`/`market_now_at` (posledná cena nového kusu, cení sa ako set),
+v rozhraní so štítkom „Nemám, len cena“. Karta je `FigureValue.vue` (aj
+v `GhostCard` cez `market`), tabuľky majú stĺpce a zoradenie ako Zbierka
+(`utils/seriesList.ts`: `SeriesColumn`, `MemberSort`); séria s duplikátmi
+to pod sumami povie.
 
 **`catalog.kind` hovorí, ako sa položka cení, nie čo to je.** Figúrky
 Mighty Machines či Super Mario sú v katalógu `kind=set`, lebo sa cenia ako
@@ -821,6 +834,9 @@ a `year_total` dávajú výberu „Nájsť sériu“ aj karte série „uložen�
 a „zostáva: 5“, pri všetkých „uložené všetko“ (`utils/themeList.ts::savedYears`).
 Počet ročníkov je z getYears (do limitu sa neráta), len pri sérii s niečím
 uloženým, v pamäti procesu deň (`themes._year_set`, plní ho aj `years`).
+GET /themes pýta getThemes a getYears uložených tém naraz (`warm_years`,
+najviac `YEARS_AT_ONCE` 6 súbežne); po jednom to pri prázdnej pamäti
+(každé spustenie desktopu) trvalo sekundy.
 Čip „Uložené série“ (`themeSource`) ukáže všetky série s uloženým ročníkom,
 aj bez môjho setu. V rozhraní sa hovorí „uložené“, nie „stiahnuté“ či „známe“.
 
@@ -1073,7 +1089,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 878 testov, frontend 433. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 883 testov, frontend 439. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

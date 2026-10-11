@@ -1153,6 +1153,15 @@ class CmfSeriesOut(BaseModel):
     synced: bool
     #: ``minifigs`` pre zberateľské minifigúrky, inak názov radu (Mighty Machines…).
     category: str
+    #: Súčty mojich figúrok série ako karta setu v Zbierke; bez figúrky null.
+    #: Duplikáty sa rátajú, nerozbalený sáčok nie. Bez ceny null, nie 0.
+    purchase_total: Money | None = None
+    market_total: Money | None = None
+    profit: Money | None = None
+    profit_pct: float | None = None
+    price_at: datetime | None = None
+    approx: bool = False
+    price_missing: int = 0
 
 
 class CmfOverviewOut(BaseModel):
@@ -1164,6 +1173,16 @@ class CmfMemberOut(BaseModel):
     catalog: CatalogOut
     owned: int
     wanted: bool
+    #: Moje kusy tejto figúrky (súčet pri duplikátoch); bez kusu null.
+    purchase_total: Money | None = None
+    market_total: Money | None = None
+    profit: Money | None = None
+    profit_pct: float | None = None
+    price_at: datetime | None = None
+    approx: bool = False
+    #: Figúrka, ktorú nemám: posledná známa trhová cena a jej dátum.
+    market_now: Money | None = None
+    market_now_at: datetime | None = None
 
 
 class CmfSeriesDetailOut(BaseModel):

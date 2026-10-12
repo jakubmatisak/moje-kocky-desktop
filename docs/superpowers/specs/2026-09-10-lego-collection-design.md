@@ -155,7 +155,6 @@ docs/superpowers/specs/  tieto dokumenty
 | `ALLOW_REGISTRATION` | true | východisko, kým ho správca v appke nezmení |
 | `BRICKECONOMY_DAILY_LIMIT` | 100 | denný strop volaní (oficiálna kvóta je 100), dá sa znížiť |
 | `PRICE_MAX_AGE_HOURS` | 360 | vek snímky, po ktorom sa cena obnoví (15 dní) |
-| `MISSING_FIGURE_MAX_AGE_HOURS` | 720 | to isté pre chýbajúce figúrky zbieraných sérií (30 dní) |
 | `PRICE_REFRESH_BUDGET` | 40 | strop položiek na jednu dávku |
 | `PRICE_REFRESH_DELAY_SECONDS` | 1.0 | pauza medzi volaniami |
 | `CMF_PARENT_THEME` | Collectible Minifigures | nadradená téma sérií na Rebrickable |

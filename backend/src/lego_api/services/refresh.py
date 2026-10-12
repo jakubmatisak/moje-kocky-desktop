@@ -131,8 +131,6 @@ class _Candidate:
     owned: bool
     #: Kedy pribudol najnovší z kusov.
     added_at: datetime
-    #: Len chýbajúca figúrka zbieranej série: obnova raz za mesiac a až nakoniec.
-    missing: bool = False
 
 
 async def collect_targets(
@@ -168,9 +166,8 @@ async def collect_targets(
     ``batch`` je počet, ktorý si používateľ vybral v dialógu obnovy; nahradí
     predvolený strop servera (``price_refresh_budget``), ``budget`` nie.
 
-    Chýbajúce figúrky sérií, z ktorých niečo mám, sú v pláne tiež: ich cena
-    vo Figúrkach pomôže rozhodnúť o kúpe. Obnovia sa raz za mesiac
-    (``missing_figure_max_age_hours``) a vždy až za mojimi kusmi a Chcem.
+    Chýbajúce figúrky sérií v pláne nie sú: ich cenu si používateľ vypýta
+    sám (Obnoviť cenu v detaile, Overiť cenu), inak by míňali dennú kvótu.
     """
     plan = RefreshPlan()
 
@@ -188,7 +185,6 @@ async def collect_targets(
         catalog: CatalogItem,
         owned: bool,
         added_at: datetime,
-        missing: bool = False,
     ) -> None:
         if not source_prices(target, catalog):
             # Holá figúrka (fig-…): zdroj ju ako set nepozná, volanie by zlyhalo vždy.
@@ -197,10 +193,7 @@ async def collect_targets(
         added_at = _aware(added_at)
         known = candidates.get(target.call_key())
         if known is None:
-            candidates[target.call_key()] = _Candidate(target, age, owned, added_at, missing)
-            return
-        if missing:
-            # Figúrka je už v pláne ako môj kus či Chcem, tam patrí aj jej poradie.
+            candidates[target.call_key()] = _Candidate(target, age, owned, added_at)
             return
         # Rozhoduje najstaršia snímka zo všetkých stavov tej istej položky.
         known.snapshot_age = _older(known.snapshot_age, age)
@@ -225,26 +218,6 @@ async def collect_targets(
         target = PriceTarget(catalog.catalog_num, PriceKind.SET, PriceCondition.NEW)
         await consider(target, catalog, False, wish.created_at)
 
-    if only is None:
-        # Chýbajúce figúrky sérií, z ktorých niečo mám: aktuálna cena pomôže
-        # rozhodnúť o kúpe. Obnova jednej série („Obnoviť ceny mojich figúrok“)
-        # ich nepýta.
-        collected = {
-            i.catalog.parent_num for i in items if i.catalog is not None and i.catalog.parent_num
-        }
-        owned_nums = {i.catalog_num for i in items}
-        if collected:
-            members = (
-                await session.execute(
-                    select(CatalogItem).where(CatalogItem.parent_num.in_(sorted(collected)))
-                )
-            ).scalars()
-            for member in members:
-                if member.catalog_num in owned_nums:
-                    continue
-                target = PriceTarget(member.catalog_num, PriceKind.SET, PriceCondition.NEW)
-                await consider(target, member, False, datetime.min.replace(tzinfo=UTC), True)
-
     if only is not None and not candidates:
         # Obnoviť cenu v detaile položky, ktorú nemám ani nechcem (chýbajúca
         # figúrka, set z Overiť cenu): jedno volanie ako set, ako Overiť cenu.
@@ -267,20 +240,15 @@ async def collect_targets(
         age = _fresher(cand.snapshot_age, tried_age)
         if age is None:
             unknown.append(cand)
-        elif force or age >= (
-            settings.missing_figure_max_age_hours if cand.missing else settings.price_max_age_hours
-        ):
+        elif force or age >= settings.price_max_age_hours:
             stale.append((cand, age))
     plan.skipped_fresh = len(candidates) - len(unknown) - len(stale)
 
     # Neznáme: hodnota zbierky ráta len vlastnené kusy a čerstvo pridaný set
     # je ten, na ktorého cenu používateľ po kliknutí čaká. Ostatné od
     # najstaršieho volania, aby sa dávka rovnomerne prestriedala.
-    # Chýbajúce figúrky zbieraných sérií vždy až za mojimi kusmi a Chcem.
-    unknown.sort(
-        key=lambda c: (not c.owned, c.missing, -c.added_at.timestamp(), c.target.call_key())
-    )
-    stale.sort(key=lambda pair: (pair[0].missing, -pair[1], pair[0].target.call_key()))
+    unknown.sort(key=lambda c: (not c.owned, -c.added_at.timestamp(), c.target.call_key()))
+    stale.sort(key=lambda pair: (-pair[1], pair[0].target.call_key()))
     ordered = [c.target for c in unknown] + [c.target for c, _ in stale]
 
     cap = settings.price_refresh_budget if batch is None else batch

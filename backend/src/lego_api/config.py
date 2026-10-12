@@ -48,8 +48,6 @@ class Settings(BaseSettings):
     #: zhruba raz za dva týždne, denné ťahanie by vracalo to isté číslo
     #: a pri 100 volaniach denne by zbierka so sériami minula celú kvótu.
     price_max_age_hours: int = 360
-    #: Chýbajúca figúrka zbieranej série: cena len na rozhodnutie o kúpe, raz za mesiac.
-    missing_figure_max_age_hours: int = 720
     #: Strop na jedno prihlásenie. Jedna položka = jedno volanie, obidva stavy naraz.
     price_refresh_budget: int = 40
     price_refresh_delay_seconds: float = 1.0

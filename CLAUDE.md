@@ -310,9 +310,8 @@ len sa to nesmie zabudnúť uložiť. Rast môže byť záporný, preto sa neč�
 cez `_decimal`, ktoré zahadzuje nulu a mínus ako neplatnú cenu.
 
 **Hromadná obnova raz za 15 dní, ručná hneď.** `price_max_age_hours` je 360.
-Chýbajúce figúrky sérií, z ktorých niečo mám, idú do plánu tiež, ale raz za
-30 dní (`missing_figure_max_age_hours` 720) a vždy až za mojimi kusmi a Chcem
-(`_Candidate.missing`); obnova jednej série (`only`) ich nepýta.
+Chýbajúce figúrky sérií v pláne hromadnej ani automatickej obnovy nie sú,
+ich cena je len na kliknutie (míňala by kvótu na figúrky, ktoré nemám).
 Obnova jednej položky (`only`), ktorú nemám ani nechcem (Obnoviť cenu
 v detaile chýbajúcej figúrky), ju zaradí ako set pod jej číslom, ako Overiť
 cenu; holé číslo série nie.

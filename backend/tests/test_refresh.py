@@ -411,15 +411,13 @@ async def test_forced_refresh_still_respects_the_quota(
 def test_bulk_refresh_waits_fifteen_days_by_default() -> None:
     """Zdroj mení hodnoty zhruba raz za dva týždne, častejšie ťahanie míňa kvótu."""
     assert Settings().price_max_age_hours == 360
-    assert Settings().missing_figure_max_age_hours == 720
 
 
-async def test_missing_figures_of_collected_series_get_a_price_once_a_month(
-    session, fast_settings
-) -> None:
-    """Chýbajúce figúrky série, z ktorej niečo mám: cena raz za 30 dní, až za mojimi kusmi.
+async def test_missing_figures_are_never_refreshed_automatically(session, fast_settings) -> None:
+    """Chýbajúca figúrka zbieranej série: cena len na kliknutie, nikdy v hromadnej obnove.
 
-    Séria, z ktorej nemám nič, sa nepýta vôbec.
+    Hromadná aj automatická obnova by inak míňali dennú kvótu na figúrky,
+    ktoré nemám. Cenu si vypýtam sám (Obnoviť cenu v detaile, Overiť cenu).
     """
     session.add(User(id=1, email="u1@x.sk", password_hash="x"))
     for series in ("71046", "71047"):
@@ -451,11 +449,7 @@ async def test_missing_figures_of_collected_series_get_a_price_once_a_month(
 
     plan = await collect_targets(session, 1, fast_settings)
 
-    assert [t.catalog_num for t in plan.targets] == ["71046-1", "71046-2"]
-
-    fast_settings.missing_figure_max_age_hours = 50
-    plan = await collect_targets(session, 1, fast_settings)
-    assert [t.catalog_num for t in plan.targets] == ["71046-1", "71046-2", "71046-3"]
+    assert [t.catalog_num for t in plan.targets] == ["71046-1"]
 
 
 async def test_batch_plans_within_the_reserve(session, sessionmaker_, fast_settings) -> None:

@@ -1007,7 +1007,7 @@
   "sources": {
     "autoRefresh": {
       "switch": "Obnovovať ceny automaticky každý deň",
-      "hint": "Aj keď Moje kocky nie sú otvorené: stačí zapnutý počítač a prihlásenie do Windows. Obnovia sa ceny staršie ako 15 dní, najprv tie, ktoré cenu ešte nemajú; chýbajúce figúrky sérií, ktoré zbieraš, raz za 30 dní. Keď bol počítač v ten čas vypnutý, obnova dobehne po zapnutí. Keď ju zapneš po nastavenom čase, prvá obnova prebehne hneď.",
+      "hint": "Aj keď Moje kocky nie sú otvorené: stačí zapnutý počítač a prihlásenie do Windows. Obnovia sa ceny staršie ako 15 dní, najprv tie, ktoré cenu ešte nemajú; chýbajúce figúrky nie, ich cenu si vypýtaš sám. Keď bol počítač v ten čas vypnutý, obnova dobehne po zapnutí. Keď ju zapneš po nastavenom čase, prvá obnova prebehne hneď.",
       "needsKey": "Na automatickú obnovu treba kľúč BrickEconomy a zapnutú obnovu cien.",
       "time": "Čas",
       "timeHint": "Miestny čas tohto počítača.",

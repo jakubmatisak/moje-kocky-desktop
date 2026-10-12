@@ -264,8 +264,8 @@ obnoviť (predvolene 50, najviac toľko, koľko dnes ostáva) a ukáže, koľko
 volaní je dnes použitých. Denná kvóta BrickEconomy je 100 volaní, preto:
 
 1. Hromadná obnova sa nepýta na položku, na ktorú sa pýtala pred menej než
-   15 dňami, ani keď vtedy zdroj cenu nemal. Chýbajúce figúrky sérií, z ktorých
-   niečo máš, sa pýtajú raz za 30 dní, až za tvojimi kusmi a Chcem.
+   15 dňami, ani keď vtedy zdroj cenu nemal. Chýbajúce figúrky sa hromadne
+   nepýtajú nikdy, ich cenu si vypýtaš sám (Obnoviť cenu v detaile, Overiť cenu).
 2. Na jedno spustenie najviac toľko položiek, koľko si vyberieš v dialógu
    (a najviac dávka z karty BrickEconomy). Najprv tie, ktorých cenu ešte
    nepoznáme (naposledy pridané prvé), potom od najstaršej; zvyšok pri
@@ -760,8 +760,8 @@ today) and shows how many calls were used today. BrickEconomy's daily quota
 is 100 calls, so:
 
 1. A bulk refresh skips items it asked about less than 15 days ago, even when
-   the source had no price then. Missing figures of series you collect are
-   asked once every 30 days, after your own items and wishlist.
+   the source had no price then. Missing figures are never asked in bulk; you
+   ask for their price yourself (Refresh price in the detail, or Price check).
 2. At most as many items per run as you pick in the dialog (and no more than
    the batch size on the BrickEconomy card). Items with no known price go
    first (most recently added first), then the oldest; the rest next time.

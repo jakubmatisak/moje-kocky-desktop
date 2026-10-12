@@ -6,7 +6,7 @@ rovnako ako karta Cena mojich figúrok (``series_value``): vlastnené figúrky
 zo sérií, duplikáty každý kus, nerozbalený sáčok nie (nemá cenu).
 
 Figúrka, ktorú nemám, má len aktuálnu trhovú cenu, ak ju už poznáme
-(obnova cien ju pri zbieranej sérii pýta raz za mesiac). Nič tu nevolá von.
+(vypýta si ju používateľ sám, hromadná obnova nie). Nič tu nevolá von.
 """
 
 from __future__ import annotations

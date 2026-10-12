@@ -313,6 +313,9 @@ cez `_decimal`, ktoré zahadzuje nulu a mínus ako neplatnú cenu.
 Chýbajúce figúrky sérií, z ktorých niečo mám, idú do plánu tiež, ale raz za
 30 dní (`missing_figure_max_age_hours` 720) a vždy až za mojimi kusmi a Chcem
 (`_Candidate.missing`); obnova jednej série (`only`) ich nepýta.
+Obnova jednej položky (`only`), ktorú nemám ani nechcem (Obnoviť cenu
+v detaile chýbajúcej figúrky), ju zaradí ako set pod jej číslom, ako Overiť
+cenu; holé číslo série nie.
 `POST /prices/refresh-all?num=` je ručná obnova z detailu a vek snímky
 nepozerá (`force`); strop dávky a zvyšok kvóty platia aj pre ňu.
 Hromadná obnova z hornej lišty ide cez dialóg `RefreshPricesDialog.vue`
@@ -1089,7 +1092,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 883 testov, frontend 439. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 884 testov, frontend 439. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

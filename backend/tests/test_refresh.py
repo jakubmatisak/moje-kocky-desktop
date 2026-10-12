@@ -848,3 +848,25 @@ async def test_refresh_status_reports_the_daily_limit(auth_client, settings, mon
 
     assert status_["calls_limit"] == card["limit"] == settings.brickeconomy_daily_limit
     assert status_["calls_used"] == card["used"] == 7
+
+
+async def test_refreshing_one_figure_i_do_not_own_asks_for_it(session, fast_settings) -> None:
+    """Obnoviť cenu v detaile figúrky, ktorú nemám (ani v Chcem): jedno volanie ako set.
+
+    Overiť cenu to tak robí; obnova z detailu predtým nenašla nič na obnovenie.
+    Holé číslo série nie: zdroj pod ním vráti prvú figúrku.
+    """
+    session.add(User(id=1, email="u1@x.sk", password_hash="x"))
+    session.add(CatalogItem(catalog_num="71046", name="S26", kind=CatalogKind.SET, series_size=3))
+    session.add(
+        CatalogItem(
+            catalog_num="71046-4", name="Heroine", kind=CatalogKind.MINIFIG, parent_num="71046"
+        )
+    )
+    await session.commit()
+
+    plan = await collect_targets(session, 1, fast_settings, only="71046-4", force=True)
+    assert [(t.catalog_num, t.price_kind) for t in plan.targets] == [("71046-4", PriceKind.SET)]
+
+    plan = await collect_targets(session, 1, fast_settings, only="71046", force=True)
+    assert plan.targets == []

@@ -245,6 +245,15 @@ async def collect_targets(
                 target = PriceTarget(member.catalog_num, PriceKind.SET, PriceCondition.NEW)
                 await consider(target, member, False, datetime.min.replace(tzinfo=UTC), True)
 
+    if only is not None and not candidates:
+        # Obnoviť cenu v detaile položky, ktorú nemám ani nechcem (chýbajúca
+        # figúrka, set z Overiť cenu): jedno volanie ako set, ako Overiť cenu.
+        # Holé číslo série nie, zdroj pod ním vráti prvú figúrku.
+        catalog = await session.get(CatalogItem, only)
+        if catalog is not None and not catalog.is_series:
+            target = PriceTarget(catalog.catalog_num, PriceKind.SET, PriceCondition.NEW)
+            await consider(target, catalog, False, datetime.now(UTC))
+
     attempts = await last_attempts(session, fingerprint)
     now = datetime.now(UTC)
     unknown: list[_Candidate] = []

@@ -95,7 +95,11 @@ všetko (súbor drží iný proces), program je preč a hláška je iná („sa
 nepodarilo celý zmazať“, `OldDirLeftovers`); kľúč a skratky ostanú, aby
 opakovaná inštalácia starú inštaláciu našla a dokončila. HKCU a profil sú
 účtu, pod ktorým inštalátor po UAC beží; stará inštalácia iného účtu ostane
-(zdokumentované v README). Aj preto stránku WebView2 otvára
+(zdokumentované v README). Aktualizácia najprv zmaže `{app}\_internal`
+(`[InstallDelete]`): Inno Setup staré súbory nemaže a metadáta
+`lego_api-1.0.1.dist-info` až po poslednú verziu by ostali vedľa seba,
+`importlib.metadata` vzal prvé a appka hlásila 1.0.1 (záloha pri
+aktualizácii bez migrácie sa podľa toho nespustila). Aj preto stránku WebView2 otvára
 `ShellExecAsOriginalUser`, nie `ShellExec` (prehliadač by bežal ako správca).
 Odinštalovanie zmaže len `{userappdata}\MojeKocky` účtu, pod ktorým po UAC
 beží, a len po otázke s menom toho účtu a predvolenou odpoveďou Nie
@@ -1091,7 +1095,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 884 testov, frontend 439. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 885 testov, frontend 439. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

@@ -825,3 +825,17 @@ def test_uninstall_deletes_the_automatic_price_refresh_task():
         and "RunOnceId" in line
         for line in lines
     )
+
+
+def test_update_removes_the_previous_program_files_first():
+    r"""Aktualizácia najprv zmaže starý ``{app}\_internal``, potom kopíruje nový.
+
+    Inno Setup súbory len prepisuje, staré nemaže. Po aktualizáciách tak
+    v ``_internal`` ostalo ``lego_api-1.0.1.dist-info`` až ``lego_api-1.6.2.dist-info``
+    a ``importlib.metadata`` vzal prvý: Nastavenia hlásili 1.0.1 a záloha pred
+    aktualizáciou bez migrácie sa podľa verzie nespustila. Údaje sú
+    v %APPDATA%, v priečinku programu nie je nič, čo by sa malo zachovať.
+    """
+    lines = _sections(_text(ISS)).get("InstallDelete", [])
+
+    assert 'Type: filesandordirs; Name: "{app}\_internal"' in lines

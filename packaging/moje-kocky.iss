@@ -56,6 +56,13 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
+[InstallDelete]
+; Inno Setup súbory len prepisuje, staré nemaže: po aktualizáciách ostávali
+; v _internal metadáta starších verzií (lego_api-1.0.1.dist-info …)
+; a appka hlásila prvú z nich, aj záloha pred aktualizáciou sa riadi verziou.
+; Údaje sú v %APPDATA%, tu je len program, preto ide celý preč.
+Type: filesandordirs; Name: "{app}\_internal"
+
 [Files]
 Source: "..\build\dist\MojeKocky\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Licencie MIT, BSD a Apache chcú svoj text pri šírenom programe (packaging\notices.py).

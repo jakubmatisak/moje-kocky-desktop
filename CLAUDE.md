@@ -390,7 +390,8 @@ súčty po Kúpil som či hromadnej úprave ostali staré až do obnovenia okna.
 Na posúdenie ponuky na kúpu karta ukáže aj Chýba mi a Celú sériu (zelenou,
 so štítkom počtu figúrok; `missing_total`, `series_total`: každá figúrka
 raz, len cena nového kusu pod číslom figúrky, bez náhrady rozbalenou) a
-zelenú čiarkovanú čiaru `history_all` (len keď cenu pozná každá figúrka),
+zelenú čiarkovanú čiaru `history_all` (súčet figúrok s cenou, pri neúplnej
+legenda „Celá séria (11 z 12)“; figúrka bez ceny chýba v súčte celý čas),
 aj pri sérii, z ktorej nemám nič (karta sa ukáže, keď má séria členov).
 Zistiť ceny chýbajúcich najprv vypýta `GET /prices/series/{num}/refresh-plan`
 (počet volaní, von nič) a stiahne až po potvrdení; potom stránka načíta aj
@@ -1109,7 +1110,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 898 testov, frontend 452. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 898 testov, frontend 455. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

@@ -689,6 +689,7 @@
   "minifigs": {
     "seriesValue": {
       "titleWhole": "Series price",
+      "wholeOf": "Whole series ({priced} of {total})",
       "figuresPlural": "{count} figure | {count} figures | {count} figures",
       "missing": "I am missing",
       "whole": "Whole series",

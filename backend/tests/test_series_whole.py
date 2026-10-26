@@ -134,7 +134,8 @@ async def test_whole_series_uses_only_the_new_price(
 
     assert (body["series_total"], body["series_priced"]) == ("10.50", 2)
     assert (body["missing_total"], body["missing_priced"]) == ("10.50", 2)
-    assert body["history_all"] == []
+    # Čiara len z cien nového kusu: rozbalená cena tretej figúrky do nej nejde.
+    assert body["history_all"][-1]["avg_price"] == "10.50"
 
 
 async def test_whole_series_line_is_the_sum_of_every_figure(
@@ -153,14 +154,24 @@ async def test_whole_series_line_is_the_sum_of_every_figure(
     ]
 
 
-async def test_whole_series_line_waits_for_every_figure(
+async def test_whole_series_line_is_drawn_from_the_figures_with_a_price(
     auth_client: AsyncClient, sessionmaker_
 ) -> None:
+    """11 z 12 s cenou má graf tiež; figúrka bez ceny chýba v súčte celý čas.
+
+    Súčet preto neklesne ani neposkočí, len je bez nej (rozhranie povie
+    „11 z 12“). Aj séria, z ktorej nemám nič, tak má graf.
+    """
     await _seed(sessionmaker_, third_price=False)
 
     body = (await auth_client.get("/prices/series/42233")).json()
 
-    assert body["history_all"] == []
+    points = [(p["captured_at"][:10], p["avg_price"]) for p in body["history_all"]]
+    assert points == [
+        ("2026-09-01", "9.50"),
+        ("2026-09-02", "9.50"),
+        ("2026-09-03", "10.50"),
+    ]
     assert (body["series_priced"], body["member_count"]) == (2, 3)
 
 

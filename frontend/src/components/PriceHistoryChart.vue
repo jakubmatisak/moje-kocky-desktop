@@ -52,6 +52,8 @@
     periods?: boolean
     /** Celá séria (súčet cien všetkých figúrok), zelená čiarkovaná. */
     wholePoints?: PricePoint[]
+    /** Popis čiary celej série, napríklad „Celá séria (11 z 12)“. */
+    wholeLabel?: string
   }>()
 
   const { preset, from, to, fromInput, toInput, setEdge, showAll } = useChartRange('all')
@@ -186,7 +188,7 @@
     }
     if (wholeSeries.value.length > 0) {
       datasets.push({
-        label: t('detail.historyWhole'),
+        label: props.wholeLabel ?? t('detail.historyWhole'),
         data: wholeSeries.value,
         borderColor: CHART_COLORS.whole,
         backgroundColor: CHART_COLORS.whole,

@@ -21,7 +21,9 @@ Na posúdenie ponuky na kúpu karta ukáže aj súčet cien figúrok, ktoré mi
 chýbajú, a celej série (každá figúrka raz), aj keď zo série nemám nič.
 Ponúkajú sa nové figúrky, preto len cena nového kusu pod číslom figúrky
 (ako ``figure_values.market_now``), bez náhrady rozbalenou. Čiara celej
-série (``history_all``) je len vtedy, keď cenu pozná každá figúrka. Ceny
+série (``history_all``) je súčet figúrok, ktoré cenu majú (11 z 12 má
+graf tiež); figúrka bez ceny v nej chýba celý čas, takže súčet neklesne
+ani neposkočí, a ``series_priced`` povie, koľko ich je. Ceny
 chýbajúcich sa ťahajú len na kliknutie (``refresh.collect_targets``
 s ``whole_series``); tu sa nič nevolá.
 """
@@ -90,7 +92,7 @@ class SeriesValue:
     #: Celá séria, každá figúrka raz, cena nového kusu; bez jedinej ceny None.
     series_priced: int = 0
     series_total: Decimal | None = None
-    #: Súčet histórie cien všetkých figúrok; prázdne, keď niektorá cenu nemá.
+    #: Súčet histórie cien figúrok s cenou nového kusu (koľko: ``series_priced``).
     history_all: list[tuple[datetime, Decimal]] = field(default_factory=list)
 
     @property
@@ -261,7 +263,9 @@ async def _whole_series(session: AsyncSession, num: str, mine: set[str]) -> Seri
     known = {m: p for m, p in prices.items() if p is not None}
     missing = [m for m in members if m not in mine]
     missing_known = [known[m] for m in missing if m in known]
-    history, _ = _sum_history(list(targets.values()), ZERO, index, exact=True)
+    # Len figúrky s cenou: bez nej by jadro nevrátilo nič (exact) a 11 z 12
+    # by nemalo graf. Figúrka bez ceny chýba v súčte celý čas, nie skokom.
+    history, _ = _sum_history([targets[m] for m in known], ZERO, index, exact=True)
     return SeriesValue(
         member_count=len(members),
         missing_count=len(missing),

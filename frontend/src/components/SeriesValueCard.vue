@@ -69,6 +69,10 @@
   const owned = computed(() => (value.value?.owned_count ?? 0) > 0)
   const members = computed(() => value.value?.member_count ?? 0)
   const unpriced = computed(() => Math.max(0, members.value - (value.value?.series_priced ?? 0)))
+  /** Čiara celej série je zo figúrok s cenou; pri neúplnej legenda povie z koľkých. */
+  const wholeLabel = computed(() => unpriced.value > 0
+    ? t('minifigs.seriesValue.wholeOf', { priced: value.value?.series_priced ?? 0, total: members.value })
+    : t('minifigs.seriesValue.whole'))
   const canFetchMissing = computed(() =>
     auth.can('brickeconomy.price_detail') && (value.value?.missing_count ?? 0) > 0)
   const hasPrice = computed(() => value.value?.market_total !== null && value.value?.market_total !== undefined)
@@ -251,6 +255,7 @@
       periods
       :purchase="pricedPurchase"
       :used-points="value.history_used"
+      :whole-label="wholeLabel"
       :whole-points="value.history_all"
     />
 

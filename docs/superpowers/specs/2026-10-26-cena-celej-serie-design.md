@@ -19,8 +19,10 @@ figúrky, preto sa ráta s cenou nového kusu.
 - **Celá séria:** každá figúrka raz, zelenou. Keď niektorá cenu nemá,
   „bez ceny: N figúrok“ a súčet je len z tých, ktoré ju majú.
 - V grafe zelená čiarkovaná čiara **Celá séria** (súčet histórie cien
-  všetkých figúrok; pred prvou cenou figúrky jej prvá cena). Len keď cenu
-  pozná každá figúrka, inak by chýbajúca vyzerala ako pád ceny.
+  figúrok, ktoré cenu majú; pred prvou cenou figúrky jej prvá cena). Pri
+  neúplnej sérii legenda „Celá séria (11 z 12)“. Figúrka bez ceny chýba
+  v súčte celý čas, takže súčet neklesne ani neposkočí. (Pôvodne len pri
+  všetkých cenách; 11 z 12 aj séria bez mojich figúrok potom nemali graf.)
 - Tlačidlo **Zistiť ceny chýbajúcich** (s kľúčom BrickEconomy a keď niečo
   chýba): najprv povie, koľko volaní to stojí a koľko dnes ostáva, stiahne
   až po potvrdení. Keď sú všetky ceny aktuálne, nevolá nič a povie to.

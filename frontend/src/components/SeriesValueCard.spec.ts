@@ -264,3 +264,22 @@ describe('Séria: počet figúrok pri sumách', () => {
     expect(wrapper.find('[data-test="series-whole-count"]').text()).toBe('12 figúrok')
   })
 })
+
+describe('Séria: čiara celej série aj pri neúplných cenách', () => {
+  it('11 z 12 s cenou: čiara je a legenda povie, z koľkých figúrok', async () => {
+    i18n.global.locale.value = 'sk'
+    answer = nothingOwned({ member_count: 12, series_priced: 11, missing_count: 12, missing_priced: 11 })
+    const wrapper = await mountCard()
+
+    const chart = wrapper.findComponent({ name: 'PriceHistoryChart' })
+    expect(chart.props('wholePoints')).toEqual(WHOLE)
+    expect(chart.props('wholeLabel')).toBe('Celá séria (11 z 12)')
+  })
+
+  it('keď cenu majú všetky, legenda je len Celá séria', async () => {
+    answer = nothingOwned()
+    const wrapper = await mountCard()
+
+    expect(wrapper.findComponent({ name: 'PriceHistoryChart' }).props('wholeLabel')).toBe('Celá séria')
+  })
+})

@@ -701,6 +701,7 @@
       "refresh": "Obnoviť ceny mojich figúrok",
       "estimated": "Pred {date} je súčet odhad: figúrke bez staršej ceny sa ráta jej prvá cena z BrickEconomy.",
       "titleWhole": "Cena série",
+      "wholeOf": "Celá séria ({priced} z {total})",
       "figuresPlural": "{count} figúrka | {count} figúrky | {count} figúrok",
       "missing": "Chýba mi",
       "whole": "Celá séria",

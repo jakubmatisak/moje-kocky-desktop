@@ -71,3 +71,15 @@ describe('čiara celej série', () => {
     expect(whole.borderDash).toEqual([6, 4])
   })
 })
+
+describe('čiara celej série s vlastným popisom', () => {
+  it('legenda berie wholeLabel', () => {
+    i18n.global.locale.value = 'sk'
+    const wrapper = shallowMount(PriceHistoryChart, {
+      props: { newPoints: [], usedPoints: [], purchase: null, wholePoints: POINTS as never, wholeLabel: 'Celá séria (11 z 12)' },
+      global: { plugins: [i18n, createVuetify()] },
+    })
+
+    expect(datasets(wrapper).map(d => d.label)).toContain('Celá séria (11 z 12)')
+  })
+})

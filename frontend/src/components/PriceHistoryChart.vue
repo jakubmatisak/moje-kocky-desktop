@@ -14,6 +14,9 @@
    * od–do, `useChartRange`). Krivky sa orežú na obdobie a na okraji dostanú
    * bod dopočítaný z cien okolo (`clipSeries`), nákupy mimo obdobia zmiznú.
    * Obdobie si nepamätá nič, každý graf začína celou históriou.
+   *
+   * `wholePoints` je tretia, zelená čiarkovaná čiara: celá séria vo Figúrkach
+   * (každá figúrka raz, cena nového kusu), aj keď zo série nemám nič.
    */
   import type { PricePoint } from '@/api/types'
   import type { ChartEvent } from '@/utils/chartEvents'
@@ -47,6 +50,8 @@
     events?: ChartEvent[]
     /** Výber obdobia nad grafom. */
     periods?: boolean
+    /** Celá séria (súčet cien všetkých figúrok), zelená čiarkovaná. */
+    wholePoints?: PricePoint[]
   }>()
 
   const { preset, from, to, fromInput, toInput, setEdge, showAll } = useChartRange('all')
@@ -89,21 +94,25 @@
   const allUsed = computed(() => series(props.usedPoints))
   const newSeries = computed(() => clipSeries(allNew.value, from.value, to.value))
   const usedSeries = computed(() => clipSeries(allUsed.value, from.value, to.value))
+  const allWhole = computed(() => series(props.wholePoints ?? []))
+  const wholeSeries = computed(() => clipSeries(allWhole.value, from.value, to.value))
+  /** Všetky krivky v období, na rozpätie osí. */
+  const shown = computed(() => [...newSeries.value, ...usedSeries.value, ...wholeSeries.value])
 
   /** Graf má zmysel od dvoch rôznych dní v aspoň jednej krivke (celej histórie). */
-  const hasData = computed(() => allNew.value.length > 1 || allUsed.value.length > 1)
+  const hasData = computed(() => allNew.value.length > 1 || allUsed.value.length > 1 || allWhole.value.length > 1)
   /** V zvolenom období nie je ani jedna cena. */
-  const emptyPeriod = computed(() => newSeries.value.length === 0 && usedSeries.value.length === 0)
+  const emptyPeriod = computed(() => shown.value.length === 0)
 
   const span = computed(() => {
-    const xs = [...newSeries.value, ...usedSeries.value, ...eventPoints.value].map(p => p.x)
+    const xs = [...shown.value, ...eventPoints.value].map(p => p.x)
     if (xs.length === 0) return { min: from.value ?? 0, max: to.value ?? Date.now() }
     return { min: Math.min(...xs), max: Math.max(...xs) }
   })
 
   /** Výška značiek udalostí: najnižšia suma v grafe, nech sú pri osi x. */
   const eventY = computed(() => {
-    const ys = [...newSeries.value, ...usedSeries.value].map(p => p.y)
+    const ys = shown.value.map(p => p.y)
     if (props.purchase !== null) ys.push(toDisplay(props.purchase))
     return ys.length > 0 ? Math.min(...ys) : 0
   })
@@ -144,7 +153,7 @@
    * desaťkrát „4 €“. Desatinné miesta len vtedy, keď je rozpätie malé.
    */
   const yDecimals = computed(() => {
-    const ys = [...newSeries.value, ...usedSeries.value].map(p => p.y)
+    const ys = shown.value.map(p => p.y)
     if (props.purchase !== null) ys.push(toDisplay(props.purchase))
     return ys.length > 0 && Math.max(...ys) - Math.min(...ys) < 10 ? 2 : 0
   })
@@ -172,6 +181,19 @@
         borderWidth: 2.4,
         tension: 0.2,
         pointRadius: 2.5,
+        pointHoverRadius: 5,
+      })
+    }
+    if (wholeSeries.value.length > 0) {
+      datasets.push({
+        label: t('detail.historyWhole'),
+        data: wholeSeries.value,
+        borderColor: CHART_COLORS.whole,
+        backgroundColor: CHART_COLORS.whole,
+        borderDash: [6, 4],
+        borderWidth: 2.2,
+        tension: 0.2,
+        pointRadius: 2,
         pointHoverRadius: 5,
       })
     }

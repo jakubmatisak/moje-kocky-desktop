@@ -229,8 +229,8 @@
         </div>
       </v-card>
 
-      <!-- Cena figúrok, ktoré zo série mám: súčty, graf a obnova, ako pri jednej figúrke. -->
-      <SeriesValueCard :num="series.series_num ?? num" />
+      <!-- Cena mojich figúrok aj celej série: súčty, graf a obnova; po stiahnutí cien aj karty figúrok. -->
+      <SeriesValueCard :num="series.series_num ?? num" @prices-updated="page.run()" />
 
       <div class="d-flex align-center flex-wrap ga-2">
         <v-btn-toggle

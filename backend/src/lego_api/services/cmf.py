@@ -309,6 +309,9 @@ class SeriesOverview:
     approx: bool = False
     #: Moje kusy bez ceny (súčet ich neráta).
     price_missing: int = 0
+    #: Celá séria z cien, ktoré už sú v databáze (nový kus, každá figúrka raz).
+    series_total: Decimal | None = None
+    series_priced: int = 0
 
 
 async def _owned_counts(
@@ -353,6 +356,8 @@ async def overview(session: AsyncSession, user_id: int) -> list[SeriesOverview]:
         )
     ).all():
         members.setdefault(parent, []).append(num)
+    # Len to, čo už je v databáze; zoznam von nevolá.
+    whole = await figure_values.market_now(session, [n for nums in members.values() for n in nums])
 
     def build(
         num: str | None,
@@ -369,6 +374,7 @@ async def overview(session: AsyncSession, user_id: int) -> list[SeriesOverview]:
             if n in values:
                 mine.merge(values[n])
         has = mine.pieces > 0
+        whole_prices = [whole[n][0] for n in nums if n in whole]
         return SeriesOverview(
             series_num=num if umbrella else None,
             theme_id=theme_id,
@@ -388,6 +394,8 @@ async def overview(session: AsyncSession, user_id: int) -> list[SeriesOverview]:
             price_at=mine.price_at,
             approx=mine.approx,
             price_missing=mine.price_missing,
+            series_total=sum(whole_prices, Decimal(0)) if whole_prices else None,
+            series_priced=len(whole_prices),
         )
 
     result: list[SeriesOverview] = []

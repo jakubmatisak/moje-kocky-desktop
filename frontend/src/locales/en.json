@@ -252,6 +252,7 @@
     "historyTitle": "Price history",
     "historyNew": "New",
     "historyUsed": "Used",
+    "historyWhole": "Whole series",
     "historyPurchase": "My purchase price",
     "priceHistory": "Price history",
     "twelveMonths": "12 months",
@@ -687,6 +688,19 @@
   },
   "minifigs": {
     "seriesValue": {
+      "titleWhole": "Series price",
+      "figuresPlural": "{count} figure | {count} figures | {count} figures",
+      "missing": "I am missing",
+      "whole": "Whole series",
+      "wholeHint": "Each figure once, new price from BrickEconomy",
+      "unpricedPlural": "no price: {count} figure | no price: {count} figures | no price: {count} figures",
+      "refreshWhole": "Get prices of missing figures",
+      "confirmTitle": "Get prices of missing figures?",
+      "confirmCallsPlural": "Downloads the price of {count} figure, it costs {count} BrickEconomy call. | Downloads the prices of {count} figures, it costs {count} BrickEconomy calls. | Downloads the prices of {count} figures, it costs {count} BrickEconomy calls.",
+      "confirmFresh": "Figures with a price newer than {days} days are not asked for ({count} in total).",
+      "confirmQuota": "{left} of {limit} calls left today.",
+      "confirm": "Download prices",
+      "allFresh": "Prices of all figures are current, newer than {days} days.",
       "title": "Value of my figures",
       "duplicatesPlural": "The series has {count} duplicate; its price is added. | The series has {count} duplicates; their price is added.",
       "single": "Value of one series without duplicates",
@@ -760,6 +774,8 @@
       "profitDesc": "Profit, highest",
       "profitAsc": "Profit, lowest",
       "profitPctDesc": "Profit %, highest",
+      "wholeDesc": "Whole series, most expensive",
+      "wholeAsc": "Whole series, cheapest",
       "profitPctAsc": "Profit %, lowest"
     },
     "categoryMinifigs": "Minifigures",
@@ -786,7 +802,10 @@
     "colValue": "Value",
     "colPriceAt": "Price from",
     "colProfit": "Profit",
-    "colProfitPct": "%"
+    "colProfitPct": "%",
+    "colWhole": "Whole series",
+    "whole": "Whole series",
+    "wholePricedOf": "{priced} of {total} priced"
   },
   "purchase": {
     "title": "I bought it",

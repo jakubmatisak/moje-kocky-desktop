@@ -33,6 +33,7 @@ from lego_api.schemas import (
     PriceOverviewOut,
     PricePointOut,
     RefreshStatusOut,
+    SeriesRefreshPlanOut,
     SeriesValueOut,
 )
 from lego_api.services import auto_refresh, price_misses
@@ -49,7 +50,7 @@ from lego_api.services.pricing import (
     store_miss,
 )
 from lego_api.services.purchase_fill import fill_purchase_prices
-from lego_api.services.refresh import claim, get_state, refresh_prices
+from lego_api.services.refresh import claim, collect_targets, get_state, refresh_prices
 from lego_api.services.series_value import series_value
 
 router = APIRouter(prefix="/prices", tags=["prices"])
@@ -109,6 +110,7 @@ async def refresh_all(
     keys: CurrentKeys,
     num: str | None = None,
     limit: int | None = None,
+    whole_series: bool = False,
 ) -> RefreshStatusOut:
     """Obnoví ceny na pozadí.
 
@@ -116,6 +118,10 @@ async def refresh_all(
     to ručná obnova jednej položky z detailu, pri sérii jej figúrok, a tá
     vek snímky nepozerá: používateľ chce cenu teraz. Jedno volanie na
     položku a zvyšok kvóty platia v oboch prípadoch.
+
+    ``whole_series`` (Zistiť ceny chýbajúcich na stránke série) pridá
+    všetky figúrky série, aj tie, ktoré nemám, a vek snímky pozerá: cena
+    mladšia než ``price_max_age_hours`` je aktuálna.
 
     ``limit`` je počet z dialógu obnovy (najviac toľko volaní). Stav „beží“
     sa zaberie ešte pred odpoveďou, úloha na pozadí štartuje až po nej;
@@ -136,9 +142,10 @@ async def refresh_all(
                 settings,
                 provider,
                 num,
-                num is not None,
+                num is not None and not whole_series,
                 limit,
                 True,
+                whole_series=whole_series and num is not None,
             )
     elif keys.policy.auto_purchase_price:
         # Kvóta je minutá, doplnenie kúpnej ceny z katalógu je zadarmo.
@@ -390,6 +397,34 @@ async def get_series_value(
             ChartEventOut(day=day, kind=kind, count=count, amount=amount)
             for day, kind, count, amount in value.events
         ],
+        member_count=value.member_count,
+        missing_count=value.missing_count,
+        missing_priced=value.missing_priced,
+        missing_total=value.missing_total,
+        series_priced=value.series_priced,
+        series_total=value.series_total,
+        history_all=_series_points(value.history_all, PriceCondition.NEW),
+    )
+
+
+@router.get("/series/{num}/refresh-plan", response_model=SeriesRefreshPlanOut)
+async def get_series_refresh_plan(
+    num: str, user: CurrentUser, session: SessionDep, settings: SettingsDep, keys: CurrentKeys
+) -> SeriesRefreshPlanOut:
+    """Počet volaní pred Zistiť ceny chýbajúcich; von nevolá nič."""
+    provider = BrickEconomyProvider.for_user(settings, keys)
+    plan = await collect_targets(
+        session,
+        user.id,
+        settings,
+        only=num,
+        whole_series=True,
+        fingerprint=provider.fingerprint,
+    )
+    return SeriesRefreshPlanOut(
+        calls=len(plan.targets) + plan.over_budget,
+        fresh=plan.skipped_fresh,
+        max_age_days=max(1, settings.price_max_age_hours // 24),
     )
 
 

@@ -315,7 +315,11 @@ cez `_decimal`, ktoré zahadzuje nulu a mínus ako neplatnú cenu.
 
 **Hromadná obnova raz za 15 dní, ručná hneď.** `price_max_age_hours` je 360.
 Chýbajúce figúrky sérií v pláne hromadnej ani automatickej obnovy nie sú,
-ich cena je len na kliknutie (míňala by kvótu na figúrky, ktoré nemám).
+ich cena je len na kliknutie (míňala by kvótu na figúrky, ktoré nemám):
+Obnoviť cenu v detaile, Overiť cenu a Zistiť ceny chýbajúcich na karte
+série (`refresh-all?num=&whole_series=true`, `collect_targets(whole_series=)`
+pridá každú figúrku série ako set, vek platí: mladšia než 15 dní ostane;
+`whole_series` ide do `refresh_prices` menom, pozične je tam `should_stop`).
 Obnova jednej položky (`only`), ktorú nemám ani nechcem (Obnoviť cenu
 v detaile chýbajúcej figúrky), ju zaradí ako set pod jej číslom, ako Overiť
 cenu; holé číslo série nie.
@@ -383,6 +387,16 @@ to povie; `?single=true` (prepínač „Hodnota jednej série“) ráta každú 
 raz (prvý kúpený kus) a server ho prijme len pri kompletnej sérii. Karta sa
 načíta znova po každej zmene kusov (`onCollectionChanged`), inak by graf aj
 súčty po Kúpil som či hromadnej úprave ostali staré až do obnovenia okna.
+Na posúdenie ponuky na kúpu karta ukáže aj Chýba mi a Celú sériu (zelenou,
+so štítkom počtu figúrok; `missing_total`, `series_total`: každá figúrka
+raz, len cena nového kusu pod číslom figúrky, bez náhrady rozbalenou) a
+zelenú čiarkovanú čiaru `history_all` (len keď cenu pozná každá figúrka),
+aj pri sérii, z ktorej nemám nič (karta sa ukáže, keď má séria členov).
+Zistiť ceny chýbajúcich najprv vypýta `GET /prices/series/{num}/refresh-plan`
+(počet volaní, von nič) a stiahne až po potvrdení; potom stránka načíta aj
+karty figúrok (`prices-updated`). Zoznam sérií má `CmfSeriesOut.series_total`
+(stĺpec a riadok na karte) len z uložených cien, sám nič nesťahuje. Spec
+`2026-10-26-cena-celej-serie-design.md`.
 
 **Figúrky majú kategórie: minifigúrky a blind-box série iných radov.**
 Mighty Machines, Super Mario Character Pack, VIDIYO, Unikitty!, Duplo vrecúška
@@ -1095,7 +1109,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 885 testov, frontend 439. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 898 testov, frontend 452. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

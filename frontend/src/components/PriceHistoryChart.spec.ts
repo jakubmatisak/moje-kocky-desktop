@@ -56,3 +56,18 @@ describe('graf ceny s obdobím', () => {
     expect(wrapper.findAllComponents({ name: 'DateField' })).toHaveLength(0)
   })
 })
+
+describe('čiara celej série', () => {
+  it('je zelená čiarkovaná a graf sa ukáže aj bez mojich figúrok', () => {
+    i18n.global.locale.value = 'sk'
+    const wrapper = shallowMount(PriceHistoryChart, {
+      props: { newPoints: [], usedPoints: [], purchase: null, wholePoints: POINTS as never },
+      global: { plugins: [i18n, createVuetify()] },
+    })
+
+    const whole = datasets(wrapper).find(d => d.label === 'Celá séria') as Dataset & { borderDash?: number[] }
+    expect(whole).toBeDefined()
+    expect(whole.data).toHaveLength(3)
+    expect(whole.borderDash).toEqual([6, 4])
+  })
+})

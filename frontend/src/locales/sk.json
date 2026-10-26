@@ -252,6 +252,7 @@
     "historyTitle": "Vývoj ceny",
     "historyNew": "Nový",
     "historyUsed": "Použitý",
+    "historyWhole": "Celá séria",
     "historyPurchase": "Moja kúpna cena",
     "priceHistory": "Vývoj ceny",
     "twelveMonths": "12 mesiacov",
@@ -698,7 +699,20 @@
       "pricedOf": "cenu má {priced} z {owned}",
       "noPrice": "Tvoje figúrky zo série zatiaľ nemajú cenu.",
       "refresh": "Obnoviť ceny mojich figúrok",
-      "estimated": "Pred {date} je súčet odhad: figúrke bez staršej ceny sa ráta jej prvá cena z BrickEconomy."
+      "estimated": "Pred {date} je súčet odhad: figúrke bez staršej ceny sa ráta jej prvá cena z BrickEconomy.",
+      "titleWhole": "Cena série",
+      "figuresPlural": "{count} figúrka | {count} figúrky | {count} figúrok",
+      "missing": "Chýba mi",
+      "whole": "Celá séria",
+      "wholeHint": "Každá figúrka raz, cena nového kusu z BrickEconomy",
+      "unpricedPlural": "bez ceny: {count} figúrka | bez ceny: {count} figúrky | bez ceny: {count} figúrok",
+      "refreshWhole": "Zistiť ceny chýbajúcich",
+      "confirmTitle": "Zistiť ceny chýbajúcich?",
+      "confirmCallsPlural": "Stiahne cenu {count} figúrky, stojí to {count} volanie BrickEconomy. | Stiahne ceny {count} figúrok, stojí to {count} volania BrickEconomy. | Stiahne ceny {count} figúrok, stojí to {count} volaní BrickEconomy.",
+      "confirmFresh": "Figúrky s cenou mladšou než {days} dní sa nepýtajú (spolu {count}).",
+      "confirmQuota": "Dnes ostáva {left} zo {limit} volaní.",
+      "confirm": "Stiahnuť ceny",
+      "allFresh": "Ceny všetkých figúrok sú aktuálne, mladšie než {days} dní."
     },
     "title": "Figúrky",
     "summary": "Figúrok zo sérií: {figures} · zbierané série: {collecting} · kompletné: {complete}",
@@ -760,7 +774,9 @@
       "profitDesc": "Zisk, najväčší",
       "profitAsc": "Zisk, najmenší",
       "profitPctDesc": "Zisk v %, najväčší",
-      "profitPctAsc": "Zisk v %, najmenší"
+      "profitPctAsc": "Zisk v %, najmenší",
+      "wholeDesc": "Celá séria, najdrahšia",
+      "wholeAsc": "Celá séria, najlacnejšia"
     },
     "categoryMinifigs": "Minifigúrky",
     "summaryOther": "Kúskov zo sérií: {figures} · zbierané série: {collecting} · kompletné: {complete}",
@@ -786,7 +802,10 @@
     "colValue": "Hodnota",
     "colPriceAt": "Cena z",
     "colProfit": "Zisk",
-    "colProfitPct": "%"
+    "colProfitPct": "%",
+    "colWhole": "Celá séria",
+    "whole": "Celá séria",
+    "wholePricedOf": "cenu má {priced} z {total}"
   },
   "purchase": {
     "title": "Kúpil som",

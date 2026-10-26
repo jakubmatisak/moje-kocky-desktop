@@ -488,6 +488,29 @@ class SeriesValueOut(BaseModel):
     #: Prvý deň zo skutočných cien všetkých figúrok; skôr je súčet odhad.
     estimated_until: date | None
     events: list[ChartEventOut]
+    #: Figúrky série v katalógu; 0 = séria bez členov (bez kľúča Rebrickable).
+    member_count: int = 0
+    #: Figúrky, ktoré nemám, a koľko z nich má cenu nového kusu.
+    missing_count: int = 0
+    missing_priced: int = 0
+    #: Súčet cien chýbajúcich figúrok (nový kus); bez jedinej ceny null.
+    missing_total: Money | None = None
+    #: Celá séria, každá figúrka raz, cena nového kusu; bez jedinej ceny null.
+    series_priced: int = 0
+    series_total: Money | None = None
+    #: Súčet histórie cien všetkých figúrok; prázdny, keď niektorá cenu nemá.
+    history_all: list[PricePointOut] = []
+
+
+class SeriesRefreshPlanOut(BaseModel):
+    """Koľko volaní stojí stiahnutie cien celej série (Zistiť ceny chýbajúcich)."""
+
+    #: Figúrky bez ceny alebo s cenou staršou než ``price_max_age_hours``.
+    calls: int
+    #: Figúrky s aktuálnou cenou, tie sa nepýtajú.
+    fresh: int
+    #: Cena mladšia než toľko dní je aktuálna (``price_max_age_hours``).
+    max_age_days: int
 
 
 class PriceOverviewOut(BaseModel):
@@ -1162,6 +1185,9 @@ class CmfSeriesOut(BaseModel):
     price_at: datetime | None = None
     approx: bool = False
     price_missing: int = 0
+    #: Celá séria z uložených cien (nový kus, každá figúrka raz); bez ceny null.
+    series_total: Money | None = None
+    series_priced: int = 0
 
 
 class CmfOverviewOut(BaseModel):

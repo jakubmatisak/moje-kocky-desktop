@@ -14,13 +14,13 @@ export const MENU_SERIES_SORTS = ['leastMissing', 'yearDesc', 'yearAsc', 'nameAs
 export const SERIES_SORTS = [
   ...MENU_SERIES_SORTS, 'ownedDesc', 'ownedAsc', 'missingAsc', 'missingDesc', 'progressDesc', 'progressAsc',
   'purchaseDesc', 'purchaseAsc', 'valueDesc', 'valueAsc', 'priceAtDesc', 'priceAtAsc',
-  'profitDesc', 'profitAsc', 'profitPctDesc', 'profitPctAsc',
+  'profitDesc', 'profitAsc', 'profitPctDesc', 'profitPctAsc', 'wholeDesc', 'wholeAsc',
 ] as const
 export type SeriesSort = (typeof SERIES_SORTS)[number]
 
 /** Stĺpce tabuľky sérií, ktoré radia (fotka nie). */
 export type SeriesColumn = 'name' | 'year' | 'owned' | 'missing' | 'progress'
-  | 'purchase' | 'value' | 'priceAt' | 'profit' | 'profitPct'
+  | 'purchase' | 'value' | 'priceAt' | 'profit' | 'profitPct' | 'whole'
 
 /**
  * Kľúč stĺpca pre každý smer; prvý je predvolený (názov od A, rok od
@@ -39,6 +39,8 @@ const COLUMN_SORTS: Record<SeriesColumn, [SeriesSort, SeriesSort]> = {
   priceAt: ['priceAtDesc', 'priceAtAsc'],
   profit: ['profitDesc', 'profitAsc'],
   profitPct: ['profitPctDesc', 'profitPctAsc'],
+  // Celá séria z uložených cien (každá figúrka raz), od najdrahšej.
+  whole: ['wholeDesc', 'wholeAsc'],
 }
 
 /** Zoradenie po kliku na hlavičku: iný stĺpec predvoleným smerom, ten istý otočí. */
@@ -56,9 +58,9 @@ export function seriesHeaderDir (column: SeriesColumn, current: SeriesSort): Sor
 }
 
 type Row = Pick<CmfSeries, 'name' | 'owned' | 'total' | 'year'>
-  & Partial<Pick<CmfSeries, 'purchase_total' | 'market_total' | 'profit' | 'profit_pct' | 'price_at'>>
+  & Partial<Pick<CmfSeries, 'purchase_total' | 'market_total' | 'profit' | 'profit_pct' | 'price_at' | 'series_total'>>
 
-type SumColumn = 'purchase' | 'value' | 'priceAt' | 'profit' | 'profitPct'
+type SumColumn = 'purchase' | 'value' | 'priceAt' | 'profit' | 'profitPct' | 'whole'
 
 /** Suma série ako číslo; séria bez mojej figúrky či bez ceny ju nemá (na konci). */
 function sumValue (row: Row, column: SumColumn): number | null {
@@ -68,6 +70,7 @@ function sumValue (row: Row, column: SumColumn): number | null {
     priceAt: row.price_at,
     profit: row.profit,
     profitPct: row.profit_pct,
+    whole: row.series_total,
   }[column]
   if (raw === null || raw === undefined) {
     return null
@@ -163,6 +166,8 @@ export function compareSeries (a: Row, b: Row, sort: SeriesSort, collator: Intl.
     case 'profitAsc': { return byColumn(a, b, 'profit', false, byName) }
     case 'profitPctDesc': { return byColumn(a, b, 'profitPct', true, byName) }
     case 'profitPctAsc': { return byColumn(a, b, 'profitPct', false, byName) }
+    case 'wholeDesc': { return byColumn(a, b, 'whole', true, byName) }
+    case 'wholeAsc': { return byColumn(a, b, 'whole', false, byName) }
     default: {
       // Najmenej chýba: rozbehnuté podľa toho, koľko chýba; kompletné za nimi, nezačaté na konci.
       return order[seriesState(a)] - order[seriesState(b)] || missingOf(a) - missingOf(b) || byColumn(a, b, 'year', true, byName)

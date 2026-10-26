@@ -980,6 +980,10 @@ export interface paths {
          *     vek snímky nepozerá: používateľ chce cenu teraz. Jedno volanie na
          *     položku a zvyšok kvóty platia v oboch prípadoch.
          *
+         *     ``whole_series`` (Zistiť ceny chýbajúcich na stránke série) pridá
+         *     všetky figúrky série, aj tie, ktoré nemám, a vek snímky pozerá: cena
+         *     mladšia než ``price_max_age_hours`` je aktuálna.
+         *
          *     ``limit`` je počet z dialógu obnovy (najviac toľko volaní). Stav „beží“
          *     sa zaberie ešte pred odpoveďou, úloha na pozadí štartuje až po nej;
          *     druhé kliknutie počas behu druhú dávku nespustí.
@@ -1072,6 +1076,26 @@ export interface paths {
          *     ``single`` (hodnota jednej série) platí len pri kompletnej sérii.
          */
         get: operations["get_series_value_api_v1_prices_series__num__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/prices/series/{num}/refresh-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Series Refresh Plan
+         * @description Počet volaní pred Zistiť ceny chýbajúcich; von nevolá nič.
+         */
+        get: operations["get_series_refresh_plan_api_v1_prices_series__num__refresh_plan_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2387,6 +2411,13 @@ export interface components {
              * @default 0
              */
             price_missing: number;
+            /** Series Total */
+            series_total?: string | null;
+            /**
+             * Series Priced
+             * @default 0
+             */
+            series_priced: number;
         };
         /** CmfSyncOut */
         CmfSyncOut: {
@@ -3607,6 +3638,18 @@ export interface components {
             missing: components["schemas"]["SeriesMissingOut"][];
         };
         /**
+         * SeriesRefreshPlanOut
+         * @description Koľko volaní stojí stiahnutie cien celej série (Zistiť ceny chýbajúcich).
+         */
+        SeriesRefreshPlanOut: {
+            /** Calls */
+            calls: number;
+            /** Fresh */
+            fresh: number;
+            /** Max Age Days */
+            max_age_days: number;
+        };
+        /**
          * SeriesValueOut
          * @description Moje figúrky jednej série: súčty a graf ako pri jednej figúrke.
          */
@@ -3645,6 +3688,35 @@ export interface components {
             estimated_until: string | null;
             /** Events */
             events: components["schemas"]["ChartEventOut"][];
+            /**
+             * Member Count
+             * @default 0
+             */
+            member_count: number;
+            /**
+             * Missing Count
+             * @default 0
+             */
+            missing_count: number;
+            /**
+             * Missing Priced
+             * @default 0
+             */
+            missing_priced: number;
+            /** Missing Total */
+            missing_total?: string | null;
+            /**
+             * Series Priced
+             * @default 0
+             */
+            series_priced: number;
+            /** Series Total */
+            series_total?: string | null;
+            /**
+             * History All
+             * @default []
+             */
+            history_all: components["schemas"]["PricePointOut"][];
         };
         /** SetAlternateOut */
         SetAlternateOut: {
@@ -6357,6 +6429,7 @@ export interface operations {
             query?: {
                 num?: string | null;
                 limit?: number | null;
+                whole_series?: boolean;
             };
             header?: never;
             path?: never;
@@ -6513,6 +6586,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SeriesValueOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_series_refresh_plan_api_v1_prices_series__num__refresh_plan_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                num: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeriesRefreshPlanOut"];
                 };
             };
             /** @description Validation Error */

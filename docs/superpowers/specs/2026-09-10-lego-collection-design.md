@@ -624,6 +624,13 @@ Set, ktorý nie je v žiadnom katalógu, sa dá zadať ručne (`POST /catalog`).
   podľa balenia (`find_blind_series`) a figúrky sú varianty čísla
   (`42233-1` až `-8`). Ukladajú sa do `blind_series` s kategóriou, členovia
   sú `kind=set` a cenia sa ako sety.
+- **Cena celej série** (spec `2026-10-26-cena-celej-serie-design.md`): na
+  posúdenie ponuky na kúpu karta série ukáže popri mojich figúrkach Chýba
+  mi a Celú sériu (každá figúrka raz, cena nového kusu) so zelenou
+  čiarkovanou čiarou v grafe, aj pri sérii, z ktorej nemám nič. Ceny
+  chýbajúcich sa ťahajú len na kliknutie (Zistiť ceny chýbajúcich, najprv
+  počet volaní a potvrdenie); cena mladšia než 15 dní sa nepýta. Zoznam
+  sérií ukáže Celú sériu len z uložených cien.
 
 **Nerozbalený sáčok** je kus ukazujúci na sériu s `unidentified=true`.
 Po rozbalení ho `PATCH /items/{id}/identify` prepne na konkrétnu figúrku

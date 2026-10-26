@@ -65,6 +65,8 @@
     { key: 'priceAt', title: 'minifigs.colPriceAt', class: 'text-end' },
     { key: 'profit', title: 'minifigs.colProfit', class: 'text-end' },
     { key: 'profitPct', title: 'minifigs.colProfitPct', class: 'text-end' },
+    // Celá séria z uložených cien (každá figúrka raz, nový kus); na posúdenie ponuky.
+    { key: 'whole', title: 'minifigs.colWhole', class: 'text-end' },
   ]
 
   function profitClass (profit: string | null | undefined): string {
@@ -557,6 +559,16 @@
             <td class="text-end text-no-wrap" :class="profitClass(row.profit)">{{ row.profit !== null && row.profit !== undefined ? money(row.profit, { sign: true }) : '' }}</td>
 
             <td class="text-end text-no-wrap">{{ row.profit_pct !== null && row.profit_pct !== undefined ? percent(row.profit_pct, { decimals: 0 }) : '' }}</td>
+
+            <td class="text-end text-no-wrap" :data-test="`whole-${row.series_num}`">
+              <template v-if="row.series_total !== null && row.series_total !== undefined">
+                <span class="text-positive">{{ exactMoney(row.series_total) }}</span>
+
+                <div v-if="(row.series_priced ?? 0) < row.total" class="text-body-small text-medium-emphasis">
+                  {{ t('minifigs.wholePricedOf', { priced: row.series_priced, total: row.total }) }}
+                </div>
+              </template>
+            </td>
           </tr>
         </tbody>
       </v-table>
@@ -627,6 +639,20 @@
               :purchase="row.purchase_total"
               :value="row.market_total"
             />
+
+            <!-- Celá séria z uložených cien; zoznam sám nič nesťahuje. -->
+            <div
+              v-if="row.series_total !== null && row.series_total !== undefined"
+              :class="row.purchase_total !== null && row.purchase_total !== undefined ? 'pt-1' : 'mt-auto pt-2'"
+              :data-test="`card-whole-${row.series_num}`"
+            >
+              <span class="text-body-small text-medium-emphasis">{{ t('minifigs.whole') }} </span>
+              <span class="text-body-medium font-weight-medium text-positive">{{ exactMoney(row.series_total) }}</span>
+
+              <span v-if="(row.series_priced ?? 0) < row.total" class="text-body-small text-medium-emphasis">
+                · {{ t('minifigs.wholePricedOf', { priced: row.series_priced, total: row.total }) }}
+              </span>
+            </div>
           </template>
 
           <div v-else class="text-body-small text-medium-emphasis mt-2">{{ t('minifigs.notSynced') }}</div>

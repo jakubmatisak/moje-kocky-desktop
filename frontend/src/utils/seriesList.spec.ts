@@ -142,3 +142,22 @@ describe('figúrky: zoradenie podľa súm ako v Zbierke', () => {
     expect(nums(sortMembers(list, 'value', 'desc'))).toEqual(['71046-2', '71046-1', '71046-3'])
   })
 })
+
+describe('stĺpec Celá séria', () => {
+  const collator = new Intl.Collator('sk', { numeric: true })
+  const row = (name: string, total: string | null) =>
+    ({ name, owned: 0, total: 3, year: 2025, series_total: total }) as never
+
+  it('radí od najdrahšej, séria bez ceny je na konci v oboch smeroch', () => {
+    const rows = [row('A', null), row('B', '10.00'), row('C', '30.00')]
+    const desc = rows.toSorted((a, b) => compareSeries(a, b, 'wholeDesc', collator))
+    const asc = rows.toSorted((a, b) => compareSeries(a, b, 'wholeAsc', collator))
+    expect(desc.map((r: { name: string }) => r.name)).toEqual(['C', 'B', 'A'])
+    expect(asc.map((r: { name: string }) => r.name)).toEqual(['B', 'C', 'A'])
+  })
+
+  it('klik na hlavičku radí najprv od najväčšej', () => {
+    expect(seriesSortFromHeader('whole', 'nameAsc')).toBe('wholeDesc')
+    expect(seriesSortFromHeader('whole', 'wholeDesc')).toBe('wholeAsc')
+  })
+})

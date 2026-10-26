@@ -98,5 +98,7 @@ export const CHART_COLORS = {
   invested: '#9A9695',
   value: '#D01012',
   proceeds: '#16714A',
+  /** Celá séria vo Figúrkach: zelená čiarkovaná čiara vedľa mojich figúrok. */
+  whole: '#2E9E5B',
   themes: ['#D01012', '#F5C518', '#1E6FB8', '#16714A', '#9A9695', '#7B4BA8'],
 }

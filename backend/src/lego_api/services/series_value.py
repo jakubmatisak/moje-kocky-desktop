@@ -16,6 +16,14 @@ každá figúrka: súčet bez jednej by bol nízky a vyzeral by ako pád ceny.
 Duplikáty (dva kusy tej istej figúrky) sa bežne rátajú oba. S ``single``
 sa ráta každá figúrka raz (prvý kúpený kus), teda hodnota jednej série;
 rozhranie to ponúka, len keď je séria kompletná.
+
+Na posúdenie ponuky na kúpu karta ukáže aj súčet cien figúrok, ktoré mi
+chýbajú, a celej série (každá figúrka raz), aj keď zo série nemám nič.
+Ponúkajú sa nové figúrky, preto len cena nového kusu pod číslom figúrky
+(ako ``figure_values.market_now``), bez náhrady rozbalenou. Čiara celej
+série (``history_all``) je len vtedy, keď cenu pozná každá figúrka. Ceny
+chýbajúcich sa ťahajú len na kliknutie (``refresh.collect_targets``
+s ``whole_series``); tu sa nič nevolá.
 """
 
 from __future__ import annotations
@@ -25,9 +33,17 @@ from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime, time
 from decimal import Decimal
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lego_api.models import CatalogItem, CollectionItem, ItemStatus, PriceCondition
+from lego_api import visibility
+from lego_api.models import (
+    CatalogItem,
+    CollectionItem,
+    ItemStatus,
+    PriceCondition,
+    PriceKind,
+)
 from lego_api.services.filters import series_num
 from lego_api.services.portfolio import (
     ZERO,
@@ -37,7 +53,7 @@ from lego_api.services.portfolio import (
     load_snapshots,
     value_items,
 )
-from lego_api.services.pricing import resolve_price_target
+from lego_api.services.pricing import PriceTarget, resolve_price_target
 
 
 @dataclass
@@ -65,6 +81,17 @@ class SeriesValue:
     estimated_until: date | None = None
     #: Nákupy a predaje figúrok série po dňoch (deň, druh, počet, suma).
     events: list[tuple[date, str, int, Decimal]] = field(default_factory=list)
+    #: Figúrky série v katalógu (bez kľúča Rebrickable žiadne).
+    member_count: int = 0
+    #: Figúrky, ktoré nemám, a koľko z nich má cenu nového kusu.
+    missing_count: int = 0
+    missing_priced: int = 0
+    missing_total: Decimal | None = None
+    #: Celá séria, každá figúrka raz, cena nového kusu; bez jedinej ceny None.
+    series_priced: int = 0
+    series_total: Decimal | None = None
+    #: Súčet histórie cien všetkých figúrok; prázdne, keď niektorá cenu nemá.
+    history_all: list[tuple[datetime, Decimal]] = field(default_factory=list)
 
     @property
     def duplicates(self) -> int:
@@ -101,7 +128,13 @@ def _history(
     targets = [
         replace(resolve_price_target(v.item, v.catalog), condition=condition) for v in market
     ]
-    exact = condition == PriceCondition.USED
+    return _sum_history(targets, manual, index, exact=condition == PriceCondition.USED)
+
+
+def _sum_history(
+    targets: list[PriceTarget], manual: Decimal, index: SnapshotIndex, *, exact: bool
+) -> tuple[list[tuple[datetime, Decimal]], date | None]:
+    """Jadro ``_history``: s ``exact`` len presný stav a bez ceny niektorého cieľa nič."""
     if exact and any(index.first(t) is None for t in targets):
         return [], None
     days: set[date] = set()
@@ -165,8 +198,9 @@ async def series_value(
     everything = await load_items(session, user_id)
     events = _events(everything, num)
     items = _mine(everything, num)
+    whole = await _whole_series(session, num, {i.catalog_num for i in items})
     if not items:
-        return SeriesValue(series_size=size, events=events)
+        return replace(whole, series_size=size, events=events)
     distinct = len({i.catalog_num for i in items})
     owned_count = len(items)
     if single:
@@ -197,4 +231,43 @@ async def series_value(
         history_used=history_used,
         estimated_until=estimated_until,
         events=events,
+        member_count=whole.member_count,
+        missing_count=whole.missing_count,
+        missing_priced=whole.missing_priced,
+        missing_total=whole.missing_total,
+        series_priced=whole.series_priced,
+        series_total=whole.series_total,
+        history_all=whole.history_all,
+    )
+
+
+async def _members(session: AsyncSession, num: str) -> list[str]:
+    """Čísla figúrok série; údaj z Rebrickable, bez vlastného kľúča žiadne."""
+    vis = visibility.current()
+    if not (vis.full or vis.rebrickable):
+        return []
+    stmt = select(CatalogItem.catalog_num).where(CatalogItem.parent_num == num)
+    return sorted((await session.execute(stmt)).scalars())
+
+
+async def _whole_series(session: AsyncSession, num: str, mine: set[str]) -> SeriesValue:
+    """Chýbajúce figúrky a celá séria: každá figúrka raz, cena nového kusu."""
+    members = await _members(session, num)
+    if not members:
+        return SeriesValue()
+    index = await load_snapshots(session, set(members))
+    targets = {m: PriceTarget(m, PriceKind.SET, PriceCondition.NEW) for m in members}
+    prices = {m: index.value_at(t) for m, t in targets.items()}
+    known = {m: p for m, p in prices.items() if p is not None}
+    missing = [m for m in members if m not in mine]
+    missing_known = [known[m] for m in missing if m in known]
+    history, _ = _sum_history(list(targets.values()), ZERO, index, exact=True)
+    return SeriesValue(
+        member_count=len(members),
+        missing_count=len(missing),
+        missing_priced=len(missing_known),
+        missing_total=sum(missing_known, ZERO) if missing_known else None,
+        series_priced=len(known),
+        series_total=sum(known.values(), ZERO) if known else None,
+        history_all=history,
     )

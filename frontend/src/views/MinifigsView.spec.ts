@@ -67,7 +67,7 @@ vi.mock('@/api/client', async original => ({
       if (path === '/minifigs/series') {
         return {
           data: {
-            series: [series('71046', 'Space', 12), series('71045', 'Series 25', 3)],
+            series: [{ ...series('71046', 'Space', 12), series_total: '19.50', series_priced: 12 }, { ...series('71045', 'Series 25', 3), series_total: '4.00', series_priced: 1 }],
             sync: { running: false, done: 0, total: 0, provider_enabled: true, switched_off: false, failed: 0, error: null },
           },
         }
@@ -271,7 +271,7 @@ describe('Figúrky: tabuľky radia klikom na hlavičku', () => {
     const names = () => wrapper.findAll('.minifigs-table__name').map(n => n.text())
 
     expect(headers().map(h => h.props('title'))).toEqual([
-      'Séria', 'Rok', 'Mám', 'Chýba', 'Kompletnosť', 'Kúpené', 'Hodnota', 'Cena z', 'Zisk', '%',
+      'Séria', 'Rok', 'Mám', 'Chýba', 'Kompletnosť', 'Kúpené', 'Hodnota', 'Cena z', 'Zisk', '%', 'Celá séria',
     ])
     // Najmenej chýba je len vo výbere, šípka nesvieti nikde.
     expect(headers().map(h => h.props('dir')).every(d => d === null)).toBe(true)
@@ -316,5 +316,32 @@ describe('Figúrky: tabuľky radia klikom na hlavičku', () => {
     headers()[0]!.vm.$emit('sort')
     await flushPromises()
     expect(first()).toContain('Astronaut')
+  })
+})
+
+describe('Figúrky: cena celej série v zozname', () => {
+  it('tabuľka má stĺpec Celá séria, pri neúplnej koľko figúrok má cenu', async () => {
+    preferences = { minifigs: { list: 'table' } }
+    const { wrapper } = await mount(MinifigsView)
+
+    expect(wrapper.find('[data-test="whole-71046"]').text()).toBe('19,50 €')
+    expect(wrapper.find('[data-test="whole-71045"]').text()).toContain('4,00')
+    expect(wrapper.find('[data-test="whole-71045"]').text()).toContain('1 z 12')
+  })
+
+  it('karta série ukáže Celú sériu zelenou', async () => {
+    const wrapper = shallowMount(MinifigsView, {
+      global: {
+        plugins: [i18n, pinia],
+        stubs: { RouterLink: RouterLinkStub },
+        renderStubDefaultSlot: true,
+        config: { warnHandler: () => {} },
+      },
+    })
+    await flushPromises()
+
+    const whole = wrapper.find('[data-test="card-whole-71046"]')
+    expect(whole.text()).toMatch(/Celá séria ?19,50/)
+    expect(whole.find('.text-positive').exists()).toBe(true)
   })
 })

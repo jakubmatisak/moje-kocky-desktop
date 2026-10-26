@@ -97,8 +97,10 @@ export const usePriceStore = defineStore('prices', () => {
    * Obnoví len jeden set, pri sérii figúrky, ktoré z nej používateľ má.
    * Na rozdiel od obnovy všetkého neminie kvótu na zvyšok zbierky.
    */
-  async function refreshOne (num: string, whenDone?: () => void): Promise<void> {
-    const { data } = await api.POST('/prices/refresh-all', { params: { query: { num } } })
+  async function refreshOne (num: string, whenDone?: () => void, wholeSeries = false): Promise<void> {
+    // Celá séria (Zistiť ceny chýbajúcich): aj figúrky, ktoré nemám; aktuálna cena ostane.
+    const query = wholeSeries ? { num, whole_series: true } : { num }
+    const { data } = await api.POST('/prices/refresh-all', { params: { query } })
     await follow(data, whenDone)
   }
 

@@ -10,6 +10,7 @@ alebo UPC) a LEGO kódy pozná lepšie než všeobecné databázy kódov.
 import json
 import logging
 import re
+from datetime import date
 from decimal import Decimal
 from html import unescape
 
@@ -269,6 +270,9 @@ class BricksetProvider:
                 else None
             ),
             category=row.get("category") if isinstance(row.get("category"), str) else None,
+            # Dátum, ktorý zverejnilo LEGO (aj ohlásený pri sete, ktorý ešte nevyšiel);
+            # bez neho prvý deň v obchode LEGO.com.
+            launch_date=_date_from(row.get("launchDate")) or _first_available(lego_com),
             source=self.name,
             extras={"owned": str(collections.get("owned", ""))},
         )
@@ -282,6 +286,27 @@ def _plain_text(html: str | None) -> str | None:
     text = unescape(re.sub(r"<[^>]+>", "", text))
     lines = [re.sub(r"[ \t]+", " ", line).strip() for line in text.splitlines()]
     return "\n".join(line for line in lines if line) or None
+
+
+def _date_from(value: object) -> date | None:
+    """Dátum z ``2027-03-01T00:00:00Z``; čokoľvek iné je None."""
+    if not isinstance(value, str) or len(value) < 10:
+        return None
+    try:
+        return date.fromisoformat(value[:10])
+    except ValueError:
+        return None
+
+
+def _first_available(lego_com: dict) -> date | None:
+    """Najskorší prvý deň predaja na LEGO.com zo všetkých krajín."""
+    days = [
+        _date_from(shop.get("dateFirstAvailable"))
+        for shop in lego_com.values()
+        if isinstance(shop, dict)
+    ]
+    known = [d for d in days if d is not None]
+    return min(known) if known else None
 
 
 def _year_from(value: str | None) -> int | None:

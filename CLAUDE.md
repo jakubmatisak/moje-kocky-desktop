@@ -769,6 +769,20 @@ istý kľúč na set nepýtal znova. Štítky sú aj filter: štítok v detaile
 setu vedie do Zbierky s ním, na detaile figúrky zo série (aj série samej)
 je obyčajný čip, lebo Zbierka figúrku neukazuje.
 
+**Dátum vydania je z Brickset, inak z BrickEconomy, nie z LEGO.com.**
+LEGO API nemá a obchod automatické požiadavky blokuje (403), strhávanie
+nie. Brickset `launchDate` (aj ohlásený pri sete, ktorý nevyšiel; bez
+neho najskorší `LEGOCom.*.dateFirstAvailable`) ide do
+`brickset_facts.launch_date`, BrickEconomy `released_date` do
+`brickeconomy_facts.released_date`; oba v odpovediach, ktoré aj tak
+chodia. `CatalogItem.release_date` dá prednosť Brickset. Detail ukáže
+„Vychádza 1. 3. 2027“ alebo „Vydaný …“ namiesto roka. Set, na ktorý sa
+Brickset pýtal pred dátumami (`brickset_facts.dates_at` prázdne), sa pri
+otvorení detailu opýta raz znova (`brickset_dates_pending`), len keď dátum
+nepozná ani BrickEconomy; dávka na pozadí ho nepýta. Odkaz LEGO.com v detaile
+je `https://www.lego.com/product/{číslo bez -1}` (`target=_blank` otvorí
+predvolený prehliadač), LEGO presmeruje na stránku setu v jazyku návštevníka.
+
 **Ďalšie fotky setu sú z Brickset, raz na set.** `getAdditionalImages`
 sa do limitu nepočíta, ale chce `setID` Brickset, nie číslo setu. `setID`
 a `additionalImageCount` prichádzajú v každom getSets (`apply_brickset`
@@ -1110,7 +1124,7 @@ takže pri pridaní komponentu do šablóny skontroluj import.
 
 ## Testy
 
-Backend má 898 testov, frontend 455. Jadro logiky je pokryté v `test_portfolio.py`,
+Backend má 907 testov, frontend 458. Jadro logiky je pokryté v `test_portfolio.py`,
 `test_pricing.py`, `test_refresh.py`, `test_insights.py`, `test_inflation.py` a `test_import.py`, poskytovatelia v `test_providers.py`
 bežia proti uloženým JSON odpovediam cez `respx`, teda bez siete. Fixtúry
 majú tvar reálnych odpovedí, vrátane setu, ktorý je ešte v predaji a nemá

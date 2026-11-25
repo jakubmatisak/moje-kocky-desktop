@@ -68,6 +68,8 @@ class MarketData:
     growth_last_year: float | None = None
     subtheme: str | None = None
     retired_date: date | None = None
+    #: Dátum vydania (aj ohlásený), prichádza s cenou zadarmo.
+    released_date: date | None = None
     #: Čiarový kód z krabice, ako ho zdroj poslal. Normalizuje sa pri ukladaní.
     ean: str | None = None
     #: Čo to je. Overiť cenu z toho spozná set, ktorý katalóg ešte nepozná.
@@ -278,6 +280,7 @@ def _to_market(
         growth_last_year=_percent(data.get("rolling_growth_lastyear")),
         subtheme=(data.get("subtheme") or None) if kind == PriceKind.SET else None,
         retired_date=_date(data.get("retired_date")),
+        released_date=_date(data.get("released_date")),
         ean=(str(data.get("ean")) if data.get("ean") else None) if kind == PriceKind.SET else None,
         name=(data.get("name") or None),
         theme=(data.get("theme") or None),

@@ -47,6 +47,11 @@ class BricksetFacts(Base):
     image_count: Mapped[int | None] = mapped_column(default=None)
     #: Stiahnutá galéria [{thumbnail_url, image_url}]. None = ešte nie.
     images: Mapped[list[dict] | None] = mapped_column(JSON, default=None)
+    #: Dátum uvedenia od LEGO (``launchDate``, inak prvý deň na LEGO.com).
+    launch_date: Mapped[date | None] = mapped_column(default=None)
+    #: Kedy prišla odpoveď už s dátumami. Prázdne = pýtali sme sa pred nimi,
+    #: detail sa opýta raz znova (``CatalogItem.brickset_dates_pending``).
+    dates_at: Mapped[datetime | None] = mapped_column(TimestampTZ, default=None)
     #: Kedy prišla plná odpoveď (popis, štítky); vlna ju nemá. Prázdne = doplniť.
     extended_at: Mapped[datetime | None] = mapped_column(TimestampTZ, default=None)
     fetched_at: Mapped[datetime] = mapped_column(TimestampTZ, default=utcnow)
@@ -70,6 +75,7 @@ class BrickEconomyFacts(Base):
     is_retired: Mapped[bool] = mapped_column(default=False)
     retired_at: Mapped[int | None] = mapped_column(default=None)
     retired_date: Mapped[date | None] = mapped_column(default=None)
+    released_date: Mapped[date | None] = mapped_column(default=None)
     minifig_no: Mapped[str | None] = mapped_column(String(64), default=None)
     ean: Mapped[str | None] = mapped_column(String(14), default=None, index=True)
     forecast_2y_eur: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), default=None)

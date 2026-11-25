@@ -275,6 +275,8 @@
     "unidentified": "Nerozbalený sáčok",
     "yearly": "ročne {value}",
     "retiredOn": "Stiahnutý {date}",
+    "releaseOn": "Vychádza {date}",
+    "releasedOn": "Vydaný {date}",
     "sinceRetired": "Od stiahnutia z predaja {value}",
     "instructions": "Návod na stavanie",
     "photos": "Fotky",

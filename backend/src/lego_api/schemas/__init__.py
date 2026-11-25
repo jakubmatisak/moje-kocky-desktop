@@ -121,6 +121,8 @@ class CatalogOut(ORMModel):
     is_retired: bool
     retired_at: int | None
     retired_date: date | None = None
+    #: Dátum vydania (Brickset, inak BrickEconomy), aj ohlásený pri sete, ktorý ešte nevyšiel.
+    release_date: date | None = None
     minifig_no: str | None
     forecast_2y_eur: Money | None = None
     forecast_5y_eur: Money | None = None
@@ -134,6 +136,8 @@ class CatalogOut(ORMModel):
     bs_wanted_by: int | None = None
     #: Kľúč účtu sa už na set Brickset pýtal (aj keď nič nenašiel).
     brickset_checked: bool = False
+    #: Brickset sa pýtal pred dátumom vydania; detail sa opýta raz znova.
+    brickset_dates_pending: bool = False
     source: str
     fetched_at: datetime
 

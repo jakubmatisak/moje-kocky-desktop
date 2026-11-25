@@ -38,7 +38,7 @@
   import { useNotifyStore } from '@/stores/notify'
   import { usePriceStore } from '@/stores/prices'
   import { eventsFromPieces } from '@/utils/chartEvents'
-  import { count, type CurrencyCode, dateTime, exactMoney, money, percent, shortDate, toNumber } from '@/utils/format'
+  import { count, type CurrencyCode, dateTime, exactMoney, isoDate, money, percent, shortDate, toNumber } from '@/utils/format'
   import { imageSrc } from '@/utils/imageSrc'
   import { placeLabel } from '@/utils/place'
   import { isSeriesPage as isSeriesDetail } from '@/utils/series'
@@ -115,6 +115,31 @@
     const c = catalog.value
     if (!c || c.kind !== 'set' || !/^\d/.test(c.catalog_num)) return null
     return `https://www.lego.com/service/buildinginstructions/${c.catalog_num.replace(/-\d+$/, '')}`
+  })
+
+  /**
+   * Stránka setu v obchode LEGO. Adresa bez jazyka a bez názvu presmeruje na
+   * stránku setu v jazyku návštevníka (`/product/10294` → Titanic v SK obchode).
+   */
+  const legoUrl = computed(() => {
+    const c = catalog.value
+    if (!c || c.kind !== 'set' || !/^\d/.test(c.catalog_num)) return null
+    return `https://www.lego.com/product/${c.catalog_num.replace(/-\d+$/, '')}`
+  })
+
+  /**
+   * Dátum vydania (Brickset, inak BrickEconomy), aj ohlásený pri sete, ktorý
+   * ešte nevyšiel: „Vychádza 1. 3. 2027“, po ňom „Vydaný 8. 11. 2021“.
+   */
+  const releaseText = computed(() => {
+    const day = catalog.value?.release_date
+    if (!day) return null
+    const upcoming = day > isoDate(new Date())
+    return t(upcoming ? 'detail.releaseOn' : 'detail.releasedOn', { date: shortDate(day) })
+  })
+  const releaseUpcoming = computed(() => {
+    const day = catalog.value?.release_date
+    return !!day && day > isoDate(new Date())
   })
 
   /**
@@ -305,7 +330,9 @@
    */
   async function fillFromBrickset (): Promise<void> {
     const c = catalog.value
-    if (!c || c.brickset_checked || !auth.can('brickset.on_detail') || !/^\d+-\d+$/.test(c.catalog_num)) return
+    // Set, na ktorý sa Brickset pýtal pred dátumom vydania, sa opýta raz znova.
+    const done = c?.brickset_checked && !c.brickset_dates_pending
+    if (!c || done || !auth.can('brickset.on_detail') || !/^\d+-\d+$/.test(c.catalog_num)) return
     const { data } = await api.POST('/catalog/{num}/brickset', { params: { path: { num: c.catalog_num } } })
     if (data && catalog.value?.catalog_num === data.catalog_num) {
       catalog.value = { ...catalog.value, ...data }
@@ -535,7 +562,18 @@
             <span class="text-body-medium text-medium-emphasis">{{ catalog.catalog_num }}</span>
             <v-chip v-if="catalog.theme" label size="small" variant="tonal">{{ catalog.theme }}</v-chip>
             <v-chip v-if="catalog.subtheme" label size="small" variant="tonal">{{ catalog.subtheme }}</v-chip>
-            <v-chip v-if="catalog.year" label size="small" variant="tonal">{{ catalog.year }}</v-chip>
+
+            <v-chip
+              v-if="releaseText"
+              :color="releaseUpcoming ? 'primary' : undefined"
+              data-test="release-date"
+              label
+              :prepend-icon="releaseUpcoming ? 'mdi-calendar-star' : 'mdi-calendar-check-outline'"
+              size="small"
+              variant="tonal"
+            >{{ releaseText }}</v-chip>
+
+            <v-chip v-else-if="catalog.year" label size="small" variant="tonal">{{ catalog.year }}</v-chip>
 
             <v-chip
               v-if="catalog.is_retired"
@@ -566,6 +604,17 @@
               target="_blank"
               variant="text"
             >{{ t('detail.instructions') }}</v-btn>
+
+            <v-btn
+              v-if="legoUrl"
+              data-test="lego-link"
+              :href="legoUrl"
+              prepend-icon="mdi-open-in-new"
+              rel="noopener"
+              size="small"
+              target="_blank"
+              variant="text"
+            >LEGO.com</v-btn>
 
             <v-btn
               v-if="bricksetUrl"

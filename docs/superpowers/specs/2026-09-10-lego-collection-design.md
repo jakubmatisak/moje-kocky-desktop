@@ -682,6 +682,12 @@ Podrobnosti:
 
 - Popis, štítky, hodnotenie a obľúbenosť prídu z `getSets` s
   `extendedData: 1`, raz na set a kľúč, stráži to `source_access`.
+- **Dátum vydania** (2026-11-25): Brickset `launchDate` (aj ohlásený, inak
+  prvý deň na LEGO.com) a BrickEconomy `released_date`, v odpovediach, ktoré
+  už chodia; prednosť má Brickset. Priamo z LEGO.com nie (bez API, strhávanie
+  nie). Set spred tejto funkcie sa pri otvorení detailu opýta Brickset raz
+  znova, keď dátum nepozná ani BrickEconomy. Detail má odkaz na LEGO.com
+  (`/product/{číslo}`).
 - Nové sety ich dostanú pri vyhľadaní. Staršie dopĺňa beh na pozadí pri
   otvorení Zbierky, najviac 40 za beh, a detail setu pri otvorení (jedno
   volanie).

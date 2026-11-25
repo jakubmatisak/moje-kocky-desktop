@@ -268,3 +268,41 @@ describe('detail setu: štítky z Brickset', () => {
     expect(tagChip(wrapper).attributes('to')).toBeUndefined()
   })
 })
+
+describe('detail setu: LEGO.com a dátum vydania', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    i18n.global.locale.value = 'sk'
+    pieces = [piece(1, {})]
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-11-25T12:00:00'))
+  })
+
+  afterEach(() => {
+    catalogExtra = {}
+    vi.useRealTimers()
+  })
+
+  it('odkaz vedie na stránku setu na LEGO.com podľa čísla', async () => {
+    const wrapper = await mountDetail()
+
+    const link = wrapper.find('[data-test="lego-link"]')
+    expect(link.attributes('href')).toBe('https://www.lego.com/product/10294')
+    expect(link.attributes('target')).toBe('_blank')
+  })
+
+  it('set, ktorý ešte nevyšiel, povie, kedy vychádza', async () => {
+    catalogExtra = { release_date: '2027-03-01', year: 2027 }
+    const wrapper = await mountDetail()
+
+    expect(norm(wrapper.find('[data-test="release-date"]').text())).toBe('Vychádza 1. 3. 2027')
+  })
+
+  it('vydaný set ukáže dátum vydania namiesto roka', async () => {
+    catalogExtra = { release_date: '2021-11-08', year: 2021 }
+    const wrapper = await mountDetail()
+
+    expect(norm(wrapper.find('[data-test="release-date"]').text())).toBe('Vydaný 8. 11. 2021')
+    expect(wrapper.findAll('v-chip').some(c => c.text() === '2021')).toBe(false)
+  })
+})

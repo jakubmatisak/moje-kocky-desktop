@@ -258,7 +258,8 @@ export interface paths {
          * @description Popis, štítky a hodnotenie pre jeden set hneď, keď ho niekto otvorí.
          *
          *     Jedno volanie Brickset, a len raz: set, na ktorý sa už pýtal, sa vráti
-         *     bez volania.
+         *     bez volania. Výnimka je set, na ktorý sa pýtal pred dátumom vydania
+         *     (``brickset_dates_pending``): ten sa opýta ešte raz.
          */
         post: operations["fill_from_brickset_api_v1_catalog__num__brickset_post"];
         delete?: never;
@@ -2139,6 +2140,8 @@ export interface components {
             retired_at: number | null;
             /** Retired Date */
             retired_date?: string | null;
+            /** Release Date */
+            release_date?: string | null;
             /** Minifig No */
             minifig_no: string | null;
             /** Forecast 2Y Eur */
@@ -2166,6 +2169,11 @@ export interface components {
              * @default false
              */
             brickset_checked: boolean;
+            /**
+             * Brickset Dates Pending
+             * @default false
+             */
+            brickset_dates_pending: boolean;
             /** Source */
             source: string;
             /**
@@ -2213,6 +2221,8 @@ export interface components {
             retired_at: number | null;
             /** Retired Date */
             retired_date?: string | null;
+            /** Release Date */
+            release_date?: string | null;
             /** Minifig No */
             minifig_no: string | null;
             /** Forecast 2Y Eur */
@@ -2240,6 +2250,11 @@ export interface components {
              * @default false
              */
             brickset_checked: boolean;
+            /**
+             * Brickset Dates Pending
+             * @default false
+             */
+            brickset_dates_pending: boolean;
             /** Source */
             source: string;
             /**

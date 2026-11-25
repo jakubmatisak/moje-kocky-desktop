@@ -304,6 +304,8 @@ def apply_brickset(item: CatalogItem, meta: CatalogMetadata) -> None:
         facts.image_count = meta.image_count
     if meta.extended:
         facts.extended_at = utcnow()
+    facts.launch_date = meta.launch_date or facts.launch_date
+    facts.dates_at = utcnow()
     facts.fetched_at = utcnow()
 
 

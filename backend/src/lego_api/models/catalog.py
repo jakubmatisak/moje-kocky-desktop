@@ -192,9 +192,12 @@ class CatalogItem(Base):
     bs_category = _facts_field(visibility.BRICKSET, "bs_category", "category")
     #: Kedy o sete Brickset naposledy odpovedal (getSets); vlna staršia než to je stará.
     bs_fetched_at = _facts_field(visibility.BRICKSET, "bs_fetched_at", "fetched_at")
+    bs_launch_date = _facts_field(visibility.BRICKSET, "bs_launch_date", "launch_date")
+    bs_dates_at = _facts_field(visibility.BRICKSET, "bs_dates_at", "dates_at")
 
     subtheme = _facts_field(visibility.BRICKECONOMY, "subtheme")
     retired_date = _facts_field(visibility.BRICKECONOMY, "retired_date")
+    released_date = _facts_field(visibility.BRICKECONOMY, "released_date")
     minifig_no = _facts_field(visibility.BRICKECONOMY, "minifig_no")
     forecast_2y_eur = _facts_field(visibility.BRICKECONOMY, "forecast_2y_eur")
     forecast_5y_eur = _facts_field(visibility.BRICKECONOMY, "forecast_5y_eur")
@@ -227,6 +230,27 @@ class CatalogItem(Base):
             visibility.current().sees(visibility.BRICKSET, self.catalog_num)
             and facts is not None
             and (facts.found is False or facts.extended_at is not None)
+        )
+
+    @property
+    def release_date(self):
+        """Dátum vydania: Brickset (dátum od LEGO), inak BrickEconomy; bez nich None."""
+        return self.bs_launch_date or self.released_date
+
+    @property
+    def brickset_dates_pending(self) -> bool:
+        """Brickset sa na set pýtal ešte pred dátumami a dátum nepozná nikto.
+
+        Detail sa vtedy opýta raz znova (jedno volanie Brickset); potom je
+        ``dates_at`` vyplnené aj bez dátumu a znova sa nepýta.
+        """
+        facts = self.__dict__.get("bs_facts")
+        return (
+            self.brickset_checked
+            and facts is not None
+            and facts.found is not False
+            and facts.dates_at is None
+            and self.release_date is None
         )
 
     @property

@@ -270,6 +270,8 @@ def apply_catalog_extras(catalog: CatalogItem, data: MarketData) -> None:
         facts.retired_at = data.retired_year
     if data.retired_date is not None:
         facts.retired_date = data.retired_date
+    if data.released_date is not None:
+        facts.released_date = data.released_date
     if data.subtheme:
         facts.subtheme = data.subtheme
     if data.minifig_no:

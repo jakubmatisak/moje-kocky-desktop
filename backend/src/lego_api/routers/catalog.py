@@ -70,13 +70,14 @@ async def fill_from_brickset(
     """Popis, štítky a hodnotenie pre jeden set hneď, keď ho niekto otvorí.
 
     Jedno volanie Brickset, a len raz: set, na ktorý sa už pýtal, sa vráti
-    bez volania.
+    bez volania. Výnimka je set, na ktorý sa pýtal pred dátumom vydania
+    (``brickset_dates_pending``): ten sa opýta ešte raz.
     """
     item = await session.get(CatalogItem, num)
     if item is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Set nie je v katalógu")
     provider = BricksetProvider.for_user(settings, keys)
-    if provider.enabled and not item.brickset_checked:
+    if provider.enabled and (not item.brickset_checked or item.brickset_dates_pending):
         try:
             await brickset_extras.fill_one(session, provider, item, Cap.BRICKSET_ON_DETAIL)
         except CallBlocked:

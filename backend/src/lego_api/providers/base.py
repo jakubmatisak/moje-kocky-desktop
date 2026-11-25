@@ -1,6 +1,7 @@
 """Rozhrania poskytovateľov metadát a cien."""
 
 from dataclasses import dataclass, field
+from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Protocol
 
@@ -40,6 +41,8 @@ class CatalogMetadata:
     image_count: int | None = None
     #: Plná odpoveď Brickset (``extendedData``: popis, štítky). Vlna ju nemá.
     extended: bool = False
+    #: Dátum uvedenia od LEGO (Brickset ``launchDate``, inak prvý deň na LEGO.com).
+    launch_date: date | None = None
     #: Kategória Brickset (Normal, Extended, Collection, Gear…): je to set?
     category: str | None = None
     source: str = "manual"

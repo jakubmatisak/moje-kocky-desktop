@@ -275,6 +275,8 @@
     "unidentified": "Sealed bag",
     "yearly": "{value} a year",
     "retiredOn": "Retired {date}",
+    "releaseOn": "Out {date}",
+    "releasedOn": "Released {date}",
     "sinceRetired": "Since retirement {value}",
     "instructions": "Building instructions",
     "photos": "Photos",
